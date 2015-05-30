@@ -4,3 +4,5 @@
 stuff/*
 doc/ranger.1.html
 build
+.metadata.json
+install_log.txt
