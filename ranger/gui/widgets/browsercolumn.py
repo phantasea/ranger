@@ -274,7 +274,9 @@ class BrowserColumn(Pager):
 
             if drawn.marked and (self.main_column or \
                     self.settings.display_tags_in_all_columns):
-                text = " " + text
+                #mod by Chris
+                #text = " " + text
+                text = "" + text
 
             # Computing predisplay data. predisplay contains a list of lists
             # [string, colorlst] where string is a piece of string to display,
