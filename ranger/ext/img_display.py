@@ -131,7 +131,7 @@ class W3MImageDisplayer(ImageDisplayer):
                 filename = path)
 
     def quit(self):
-        if self.is_initialized:
+        if self.is_initialized and self.process and self.process.poll() is None:
             self.process.kill()
 
 class ITerm2ImageDisplayer(ImageDisplayer, FileManagerAware):
