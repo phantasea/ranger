@@ -83,6 +83,34 @@
 
 from ranger.api.commands import *
 
+class vid(Command):
+    """
+    :vidfs
+
+    Play video file with mplayer in fullscreen
+    """
+
+    def execute(self):
+        from ranger.ext.shell_escape import shell_escape as esc
+
+        command = 'mplayer -vo fbdev2 '
+        filename = esc(self.fm.thisfile.path)
+        self.fm.run(command + filename)
+
+class vidfs(Command):
+    """
+    :vidfs
+
+    Play video file with mplayer in fullscreen
+    """
+
+    def execute(self):
+        from ranger.ext.shell_escape import shell_escape as esc
+
+        command = 'mplayer -vo fbdev2 -xy 1024 -fs -zoom -really-quiet '
+        filename = esc(self.fm.thisfile.path)
+        self.fm.run(command + filename)
+
 class alias(Command):
     """:alias <newcommand> <oldcommand>
 
