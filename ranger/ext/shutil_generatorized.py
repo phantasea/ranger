@@ -30,12 +30,14 @@ except NameError:
 
 def copyfileobj(fsrc, fdst, length=BLOCK_SIZE):
     """copy data from file-like object fsrc to file-like object fdst"""
+    done = 0
     while 1:
         buf = fsrc.read(length)
         if not buf:
             break
         fdst.write(buf)
-        yield
+        done += len(buf)
+        yield done
 
 def _samefile(src, dst):
     # Macintosh, Unix.
@@ -69,8 +71,8 @@ def copyfile(src, dst):
     try:
         fsrc = open(src, 'rb')
         fdst = open(dst, 'wb')
-        for _ in copyfileobj(fsrc, fdst):
-            yield
+        for done in copyfileobj(fsrc, fdst):
+            yield done
     finally:
         if fdst:
             fdst.close()
@@ -107,8 +109,8 @@ def copy2(src, dst, overwrite=False, symlinks=False):
             os.unlink(dst)
         os.symlink(linkto, dst)
     else:
-        for _ in copyfile(src, dst):
-            yield
+        for done in copyfile(src, dst):
+            yield done
         copystat(src, dst)
 
 def get_safe_path(dst):
@@ -165,6 +167,7 @@ def copytree(src, dst, symlinks=False, ignore=None, overwrite=False):
         if not overwrite:
             dst = get_safe_path(dst)
             os.makedirs(dst)
+    done = 0
     for name in names:
         if name in ignored_names:
             continue
@@ -178,14 +181,18 @@ def copytree(src, dst, symlinks=False, ignore=None, overwrite=False):
                 os.symlink(linkto, dstname)
                 copystat(srcname, dstname)
             elif os.path.isdir(srcname):
-                for _ in copytree(srcname, dstname, symlinks,
+                d = 0
+                for d in copytree(srcname, dstname, symlinks,
                         ignore, overwrite):
-                    yield
+                    yield done + d
+                done += d
             else:
                 # Will raise a SpecialFileError for unsupported file types
-                for _ in copy2(srcname, dstname,
+                d = 0
+                for d in copy2(srcname, dstname,
                         overwrite=overwrite, symlinks=symlinks):
-                    yield
+                    yield done + d
+                done += d
         # catch the Error from the recursive copytree so that we can
         # continue with other files
         except Error as err:
@@ -283,12 +290,12 @@ def move(src, dst, overwrite=False):
         if os.path.isdir(src):
             if _destinsrc(src, dst):
                 raise Error("Cannot move a directory '%s' into itself '%s'." % (src, dst))
-            for _ in copytree(src, real_dst, symlinks=True, overwrite=overwrite):
-                yield
+            for done in copytree(src, real_dst, symlinks=True, overwrite=overwrite):
+                yield done
             rmtree(src)
         else:
-            for _ in copy2(src, real_dst, symlinks=True, overwrite=overwrite):
-                yield
+            for done in copy2(src, real_dst, symlinks=True, overwrite=overwrite):
+                yield done
             os.unlink(src)
 
 def _destinsrc(src, dst):
