@@ -1,4 +1,4 @@
-ranger v.1.7.1
+ranger v.1.7.2
 ==============
 ranger is a console file manager with VI key bindings.  It provides a
 minimalistic and nice curses interface with a view on the directory hierarchy.
@@ -52,8 +52,8 @@ Features
 
 Dependencies
 ------------
-* Python (tested with version 2.6, 2.7, 3.1, 3.2) with support for ncurses
-  and (optionally) wide-unicode.
+* Python (tested with version 2.6, 2.7, 3.1, 3.2) with the "curses" module
+  and (optionally) wide-unicode support.
 * A pager ("less" by default)
 
 Optional:
