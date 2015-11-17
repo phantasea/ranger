@@ -126,6 +126,16 @@ class alias(Command):
         else:
             self.fm.commands.alias(self.arg(1), self.rest(2))
 
+
+class echo(Command):
+    """:echo <text>
+
+    Display the text in the statusbar.
+    """
+    def execute(self):
+        self.fm.notify(self.rest(1))
+
+
 class cd(Command):
     """:cd [-r] <dirname>
 
@@ -679,8 +689,6 @@ class touch(Command):
     Creates a file with the name <fname>.
     """
 
-    resolve_macros = False
-
     def execute(self):
         from os.path import join, expanduser, lexists
 
@@ -756,8 +764,6 @@ class rename(Command):
     Changes the name of the currently highlighted file to <newname>
     """
 
-    resolve_macros = False
-
     def execute(self):
         from ranger.container.file import File
         from os import access
@@ -800,9 +806,9 @@ class rename_append(Command):
     def execute(self):
         cf = self.fm.thisfile
         if cf.relative_path.find('.') != 0 and cf.relative_path.rfind('.') != -1 and not cf.is_directory:
-            self.fm.open_console('rename ' + cf.relative_path, position=(7 + cf.relative_path.rfind('.')))
+            self.fm.open_console('rename ' + cf.relative_path.replace("%", "%%"), position=(7 + cf.relative_path.rfind('.')))
         else:
-            self.fm.open_console('rename ' + cf.relative_path)
+            self.fm.open_console('rename ' + cf.relative_path.replace("%", "%%"))
 
 class chmod(Command):
     """:chmod <octal number>
