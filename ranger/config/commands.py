@@ -21,10 +21,12 @@
 # ===================================================================
 # Every class defined here which is a subclass of `Command' will be used as a
 # command in ranger.  Several methods are defined to interface with ranger:
-#   execute(): called when the command is executed.
-#   cancel():  called when closing the console.
-#   tab():     called when <TAB> is pressed.
-#   quick():   called after each keypress.
+#   execute():   called when the command is executed.
+#   cancel():    called when closing the console.
+#   tab(tabnum): called when <TAB> is pressed.
+#   quick():     called after each keypress.
+#
+# tab() argument tabnum is 1 for <TAB> and -1 for <S-TAB> by default
 #
 # The return values for tab() can be either:
 #   None: There is no tab completion
@@ -163,7 +165,7 @@ class cd(Command):
         else:
             self.fm.cd(destination)
 
-    def tab(self):
+    def tab(self, tabnum):
         import os
         from os.path import dirname, basename, expanduser, join
 
@@ -242,7 +244,7 @@ class shell(Command):
                 command = self.fm.substitute_macros(command, escape=True)
             self.fm.execute_command(command, flags=flags)
 
-    def tab(self):
+    def tab(self, tabnum):
         from ranger.ext.get_executables import get_executables
         if self.arg(1) and self.arg(1)[0] == '-':
             command = self.rest(2)
@@ -276,7 +278,7 @@ class open_with(Command):
                 flags = flags,
                 mode = mode)
 
-    def tab(self):
+    def tab(self, tabnum):
         return self._tab_through_executables()
 
     def _get_app_flags_mode(self, string):
@@ -373,7 +375,7 @@ class set_(Command):
         name, value, _ = self.parse_setting_line()
         self.fm.set_option_from_string(name, value)
 
-    def tab(self):
+    def tab(self, tabnum):
         from ranger.gui.colorscheme import get_all_colorschemes
         name, value, name_done = self.parse_setting_line()
         settings = self.fm.settings
@@ -470,7 +472,7 @@ class default_linemode(Command):
             for col in self.fm.ui.browser.columns:
                 col.need_redraw = True
 
-    def tab(self):
+    def tab(self, tabnum):
         mode = self.arg(1)
         return (self.arg(0) + " " + linemode
                 for linemode in self.fm.thisfile.linemode_dict.keys()
@@ -679,7 +681,7 @@ class mkdir(Command):
         else:
             self.fm.notify("file/directory exists!", bad=True)
 
-    def tab(self):
+    def tab(self, tabnum):
         return self._tab_directory_content()
 
 
@@ -698,7 +700,7 @@ class touch(Command):
         else:
             self.fm.notify("file/directory exists!", bad=True)
 
-    def tab(self):
+    def tab(self, tabnum):
         return self._tab_directory_content()
 
 
@@ -714,7 +716,7 @@ class edit(Command):
         else:
             self.fm.edit_file(self.rest(1))
 
-    def tab(self):
+    def tab(self, tabnum):
         return self._tab_directory_content()
 
 
@@ -794,7 +796,7 @@ class rename(Command):
                 self.fm.tags.tags[t.replace(old_name,new_name)] = tagged[t]
                 self.fm.tags.dump()
 
-    def tab(self):
+    def tab(self, tabnum):
         return self._tab_directory_content()
 
 class rename_append(Command):
@@ -805,10 +807,11 @@ class rename_append(Command):
 
     def execute(self):
         cf = self.fm.thisfile
-        if cf.relative_path.find('.') != 0 and cf.relative_path.rfind('.') != -1 and not cf.is_directory:
-            self.fm.open_console('rename ' + cf.relative_path.replace("%", "%%"), position=(7 + cf.relative_path.rfind('.')))
+        path = cf.relative_path.replace("%", "%%")
+        if path.find('.') != 0 and path.rfind('.') != -1 and not cf.is_directory:
+            self.fm.open_console('rename ' + path, position=(7 + path.rfind('.')))
         else:
-            self.fm.open_console('rename ' + cf.relative_path.replace("%", "%%"))
+            self.fm.open_console('rename ' + path)
 
 class chmod(Command):
     """:chmod <octal number>
@@ -958,7 +961,7 @@ class relink(Command):
         self.fm.thisdir.pointed_obj = cf
         self.fm.thisfile = cf
 
-    def tab(self):
+    def tab(self, tabnum):
         if not self.rest(1):
             return self.line+os.readlink(self.fm.thisfile.path)
         else:
@@ -1214,8 +1217,8 @@ class scout(Command):
             return True
         return False
 
-    def tab(self):
-        self._count(move=True, offset=1)
+    def tab(self, tabnum):
+        self._count(move=True, offset=tabnum)
 
     def _build_regex(self):
         if self._regex is not None:
@@ -1505,7 +1508,7 @@ class meta(prompt_metadata):
             self.fm.metadata.set_metadata(f.path, update_dict)
         self._process_command_stack()
 
-    def tab(self):
+    def tab(self, tabnum):
         key = self.arg(1)
         metadata = self.fm.metadata.get_metadata(self.fm.thisfile.path)
         if key in metadata and metadata[key]:
