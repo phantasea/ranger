@@ -876,12 +876,12 @@ class Actions(FileManagerAware, SettingsAware):
 
     if version_info[0] == 3:
         def sha1_encode(self, path):
-            return os.path.join(ranger.CACHEDIR,
+            return os.path.join(ranger.arg.cachedir,
                     sha1(path.encode('utf-8', 'backslashreplace')) \
                             .hexdigest()) + '.jpg'
     else:
         def sha1_encode(self, path):
-            return os.path.join(ranger.CACHEDIR,
+            return os.path.join(ranger.arg.cachedir,
                     sha1(path).hexdigest()) + '.jpg'
 
     def get_preview(self, file, width, height):
@@ -933,7 +933,7 @@ class Actions(FileManagerAware, SettingsAware):
                     data['loading'] = False
                     return path
 
-                cacheimg = os.path.join(ranger.CACHEDIR, self.sha1_encode(path))
+                cacheimg = os.path.join(ranger.arg.cachedir, self.sha1_encode(path))
                 if (os.path.isfile(cacheimg) and os.path.getmtime(cacheimg) > os.path.getmtime(path)):
                     data['foundpreview'] = True
                     data['imagepreview'] = True
@@ -1306,23 +1306,30 @@ class Actions(FileManagerAware, SettingsAware):
         self.loader.add(loadable, append=append)
         self.do_cut = False
 
-    def delete(self):
+    def delete(self, files=None):
         # XXX: warn when deleting mount points/unseen marked files?
         self.notify("Deleting!")
-        selected = self.thistab.get_selection()
-        self.copy_buffer -= set(selected)
-        if selected:
-            for f in selected:
-                if isdir(f.path) and not os.path.islink(f.path):
-                    try:
-                        shutil.rmtree(f.path)
-                    except OSError as err:
-                        self.notify(err)
-                else:
-                    try:
-                        os.remove(f.path)
-                    except OSError as err:
-                        self.notify(err)
+        # COMPAT: old command.py use fm.delete() without arguments
+        if files is None:
+            files = (f.path for f in self.thistab.get_selection())
+        files = [os.path.abspath(f) for f in files]
+        for f in files:
+            # Untag the deleted files.
+            for tag in self.fm.tags.tags:
+                if str(tag).startswith(f):
+                    self.fm.tags.remove(tag)
+        self.copy_buffer = set(filter(lambda f: f.path not in files, self.copy_buffer))
+        for f in files:
+            if isdir(f) and not os.path.islink(f):
+                try:
+                    shutil.rmtree(f)
+                except OSError as err:
+                    self.notify(err)
+            else:
+                try:
+                    os.remove(f)
+                except OSError as err:
+                    self.notify(err)
         self.thistab.ensure_correct_pointer()
 
     def mkdir(self, name):

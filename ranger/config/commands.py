@@ -402,7 +402,7 @@ class set_(Command):
 
 
 class setlocal(set_):
-    """:setlocal path=<python string> <option name>=<python expression>
+    """:setlocal path=<regular expression> <option name>=<python expression>
 
     Gives an option a new value.
     """
@@ -529,7 +529,8 @@ class terminal(Command):
 class delete(Command):
     """:delete
 
-    Tries to delete the selection.
+    Tries to delete the selection or the files passed in arguments (if any).
+    The arguments use a shell-like escaping.
 
     "Selection" is defined as all the "marked files" (by default, you
     can mark files with space or v). If there are no marked files,
@@ -540,41 +541,49 @@ class delete(Command):
     """
 
     allow_abbrev = False
+    escape_macros_for_shell = True
 
     def execute(self):
         import os
-        if self.rest(1):
-            self.fm.notify("Error: delete takes no arguments! It deletes "
-                    "the selected file(s).", bad=True)
-            return
+        import shlex
+        from functools import partial
+        from ranger.container.file import File
 
-        cwd = self.fm.thisdir
-        cf = self.fm.thisfile
-        if not cwd or not cf:
-            self.fm.notify("Error: no file selected for deletion!", bad=True)
-            return
+        def is_directory_with_files(f):
+            import os.path
+            return (os.path.isdir(f) and not os.path.islink(f) \
+                and len(os.listdir(f)) > 0)
+
+        if self.rest(1):
+            files = shlex.split(self.rest(1))
+            many_files = (len(files) > 1 or is_directory_with_files(files[0]))
+        else:
+            cwd = self.fm.thisdir
+            cf = self.fm.thisfile
+            if not cwd or not cf:
+                self.fm.notify("Error: no file selected for deletion!", bad=True)
+                return
+
+            # relative_path used for a user-friendly output in the confirmation.
+            files = [f.relative_path for f in self.fm.thistab.get_selection()]
+            many_files = (cwd.marked_items or is_directory_with_files(cf.path))
 
         confirm = self.fm.settings.confirm_on_delete
-        many_files = (cwd.marked_items or (cf.is_directory and not cf.is_link \
-                and len(os.listdir(cf.path)) > 0))
-
         if confirm != 'never' and (confirm != 'multiple' or many_files):
+            filename_list = files
             self.fm.ui.console.ask("Confirm deletion of: %s (y/N)" %
-                ', '.join(f.relative_path for f in self.fm.thistab.get_selection()),
-                self._question_callback, ('n', 'N', 'y', 'Y'))
+                ', '.join(files),
+                partial(self._question_callback, files), ('n', 'N', 'y', 'Y'))
         else:
             # no need for a confirmation, just delete
-            for f in self.fm.tags.tags:
-                if str(f).startswith(self.fm.thisfile.path):
-                    self.fm.tags.remove(f)
-            self.fm.delete()
+            self.fm.delete(files)
 
-    def _question_callback(self, answer):
+    def tab(self, tabnum):
+        return self._tab_directory_content()
+
+    def _question_callback(self, files, answer):
         if answer == 'y' or answer == 'Y':
-            for f in self.fm.tags.tags:
-                if str(f).startswith(self.fm.thisfile.path):
-                    self.fm.tags.remove(f)
-            self.fm.delete()
+            self.fm.delete(files)
 
 
 class mark_tag(Command):
