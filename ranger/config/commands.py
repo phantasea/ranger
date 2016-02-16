@@ -237,11 +237,7 @@ class shell(Command):
             flags = ''
             command = self.rest(1)
 
-        if not command and 'p' in flags:
-            command = 'cat %f'
         if command:
-            if '%' in command:
-                command = self.fm.substitute_macros(command, escape=True)
             self.fm.execute_command(command, flags=flags)
 
     def tab(self, tabnum):
@@ -799,6 +795,14 @@ class rename(Command):
 
         if self.fm.rename(self.fm.thisfile, new_name):
             f = File(new_name)
+            # Update bookmarks that were pointing on the previous name
+            obsoletebookmarks = [b for b in self.fm.bookmarks
+                                 if b[1].path == self.fm.thisfile]
+            if obsoletebookmarks:
+                for key, _ in obsoletebookmarks:
+                    self.fm.bookmarks[key] = f
+                self.fm.bookmarks.update_if_outdated()
+
             self.fm.thisdir.pointed_obj = f
             self.fm.thisfile = f
             for t in tagged:

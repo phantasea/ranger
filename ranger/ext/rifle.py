@@ -154,11 +154,12 @@ class Rifle(object):
             config_file = self.config_file
         f = open(config_file, 'r')
         self.rules = []
-        lineno = 1
+        lineno = 0
         for line in f:
-            if line.startswith('#') or line == '\n':
-                continue
+            lineno += 1
             line = line.strip()
+            if line.startswith('#') or line == '':
+                continue
             try:
                 if self.delimiter1 not in line:
                     raise Exception("Line without delimiter")
@@ -170,7 +171,6 @@ class Rifle(object):
             except Exception as e:
                 self.hook_logger("Syntax error in %s line %d (%s)" % \
                     (config_file, lineno, str(e)))
-            lineno += 1
         f.close()
 
     def _eval_condition(self, condition, files, label):
