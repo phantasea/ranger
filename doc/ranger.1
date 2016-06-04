@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "RANGER 1"
-.TH RANGER 1 "ranger-1.7.2" "02/24/2016" "ranger manual"
+.TH RANGER 1 "ranger-1.7.2" "16/05/16" "ranger manual"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -332,6 +332,8 @@ The macro \f(CW%rangerdir\fR expands to the directory of ranger's python library
 can use it for something like this command:
   alias show_commands shell less \f(CW%rangerdir\fR/config/commands.py
 .PP
+\&\f(CW%confdir\fR expands to the directory given by \fB\-\-confdir\fR.
+.PP
 The macro \f(CW%space\fR expands to a space character. You can use it to add spaces to
 the end of a command when needed, while preventing editors to strip spaces off
 the end of the line automatically.
@@ -403,6 +405,9 @@ starting ranger.  A plugin changes rangers behavior by overwriting or extending
 a function that ranger uses.  This allows you to change pretty much every part
 of ranger, but there is no guarantee that things will continue to work in
 future versions as the source code evolves.
+.PP
+Adding new commands via a plugin as simple as specifying them like you would do
+in the \fIcommands.py\fR.
 .PP
 There are some hooks that are specifically made for the use in plugins.  They
 are functions that start with hook_ and can be found throughout the code.
@@ -487,10 +492,13 @@ Change the permissions of the selection.  For example, \f(CW\*(C`777=\*(C'\fR is
 \&\f(CW\*(C`chmod 777 %s\*(C'\fR, \f(CW\*(C`+ar\*(C'\fR does \f(CW\*(C`chmod a+r %s\*(C'\fR, \f(CW\*(C`\-ow\*(C'\fR does \f(CW\*(C`chmod o\-w %s\*(C'\fR etc.
 .IP "yy" 14
 .IX Item "yy"
-Copy (yank) the selection, like pressing Ctrl+C in modern \s-1GUI\s0 programs.
+Copy (yank) the selection, like pressing Ctrl+C in modern \s-1GUI\s0 programs.  (You
+can also type \*(L"ya\*(R" to add files to the copy buffer, \*(L"yr\*(R" to remove files again,
+or \*(L"yt\*(R" for toggling.)
 .IP "dd" 14
 .IX Item "dd"
-Cut the selection, like pressing Ctrl+X in modern \s-1GUI\s0 programs.
+Cut the selection, like pressing Ctrl+X in modern \s-1GUI\s0 programs.  (There are
+also \*(L"da\*(R", \*(L"dr\*(R" and \*(L"dt\*(R" shortcuts equivalent to \*(L"ya\*(R", \*(L"yr\*(R" and \*(L"yt\*(R".)
 .IP "pp" 14
 .IX Item "pp"
 Paste the files which were previously copied or cut, like pressing Ctrl+V in
@@ -630,6 +638,12 @@ fly with the command \fB:set option value\fR.  Examples:
 \& set show_hidden true
 .Ve
 .PP
+Toggling options can be done with:
+.PP
+.Vb 1
+\& set show_hidden!
+.Ve
+.PP
 The different types of settings and an example for each type:
 .PP
 .Vb 7
@@ -699,8 +713,8 @@ Display tags in all columns?
 .IP "draw_borders [bool]" 4
 .IX Item "draw_borders [bool]"
 Draw borders around columns?
-.IP "draw_progress_bar_in_statusbar [bool]" 4
-.IX Item "draw_progress_bar_in_statusbar [bool]"
+.IP "draw_progress_bar_in_status_bar [bool]" 4
+.IX Item "draw_progress_bar_in_status_bar [bool]"
 Draw a progress bar in the status bar which displays the average state of all
 currently running tasks which support progress bars?
 .IP "flushinput [bool] <zi>" 4
@@ -721,6 +735,15 @@ this pattern will hide all files that start with a dot or end with a tilde.
 The delay that ranger idly waits for user input, in milliseconds, with a
 resolution of 100ms.  Lower delay reduces lag between directory updates but
 increases \s-1CPU\s0 load.
+.IP "line_numbers [string]" 4
+.IX Item "line_numbers [string]"
+Show line numbers in main column.  Possible values are:
+.Sp
+.Vb 3
+\& false      turn the feature off
+\& absolute   absolute line numbers for use with "<N>gg"
+\& relative   relative line numbers for "<N>k" or "<N>j"
+.Ve
 .IP "max_console_history_size [integer, none]" 4
 .IX Item "max_console_history_size [integer, none]"
 How many console commands should be kept in history?  \*(L"none\*(R" will disable the
@@ -834,6 +857,9 @@ Sets the state for the version control backend. The possible values are:
 .IX Item "xterm_alt_key [bool]"
 Enable this if key combinations with the Alt Key don't work for you.
 (Especially on xterm)
+.IP "clear_filters_on_dir_change [bool]" 4
+.IX Item "clear_filters_on_dir_change [bool]"
+If set to 'true', persistent filters would be cleared upon leaving the directory
 .SH "COMMANDS"
 .IX Header "COMMANDS"
 You can enter the commands in the console which is opened by pressing \*(L":\*(R".
@@ -889,6 +915,7 @@ ranger.  For your convenience, this is a list of the \*(L"public\*(R" commands i
 \& setintag tags option value
 \& setlocal [path=<path>] option value
 \& shell [\-FLAGS] command
+\& source filename
 \& terminal
 \& tmap key command
 \& touch filename
@@ -1200,6 +1227,15 @@ use \f(CW\*(C`path=~/dl$\*(C'\fR.
 .IP "shell [\-\fIflags\fR] \fIcommand\fR" 2
 .IX Item "shell [-flags] command"
 Run a shell command.  \fIflags\fR are discussed in their own section.
+.IP "source \fIfilename\fR" 2
+.IX Item "source filename"
+Reads commands from a file and executes them in the ranger console.
+.Sp
+This can be used to re-evaluate the rc.conf file after changing it:
+.Sp
+.Vb 1
+\& map X chain shell vim \-p %confdir/rc.conf %rangerdir/config/rc.conf; source %confdir/rc.conf
+.Ve
 .IP "terminal" 2
 .IX Item "terminal"
 Spawns the \fIx\-terminal-emulator\fR starting in the current directory.
@@ -1263,7 +1299,8 @@ and settings are defined here.
 .IP "commands.py" 10
 .IX Item "commands.py"
 A python module that defines commands which can be used in ranger's console by
-typing \*(L":\*(R" or in the rc.conf file.
+typing \*(L":\*(R" or in the rc.conf file.  Note that you can define commands in the
+same manner within plugins.
 .IP "commands_full.py" 10
 .IX Item "commands_full.py"
 This file is copied by \-\-copy\-config=commands_full and serves as a reference

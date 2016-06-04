@@ -228,6 +228,8 @@ The macro %rangerdir expands to the directory of ranger's python library, you
 can use it for something like this command:
   alias show_commands shell less %rangerdir/config/commands.py
 
+%confdir expands to the directory given by B<--confdir>.
+
 The macro %space expands to a space character. You can use it to add spaces to
 the end of a command when needed, while preventing editors to strip spaces off
 the end of the line automatically.
@@ -299,6 +301,9 @@ starting ranger.  A plugin changes rangers behavior by overwriting or extending
 a function that ranger uses.  This allows you to change pretty much every part
 of ranger, but there is no guarantee that things will continue to work in
 future versions as the source code evolves.
+
+Adding new commands via a plugin as simple as specifying them like you would do
+in the I<commands.py>.
 
 There are some hooks that are specifically made for the use in plugins.  They
 are functions that start with hook_ and can be found throughout the code.
@@ -404,11 +409,14 @@ C<chmod 777 %s>, C<+ar> does C<chmod a+r %s>, C<-ow> does C<chmod o-w %s> etc.
 
 =item yy
 
-Copy (yank) the selection, like pressing Ctrl+C in modern GUI programs.
+Copy (yank) the selection, like pressing Ctrl+C in modern GUI programs.  (You
+can also type "ya" to add files to the copy buffer, "yr" to remove files again,
+or "yt" for toggling.)
 
 =item dd
 
-Cut the selection, like pressing Ctrl+X in modern GUI programs.
+Cut the selection, like pressing Ctrl+X in modern GUI programs.  (There are
+also "da", "dr" and "dt" shortcuts equivalent to "ya", "yr" and "yt".)
 
 =item pp
 
@@ -601,6 +609,10 @@ fly with the command B<:set option value>.  Examples:
  set column_ratios 1,2,3
  set show_hidden true
 
+Toggling options can be done with:
+
+ set show_hidden!
+
 The different types of settings and an example for each type:
 
  setting type   | example values
@@ -684,7 +696,7 @@ Display tags in all columns?
 
 Draw borders around columns?
 
-=item draw_progress_bar_in_statusbar [bool]
+=item draw_progress_bar_in_status_bar [bool]
 
 Draw a progress bar in the status bar which displays the average state of all
 currently running tasks which support progress bars?
@@ -707,6 +719,14 @@ this pattern will hide all files that start with a dot or end with a tilde.
 The delay that ranger idly waits for user input, in milliseconds, with a
 resolution of 100ms.  Lower delay reduces lag between directory updates but
 increases CPU load.
+
+=item line_numbers [string]
+
+Show line numbers in main column.  Possible values are:
+
+ false      turn the feature off
+ absolute   absolute line numbers for use with "<N>gg"
+ relative   relative line numbers for "<N>k" or "<N>j"
 
 =item max_console_history_size [integer, none]
 
@@ -849,6 +869,10 @@ Sets the state for the version control backend. The possible values are:
 Enable this if key combinations with the Alt Key don't work for you.
 (Especially on xterm)
 
+=item clear_filters_on_dir_change [bool]
+
+If set to 'true', persistent filters would be cleared upon leaving the directory
+
 =back
 
 
@@ -906,6 +930,7 @@ ranger.  For your convenience, this is a list of the "public" commands including
  setintag tags option value
  setlocal [path=<path>] option value
  shell [-FLAGS] command
+ source filename
  terminal
  tmap key command
  touch filename
@@ -1256,6 +1281,14 @@ use C<path=~/dl$>.
 
 Run a shell command.  I<flags> are discussed in their own section.
 
+=item source I<filename>
+
+Reads commands from a file and executes them in the ranger console.
+
+This can be used to re-evaluate the rc.conf file after changing it:
+
+ map X chain shell vim -p %confdir/rc.conf %rangerdir/config/rc.conf; source %confdir/rc.conf
+
 =item terminal
 
 Spawns the I<x-terminal-emulator> starting in the current directory.
@@ -1336,7 +1369,8 @@ and settings are defined here.
 =item commands.py
 
 A python module that defines commands which can be used in ranger's console by
-typing ":" or in the rc.conf file.
+typing ":" or in the rc.conf file.  Note that you can define commands in the
+same manner within plugins.
 
 =item commands_full.py
 

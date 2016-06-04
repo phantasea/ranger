@@ -23,9 +23,10 @@ from ranger.ext.next_available_filename import next_available_filename
 from ranger.ext.rifle import squash_flags, ASK_COMMAND
 from ranger.core.shared import FileManagerAware, SettingsAware
 from ranger.core.tab import Tab
+from ranger.container.directory import Directory
 from ranger.container.file import File
 from ranger.core.loader import CommandLoader, CopyLoader
-from ranger.container.settings import ALLOWED_SETTINGS
+from ranger.container.settings import ALLOWED_SETTINGS, ALLOWED_VALUES
 from ranger.core.linemode import DEFAULT_LINEMODE
 
 MACRO_FAIL = "<\x01\x01MACRO_HAS_NO_VALUE\x01\01>"
@@ -245,6 +246,7 @@ class Actions(FileManagerAware, SettingsAware):
         macros = {}
 
         macros['rangerdir'] = ranger.RANGERDIR
+        macros['confdir'] = self.fm.confpath()
         macros['space'] = ' '
 
         if self.fm.thisfile:
@@ -341,18 +343,19 @@ class Actions(FileManagerAware, SettingsAware):
         Load a config file.
         """
         filename = os.path.expanduser(filename)
-        for line in open(filename, 'r'):
-            line = line.lstrip().rstrip("\r\n")
-            if line.startswith("#") or not line.strip():
-                continue
-            try:
-                self.execute_console(line)
-            except Exception as e:
-                if ranger.arg.debug:
-                    raise
-                else:
-                    self.notify('Error in line `%s\':\n  %s' %
-                            (line, str(e)), bad=True)
+        with open(filename, 'r') as f:
+            for line in f:
+                line = line.lstrip().rstrip("\r\n")
+                if line.startswith("#") or not line.strip():
+                    continue
+                try:
+                    self.execute_console(line)
+                except Exception as e:
+                    if ranger.arg.debug:
+                        raise
+                    else:
+                        self.notify('Error in line `%s\':\n  %s' %
+                                (line, str(e)), bad=True)
 
     def execute_file(self, files, **kw):
         """Uses the "rifle" module to open/execute a file
@@ -564,7 +567,7 @@ class Actions(FileManagerAware, SettingsAware):
     def pager_close(self):
         if self.ui.pager.visible:
             self.ui.close_pager()
-        if self.ui.browser.pager.visible:
+        if hasattr(self.ui.browser, 'pager') and self.ui.browser.pager.visible:
             self.ui.close_embedded_pager()
 
     def taskview_open(self):
@@ -593,6 +596,17 @@ class Actions(FileManagerAware, SettingsAware):
         """
         if isinstance(self.settings[string], bool):
             self.settings[string] ^= True
+        elif string in ALLOWED_VALUES:
+            current = self.settings[string]
+            allowed = ALLOWED_VALUES[string]
+            if len(allowed) > 0:
+                if current not in allowed and current == "":
+                    current = allowed[0]
+                if current in allowed:
+                    self.settings[string] = \
+                        allowed[(allowed.index(current) + 1) % len(allowed)]
+                else:
+                    self.settings[string] = allowed[0]
 
     def set_option(self, optname, value):
         """:set_option <optname>
@@ -782,10 +796,14 @@ class Actions(FileManagerAware, SettingsAware):
         except KeyError:
             pass
 
-    def set_bookmark(self, key):
+    def set_bookmark(self, key, val=None):
         """Set the bookmark with the name <key> to the current directory"""
+        if val is None:
+            val = self.thisdir
+        else:
+            val = Directory(val)
         self.bookmarks.update_if_outdated()
-        self.bookmarks[str(key)] = self.thisdir
+        self.bookmarks[str(key)] = val
 
     def unset_bookmark(self, key):
         """Delete the bookmark with the name <key>"""
@@ -804,9 +822,13 @@ class Actions(FileManagerAware, SettingsAware):
         except:
             self.ui.browser.draw_info = []
             return
-        programs = self.rifle.list_commands([target.path], None)
-        programs = ['%s | %s' % program[0:2] for program in programs]
-        self.ui.browser.draw_info = programs
+        programs = [program for program in self.rifle.list_commands([target.path],
+                None)]
+        if programs:
+            num_digits = max((len(str(program[0])) for program in programs))
+            program_info = ['%s | %s' % (str(program[0]).rjust(num_digits),
+                    program[1]) for program in programs]
+            self.ui.browser.draw_info = program_info
 
     def hide_console_info(self):
         self.ui.browser.draw_info = False
@@ -1036,6 +1058,7 @@ class Actions(FileManagerAware, SettingsAware):
         if tab_has_changed:
             self.change_mode('normal')
             self.signal_emit('tab.change', old=previous_tab, new=self.thistab)
+            self.signal_emit('tab.layoutchange')
 
     def tab_close(self, name=None):
         if name is None:
@@ -1050,6 +1073,7 @@ class Actions(FileManagerAware, SettingsAware):
         if name in self.tabs:
             del self.tabs[name]
         self.restorable_tabs.append(tab)
+        self.signal_emit('tab.layoutchange')
 
     def tab_restore(self):
         # NOTE: The name of the tab is not restored.

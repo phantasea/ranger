@@ -26,6 +26,7 @@ ALLOWED_SETTINGS = {
     'flushinput': bool,
     'hidden_filter': str,
     'idle_delay': int,
+    'line_numbers': str,
     'max_console_history_size': (int, type(None)),
     'max_history_size': (int, type(None)),
     'metadata_deep_search': bool,
@@ -56,6 +57,7 @@ ALLOWED_SETTINGS = {
     'update_title': bool,
     'update_tmux_title': bool,
     'use_preview_script': bool,
+    'viewmode': str,
     'vcs_aware': bool,
     'vcs_backend_bzr': str,
     'vcs_backend_git': str,
@@ -63,6 +65,17 @@ ALLOWED_SETTINGS = {
     'vcs_backend_svn': str,
     'xterm_alt_key': bool,
     'clear_filters_on_dir_change': bool
+}
+
+ALLOWED_VALUES = {
+    'confirm_on_delete': ['always', 'multiple', 'never'],
+    'line_numbers': ['false', 'absolute', 'relative'],
+    'preview_images_method': ['w3m', 'iterm2'],
+    'vcs_backend_bzr': ['enabled', 'local', 'disabled'],
+    'vcs_backend_git': ['enabled', 'local', 'disabled'],
+    'vcs_backend_hg': ['enabled', 'local', 'disabled'],
+    'vcs_backend_svn': ['enabled', 'local', 'disabled'],
+    'viewmode': ['miller', 'multipane'],
 }
 
 DEFAULT_VALUES = {

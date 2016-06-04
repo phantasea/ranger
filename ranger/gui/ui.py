@@ -11,6 +11,7 @@ from .displayable import DisplayableContainer
 from .mouse_event import MouseEvent
 from ranger.ext.keybinding_parser import KeyBuffer, KeyMaps, ALT_KEY
 from ranger.ext.lazy_property import lazy_property
+from ranger.ext.signals import Signal
 
 MOUSEMASK = curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION
 
@@ -34,6 +35,8 @@ def _setup_mouse(signal):
         curses.mousemask(0)
 
 class UI(DisplayableContainer):
+    ALLOWED_VIEWMODES = 'miller', 'multipane'
+
     is_set_up = False
     load_mode = False
     is_on = False
@@ -87,6 +90,7 @@ class UI(DisplayableContainer):
             self.win.addstr("loading...")
             self.win.refresh()
             self._draw_title = curses.tigetflag('hs') # has_status_line
+
         self.update_size()
         self.is_on = True
 
@@ -223,7 +227,7 @@ class UI(DisplayableContainer):
 
     def setup(self):
         """Build up the UI by initializing widgets."""
-        from ranger.gui.widgets.browserview import BrowserView
+        from ranger.gui.widgets.view_miller import ViewMiller
         from ranger.gui.widgets.titlebar import TitleBar
         from ranger.gui.widgets.console import Console
         from ranger.gui.widgets.statusbar import StatusBar
@@ -235,9 +239,10 @@ class UI(DisplayableContainer):
         self.add_child(self.titlebar)
 
         # Create the browser view
-        self.browser = BrowserView(self.win, self.settings.column_ratios)
-        self.settings.signal_bind('setopt.column_ratios',
-                self.browser.change_ratios)
+        self.settings.signal_bind('setopt.viewmode', self._set_viewmode)
+        self._viewmode = None
+        # The following line sets self.browser implicitly through the signal
+        self.viewmode = self.settings.viewmode
         self.add_child(self.browser)
 
         # Create the process manager
@@ -339,10 +344,11 @@ class UI(DisplayableContainer):
     def draw_images(self):
         if self.pager.visible:
             self.pager.draw_image()
-        elif self.browser.pager.visible:
-            self.browser.pager.draw_image()
-        else:
-            self.browser.columns[-1].draw_image()
+        elif hasattr(self.browser, 'pager'):
+            if self.browser.pager.visible:
+                self.browser.pager.draw_image()
+            else:
+                self.browser.columns[-1].draw_image()
 
     def close_pager(self):
         if self.console.visible:
@@ -411,7 +417,44 @@ class UI(DisplayableContainer):
         self.status.hint = text
 
     def get_pager(self):
-        if self.browser.pager.visible:
+        if hasattr(self.browser, 'pager') and self.browser.pager.visible:
             return self.browser.pager
         else:
             return self.pager
+
+    def _get_viewmode(self):
+        return self._viewmode
+
+    def _set_viewmode(self, value):
+        if isinstance(value, Signal):
+            value = value.value
+        if value == '':
+            value = self.ALLOWED_VIEWMODES[0]
+        if value in self.ALLOWED_VIEWMODES:
+            if self._viewmode != value:
+                self._viewmode = value
+                resize = False
+                if hasattr(self, 'browser'):
+                    old_size = self.browser.y, self.browser.x, self.browser.hei, self.browser.wid
+                    self.remove_child(self.browser)
+                    self.browser.destroy()
+                    resize = True
+
+                self.browser = self._viewmode_to_class(value)(self.win)
+                self.redraw_window()
+                self.add_child(self.browser)
+                if resize:
+                    self.browser.resize(*old_size)
+        else:
+            raise ValueError("Attempting to set invalid viewmode `%s`, should "
+                    "be one of `%s`." % (value, "`, `".join(self.ALLOWED_VIEWMODES)))
+
+    viewmode = property(_get_viewmode, _set_viewmode)
+
+    def _viewmode_to_class(self, viewmode):
+        if viewmode == 'miller':
+            from ranger.gui.widgets.view_miller import ViewMiller
+            return ViewMiller
+        if viewmode == 'multipane':
+            from ranger.gui.widgets.view_multipane import ViewMultipane
+            return ViewMultipane

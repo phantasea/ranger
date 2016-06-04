@@ -7,3 +7,4 @@ build
 .metadata.json
 install_log.txt
 pytestdebug.log
+install_log.txt

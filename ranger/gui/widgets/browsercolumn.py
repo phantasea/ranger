@@ -27,7 +27,7 @@ class BrowserColumn(Pager):
     old_dir = None
     old_thisfile = None
 
-    def __init__(self, win, level):
+    def __init__(self, win, level, tab=None):
         """Initializes a Browser Column Widget
 
         win = the curses window object of the BrowserView
@@ -40,6 +40,7 @@ class BrowserColumn(Pager):
         Pager.__init__(self, win)
         Widget.__init__(self, win)
         self.level = level
+        self.tab = tab
         self.original_level = level
 
         self.settings.signal_bind('setopt.display_size_in_main_column',
@@ -47,9 +48,6 @@ class BrowserColumn(Pager):
 
     def request_redraw(self):
         self.need_redraw = True
-
-    def resize(self, y, x, hei, wid):
-        Widget.resize(self, y, x, hei, wid)
 
     def click(self, event):
         """Handle a MouseEvent"""
@@ -132,7 +130,11 @@ class BrowserColumn(Pager):
 
     def poke(self):
         Widget.poke(self)
-        self.target = self.fm.thistab.at_level(self.level)
+        if self.tab is None:
+            tab = self.fm.thistab
+        else:
+            tab = self.tab
+        self.target = tab.at_level(self.level)
 
     def draw(self):
         """Call either _draw_file() or _draw_directory()"""
@@ -189,6 +191,15 @@ class BrowserColumn(Pager):
                 self.set_source(f)
             Pager.draw(self)
 
+    def _format_line_number(self, linum_format, i, selected_i):
+        line_number = i
+        if self.settings.line_numbers == 'relative':
+            line_number = abs(selected_i - i)
+            if line_number == 0:
+                line_number = selected_i
+
+        return linum_format.format(line_number)
+
     def _draw_directory(self):
         """Draw the contents of a directory"""
         if self.image:
@@ -200,6 +211,15 @@ class BrowserColumn(Pager):
             return
 
         base_color = ['in_browser']
+
+        if self.fm.ui.viewmode == 'multipane' and self.tab is not None:
+            active_pane = self.tab == self.fm.thistab
+            if active_pane:
+                base_color.append('active_pane')
+            else:
+                base_color.append('inactive_pane')
+        else:
+            active_pane = False
 
         self.win.move(0, 0)
 
@@ -228,11 +248,16 @@ class BrowserColumn(Pager):
 
         copied = [f.path for f in self.fm.copy_buffer]
 
-        selected_i = self.target.pointer
+        # Set the size of the linum text field to the number of digits in the
+        # visible files in directory.
+        linum_text_len = len(str(self.scroll_begin + self.hei))
+        linum_format = "{0:>" + str(linum_text_len) + "}"
+        # add separator between line number and tag
+        linum_format += " "
+
+        selected_i = self._get_index_of_selected_file()
         for line in range(self.hei):
             i = line + self.scroll_begin
-            if line > self.hei:
-                break
 
             try:
                 drawn = self.target.files[i]
@@ -258,9 +283,18 @@ class BrowserColumn(Pager):
             key = (self.wid, selected_i == i, drawn.marked, self.main_column,
                    drawn.path in copied, tagged_marker, drawn.infostring,
                    drawn.vcsstatus, drawn.vcsremotestatus, self.target.has_vcschild,
-                   self.fm.do_cut, current_linemode.name, metakey)
+                   self.fm.do_cut, current_linemode.name, metakey, active_pane,
+                   self.settings.line_numbers)
 
+            # Check if current line has not already computed and cached
             if key in drawn.display_data:
+                # Recompute line numbers because they can't be reliably cached.
+                if self.main_column and self.settings.line_numbers != 'false':
+                    line_number_text = self._format_line_number(linum_format,
+                                                                i,
+                                                                selected_i)
+                    drawn.display_data[key][0][0] = line_number_text
+
                 self.execute_curses_batch(line, drawn.display_data[key])
                 self.color_reset()
                 continue
@@ -280,6 +314,19 @@ class BrowserColumn(Pager):
             predisplay_left = []
             predisplay_right = []
             space = self.wid
+
+            # line number field
+            if self.settings.line_numbers != 'false':
+                if self.main_column and space - linum_text_len > 2:
+                    line_number_text = self._format_line_number(linum_format,
+                                                                i,
+                                                                selected_i)
+                    predisplay_left.append([line_number_text, []])
+                    space -= linum_text_len
+
+                    # Delete one additional character for space separator
+                    # between the line number and the tag
+                    space -= 1
 
             # selection mark
             tagmark = self._draw_tagged_display(tagged, tagged_marker)
@@ -338,6 +385,12 @@ class BrowserColumn(Pager):
             self.execute_curses_batch(line, display_data)
             self.color_reset()
 
+    def _get_index_of_selected_file(self):
+        if self.fm.ui.viewmode == 'multipane' and hasattr(self, 'tab'):
+            return self.tab.pointer
+        else:
+            return self.target.pointer
+
     def _total_len(self, predisplay):
         return sum([len(WideString(s)) for s, L in predisplay])
 
@@ -393,7 +446,7 @@ class BrowserColumn(Pager):
 
     def _draw_directory_color(self, i, drawn, copied):
         this_color = []
-        if i == self.target.pointer:
+        if i == self._get_index_of_selected_file():
             this_color.append('selected')
 
         if drawn.marked:
@@ -433,7 +486,7 @@ class BrowserColumn(Pager):
         dirsize = len(self.target)
         winsize = self.hei
         halfwinsize = winsize // 2
-        index = self.target.pointer or 0
+        index = self._get_index_of_selected_file() or 0
         original = self.target.scroll_begin
         projected = index - original
 
