@@ -173,7 +173,7 @@ class cd(Command):
         rel_dest = self.rest(1)
 
         bookmarks = [v.path for v in self.fm.bookmarks.dct.values()
-                if rel_dest in v.path ]
+                if rel_dest in v.path]
 
         # expand the tilde into the user directory
         if rel_dest.startswith('~'):
@@ -597,7 +597,7 @@ class mark_tag(Command):
 
     def execute(self):
         cwd = self.fm.thisdir
-        tags = self.rest(1).replace(" ","")
+        tags = self.rest(1).replace(" ", "")
         if not self.fm.tags or not cwd.files:
             return
         for fileobj in cwd.files:
@@ -811,7 +811,7 @@ class rename(Command):
             self.fm.thisdir.pointed_obj = f
             self.fm.thisfile = f
             for t in tagged:
-                self.fm.tags.tags[t.replace(old_name,new_name)] = tagged[t]
+                self.fm.tags.tags[t.replace(old_name, new_name)] = tagged[t]
                 self.fm.tags.dump()
 
     def tab(self, tabnum):
