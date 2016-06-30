@@ -8,8 +8,10 @@ It displays the current path among other things.
 
 from os.path import basename
 
+
 from . import Widget
 from ranger.gui.bar import Bar
+
 
 class TitleBar(Widget):
     old_thisfile = None
@@ -73,7 +75,7 @@ class TitleBar(Widget):
                 else:
                     try:
                         self.fm.enter_dir(part.directory)
-                    except:
+                    except Exception:
                         pass
                 return True
         return False
@@ -103,7 +105,7 @@ class TitleBar(Widget):
         pathway = self.fm.thistab.pathway
         if self.settings.tilde_in_titlebar and \
                 self.fm.thisdir.path.startswith(self.fm.home_path):
-            pathway = pathway[self.fm.home_path.count('/')+1:]
+            pathway = pathway[self.fm.home_path.count('/') + 1:]
             bar.add('~/', 'directory', fixed=True)
 
         for path in pathway:

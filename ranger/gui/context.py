@@ -13,14 +13,15 @@ CONTEXT_KEYS = ['reset', 'error', 'badinfo',
         'space', 'permissions', 'owner', 'group', 'mtime', 'nlink',
         'scroll', 'all', 'bot', 'top', 'percentage', 'filter',
         'flat', 'marked', 'tagged', 'tag_marker', 'cut', 'copied',
-        'help_markup', # COMPAT
-        'seperator', 'key', 'special', 'border', # COMPAT
+        'help_markup',  # COMPAT
+        'seperator', 'key', 'special', 'border',  # COMPAT
         'title', 'text', 'highlight', 'bars', 'quotes', 'tab', 'loaded',
         'keybuffer',
         'infostring',
         'vcsfile', 'vcsremote', 'vcsinfo', 'vcscommit', 'vcsdate',
         'vcsconflict', 'vcschanged', 'vcsunknown', 'vcsignored',
         'vcsstaged', 'vcssync', 'vcsnone', 'vcsbehind', 'vcsahead', 'vcsdiverged']
+
 
 class Context(object):
     def __init__(self, keys):

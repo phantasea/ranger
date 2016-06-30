@@ -14,6 +14,7 @@ from ranger.ext.lazy_property import lazy_property
 
 _SETTINGS_RE = re.compile(r'^\s*([^\s]+?)=(.*)$')
 
+
 class CommandContainer(object):
     def __init__(self):
         self.commands = {}
@@ -30,7 +31,7 @@ class CommandContainer(object):
             cmd._line = full_command
             self.commands[name] = cmd
 
-        except:
+        except Exception:
             pass
 
     def load_commands_from_module(self, module):
@@ -56,8 +57,8 @@ class CommandContainer(object):
 
     def get_command(self, name, abbrev=True):
         if abbrev:
-            lst = [cls for cmd, cls in self.commands.items() \
-                    if cls.allow_abbrev and cmd.startswith(name) \
+            lst = [cls for cmd, cls in self.commands.items()
+                    if cls.allow_abbrev and cmd.startswith(name)
                     or cmd == name]
             if len(lst) == 0:
                 raise KeyError
@@ -141,7 +142,7 @@ class Command(FileManagerAware):
 
     def start(self, n):
         """Returns everything until (inclusively) arg(n)"""
-        return ' '.join(self.args[:n]) + " " # XXX
+        return ' '.join(self.args[:n]) + " "  # XXX
 
     def shift(self):
         del self.args[0]
@@ -273,7 +274,7 @@ class Command(FileManagerAware):
             # are we in the middle of the filename?
             else:
                 _, dirnames, _ = next(os.walk(abs_dirname))
-                dirnames = [dn for dn in dirnames \
+                dirnames = [dn for dn in dirnames
                         if dn.startswith(rel_basename)]
         except (OSError, StopIteration):
             # os.walk found nothing
@@ -332,7 +333,7 @@ class Command(FileManagerAware):
             else:
                 if directory.content_loaded:
                     # Take the order from the directory object
-                    names = [f.basename for f in directory.files \
+                    names = [f.basename for f in directory.files
                             if f.basename.startswith(rel_basename)]
                     if self.fm.thisfile.basename in names:
                         i = names.index(self.fm.thisfile.basename)
@@ -340,7 +341,7 @@ class Command(FileManagerAware):
                 else:
                     # Fall back to old method with "os.walk"
                     _, dirnames, filenames = next(os.walk(abs_dirname))
-                    names = [name for name in (dirnames + filenames) \
+                    names = [name for name in (dirnames + filenames)
                             if name.startswith(rel_basename)]
                     names.sort()
         except (OSError, StopIteration):
@@ -363,7 +364,7 @@ class Command(FileManagerAware):
 
     def _tab_through_executables(self):
         from ranger.ext.get_executables import get_executables
-        programs = [program for program in get_executables() if \
+        programs = [program for program in get_executables() if
                 program.startswith(self.rest(1))]
         if not programs:
             return
@@ -377,12 +378,13 @@ class FunctionCommand(Command):
     _based_function = None
     _object_name = ""
     _function_name = "unknown"
+
     def execute(self):
         if not self._based_function:
             return
         if len(self.args) == 1:
             try:
-                return self._based_function(**{'narg':self.quantifier})
+                return self._based_function(**{'narg': self.quantifier})
             except TypeError:
                 return self._based_function()
 
@@ -392,13 +394,13 @@ class FunctionCommand(Command):
             value = arg if (equal_sign is -1) else arg[equal_sign + 1:]
             try:
                 value = int(value)
-            except:
+            except Exception:
                 if value in ('True', 'False'):
                     value = (value == 'True')
                 else:
                     try:
                         value = float(value)
-                    except:
+                    except Exception:
                         pass
 
             if equal_sign == -1:
@@ -426,11 +428,13 @@ class FunctionCommand(Command):
                         (self._object_name, self._function_name,
                             repr(args), repr(keywords)), bad=True)
 
+
 class AliasCommand(Command):
     _based_function = None
     _object_name = ""
     _function_name = "unknown"
     _line = ""
+
     def execute(self):
         return self._make_cmd().execute()
 

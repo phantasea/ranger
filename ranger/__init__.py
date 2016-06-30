@@ -34,7 +34,7 @@ try:
 except NameError:
     ExceptionClass = IOError
 try:
-    LOGFILE = tempfile.gettempdir()+'/ranger_errorlog'
+    LOGFILE = tempfile.gettempdir() + '/ranger_errorlog'
 except ExceptionClass:
     LOGFILE = '/dev/null'
 del ExceptionClass
@@ -46,12 +46,15 @@ CONFDIR = '~/.config/ranger'
 # Debugging functions.  These will be activated when run with --debug.
 # Example usage in the code:
 # import ranger; ranger.log("hello world")
+
+
 def log(*objects, **keywords):
     """Writes objects to a logfile (for the purpose of debugging only.)
     Has the same arguments as print() in python3.
     """
     from ranger import arg
-    if LOGFILE is None or not arg.debug or arg.clean: return
+    if LOGFILE is None or not arg.debug or arg.clean:
+        return
     start = keywords.get('start', 'ranger:')
     sep   = keywords.get('sep', ' ')
     end   = keywords.get('end', '\n')
@@ -61,7 +64,8 @@ def log(*objects, **keywords):
 
 def log_traceback():
     from ranger import arg
-    if LOGFILE is None or not arg.debug or arg.clean: return
+    if LOGFILE is None or not arg.debug or arg.clean:
+        return
     import traceback
     traceback.print_stack(file=open(LOGFILE, 'a'))
 

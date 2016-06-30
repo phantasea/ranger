@@ -3,10 +3,12 @@
 
 """The base GUI element for views on the directory"""
 
-import curses, _curses
+import curses
+import _curses
 from ranger.ext.keybinding_parser import key_to_string
 from . import Widget
 from ..displayable import DisplayableContainer
+
 
 class ViewBase(Widget, DisplayableContainer):
     draw_bookmarks = False
@@ -45,7 +47,7 @@ class ViewBase(Widget, DisplayableContainer):
         if hasattr(self, 'pager') and self.pager.visible:
             try:
                 self.fm.ui.win.move(self.main_column.y, self.main_column.x)
-            except:
+            except Exception:
                 pass
         else:
             try:
@@ -53,7 +55,7 @@ class ViewBase(Widget, DisplayableContainer):
                 y = self.main_column.y + self.main_column.target.pointer\
                         - self.main_column.scroll_begin
                 self.fm.ui.win.move(y, x)
-            except:
+            except Exception:
                 pass
 
     def _draw_bookmarks(self):
@@ -62,8 +64,8 @@ class ViewBase(Widget, DisplayableContainer):
         self.color_reset()
         self.need_clear = True
 
-        sorted_bookmarks = sorted((item for item in self.fm.bookmarks \
-            if self.fm.settings.show_hidden_bookmarks or \
+        sorted_bookmarks = sorted((item for item in self.fm.bookmarks
+            if self.fm.settings.show_hidden_bookmarks or
             '/.' not in item[1].path), key=lambda t: t[0].lower())
 
         hei = min(self.hei - 1, len(sorted_bookmarks))
@@ -73,7 +75,7 @@ class ViewBase(Widget, DisplayableContainer):
         self.addnstr(ystart - 1, 0, "mark  path".ljust(self.wid), self.wid)
 
         whitespace = " " * maxlen
-        for line, items in zip(range(self.hei-1), sorted_bookmarks):
+        for line, items in zip(range(self.hei - 1), sorted_bookmarks):
             key, mark = items
             string = " " + key + "   " + mark.path
             self.addstr(ystart + line, 0, whitespace)
@@ -116,7 +118,7 @@ class ViewBase(Widget, DisplayableContainer):
                 self.wid)
         try:
             self.win.chgat(ystart - 1, 0, curses.A_UNDERLINE)
-        except:
+        except Exception:
             pass
         whitespace = " " * self.wid
         i = ystart
@@ -138,7 +140,7 @@ class ViewBase(Widget, DisplayableContainer):
                     self.fm.settings.use_preview_script:
                 try:
                     result = not self.fm.previews[target.realpath]['foundpreview']
-                except:
+                except Exception:
                     return self.old_collapse
 
         self.old_collapse = result

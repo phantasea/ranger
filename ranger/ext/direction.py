@@ -18,6 +18,7 @@ has been defined.
 False
 """
 
+
 class Direction(dict):
     def __init__(self, dictionary=None, **keywords):
         if dictionary is not None:
@@ -32,16 +33,22 @@ class Direction(dict):
         return Direction(**self)
 
     def _get_bool(self, first, second, fallback=None):
-        try: return self[first]
-        except:
-            try: return not self[second]
-            except: return fallback
+        try:
+            return self[first]
+        except Exception:
+            try:
+                return not self[second]
+            except Exception:
+                return fallback
 
     def _get_direction(self, first, second, fallback=0):
-        try: return self[first]
-        except:
-            try: return -self[second]
-            except: return fallback
+        try:
+            return self[first]
+        except Exception:
+            try:
+                return -self[second]
+            except Exception:
+                return fallback
 
     def up(self):
         return -Direction.down(self)
@@ -88,7 +95,7 @@ class Direction(dict):
         for key in ('up', 'right', 'down', 'left'):
             try:
                 self[key] *= n
-            except:
+            except Exception:
                 pass
 
     def set(self, n):
@@ -135,7 +142,7 @@ class Direction(dict):
 
     def select(self, lst, current, pagesize, override=None, offset=1):
         dest = self.move(direction=self.down(), override=override,
-            current=current, pagesize=pagesize, minimum=0, maximum=len(lst)+1)
+            current=current, pagesize=pagesize, minimum=0, maximum=len(lst) + 1)
         selection = lst[min(current, dest):max(current, dest) + offset]
         return dest + offset - 1, selection
 

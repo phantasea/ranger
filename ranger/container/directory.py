@@ -20,28 +20,35 @@ from ranger.ext.human_readable import human_readable
 from ranger.container.settings import LocalSettings
 from ranger.ext.vcs import Vcs
 
+
 def sort_by_basename(path):
     """returns path.relative_path (for sorting)"""
     return path.relative_path
+
 
 def sort_by_basename_icase(path):
     """returns case-insensitive path.relative_path (for sorting)"""
     return path.relative_path_lower
 
+
 def sort_by_directory(path):
     """returns 0 if path is a directory, otherwise 1 (for sorting)"""
     return 1 - path.is_directory
 
+
 def sort_naturally(path):
     return path.basename_natural
 
+
 def sort_naturally_icase(path):
     return path.basename_natural_lower
+
 
 def sort_unicode_wrapper_string(old_sort_func):
     def sort_unicode(path):
         return locale.strxfrm(old_sort_func(path))
     return sort_unicode
+
 
 def sort_unicode_wrapper_list(old_sort_func):
     def sort_unicode(path):
@@ -63,6 +70,7 @@ def accept_file(file, filters):
             return False
     return True
 
+
 def walklevel(some_dir, level):
     some_dir = some_dir.rstrip(os.path.sep)
     followlinks = True if level > 0 else False
@@ -74,6 +82,7 @@ def walklevel(some_dir, level):
         if level != -1 and num_sep + level <= num_sep_this:
             del dirs[:]
 
+
 def mtimelevel(path, level):
     mtime = os.stat(path).st_mtime
     for dirpath, dirnames, filenames in walklevel(path, level):
@@ -81,6 +90,7 @@ def mtimelevel(path, level):
                 if level == -1 or dirpath.count(os.path.sep) - path.count(os.path.sep) <= level]
         mtime = max(mtime, max([-1] + [os.stat(d).st_mtime for d in dirlist]))
     return mtime
+
 
 class Directory(FileSystemObject, Accumulator, Loadable):
     is_directory = True
@@ -164,7 +174,7 @@ class Directory(FileSystemObject, Accumulator, Loadable):
     def mark_item(self, item, val):
         item._mark(val)
         if val:
-            if item in self.files and not item in self.marked_items:
+            if item in self.files and item not in self.marked_items:
                 self.marked_items.append(item)
         else:
             while True:
@@ -214,7 +224,7 @@ class Directory(FileSystemObject, Accumulator, Loadable):
 
     def refilter(self):
         if self.files_all is None:
-            return # propably not loaded yet
+            return  # propably not loaded yet
 
         self.last_update_time = time()
 
@@ -316,14 +326,14 @@ class Directory(FileSystemObject, Accumulator, Loadable):
                             file_stat = file_lstat
                         stats = (file_stat, file_lstat)
                         is_a_dir = file_stat.st_mode & 0o170000 == 0o040000
-                    except:
+                    except Exception:
                         stats = None
                         is_a_dir = False
                     if is_a_dir:
                         try:
                             item = self.fm.get_directory(name)
                             item.load_if_outdated()
-                        except:
+                        except Exception:
                             item = Directory(name, preload=stats, path_is_abs=True,
                                              basename_is_rel_to=basename_is_rel_to)
                             item.load()
@@ -432,7 +442,7 @@ class Directory(FileSystemObject, Accumulator, Loadable):
 
         try:
             sort_func = self.sort_dict[self.settings.sort]
-        except:
+        except Exception:
             sort_func = sort_by_basename
 
         if self.settings.sort_case_insensitive and \
@@ -450,13 +460,13 @@ class Directory(FileSystemObject, Accumulator, Loadable):
             elif sort_func in (sort_by_basename, sort_by_basename_icase):
                 sort_func = sort_unicode_wrapper_string(sort_func)
 
-        self.files_all.sort(key = sort_func)
+        self.files_all.sort(key=sort_func)
 
         if self.settings.sort_reverse:
             self.files_all.reverse()
 
         if self.settings.sort_directories_first:
-            self.files_all.sort(key = sort_by_directory)
+            self.files_all.sort(key=sort_by_directory)
 
         self.refilter()
 
@@ -474,7 +484,7 @@ class Directory(FileSystemObject, Accumulator, Loadable):
                     else:
                         stat = os_stat(dirpath + "/" + file)
                     cum += stat.st_size
-                except:
+                except Exception:
                     pass
         return cum
 
@@ -528,7 +538,7 @@ class Directory(FileSystemObject, Accumulator, Loadable):
     def move_to_obj(self, arg):
         try:
             arg = arg.path
-        except:
+        except Exception:
             pass
         self.load_content_once(schedule=False)
         if self.empty():
@@ -543,10 +553,10 @@ class Directory(FileSystemObject, Accumulator, Loadable):
         length = len(self)
 
         if forward:
-            generator = ((self.pointer + (x + offset)) % length \
+            generator = ((self.pointer + (x + offset)) % length
                     for x in range(length - 1))
         else:
-            generator = ((self.pointer - (x + offset)) % length \
+            generator = ((self.pointer - (x + offset)) % length
                     for x in range(length - 1))
 
         for i in generator:
@@ -577,7 +587,7 @@ class Directory(FileSystemObject, Accumulator, Loadable):
         try:
             if self == self.fm.thisdir:
                 self.fm.thisfile = self.pointed_obj
-        except:
+        except Exception:
             pass
 
     def load_content_once(self, *a, **k):

@@ -3,12 +3,14 @@
 
 """ViewMiller arranges the view in miller columns"""
 
-import curses, _curses
+import curses
+import _curses
 from ranger.ext.signals import Signal
 from .browsercolumn import BrowserColumn
 from .pager import Pager
 from ..displayable import DisplayableContainer
 from ranger.gui.widgets.view_base import ViewBase
+
 
 class ViewMiller(ViewBase):
     ratios = None
@@ -60,7 +62,8 @@ class ViewMiller(ViewBase):
                     (self.ratios[-1] * last))
 
         offset = 1 - len(ratios)
-        if self.preview: offset += 1
+        if self.preview:
+            offset += 1
 
         for level in range(len(ratios)):
             fl = BrowserColumn(self.win, level + offset)
@@ -146,7 +149,7 @@ class ViewMiller(ViewBase):
                 win.vline(1, x, curses.ACS_VLINE, y - 1)
                 self.addch(0, x, curses.ACS_TTEE, 0)
                 self.addch(y, x, curses.ACS_BTEE, 0)
-            except:
+            except Exception:
                 # in case it's off the boundaries
                 pass
 
@@ -173,7 +176,7 @@ class ViewMiller(ViewBase):
                     self.fm.settings.use_preview_script:
                 try:
                     result = not self.fm.previews[target.realpath]['foundpreview']
-                except:
+                except Exception:
                     return self.old_collapse
 
         self.old_collapse = result
@@ -208,16 +211,16 @@ class ViewMiller(ViewBase):
                     continue
 
             if i == last_i - 1:
-                self.pager.resize(pad, left, hei - pad * 2, \
+                self.pager.resize(pad, left, hei - pad * 2,
                         max(1, self.wid - left - pad))
 
                 if cut_off:
-                    self.columns[i].resize(pad, left, hei - pad * 2, \
+                    self.columns[i].resize(pad, left, hei - pad * 2,
                             max(1, self.wid - left - pad))
                     continue
 
             try:
-                self.columns[i].resize(pad, left, hei - pad * 2, \
+                self.columns[i].resize(pad, left, hei - pad * 2,
                         max(1, wid - 1))
             except KeyError:
                 pass

@@ -1,11 +1,14 @@
 ranger v.1.7.2
 ==============
+
+[![Build Status](https://travis-ci.org/ranger/ranger.svg?branch=master)](https://travis-ci.org/ranger/ranger)
+
 ranger is a console file manager with VI key bindings.  It provides a
 minimalistic and nice curses interface with a view on the directory hierarchy.
 It ships with "rifle", a file launcher that is good at automatically finding
 out which program to use for what file type.
 
-![screenshot](doc/screenshot.png)
+![screenshot](https://raw.githubusercontent.com/ranger/ranger-assets/master/screenshots/screenshot.png)
 
 This file describes ranger and how to get it to run.  For instructions on the
 usage, please read the man page.  See HACKING.md for development specific

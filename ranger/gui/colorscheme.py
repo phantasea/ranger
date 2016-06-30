@@ -34,6 +34,7 @@ from ranger.core.main import allow_access_to_confdir
 from ranger.ext.cached_function import cached_function
 from ranger.ext.iter_tools import flatten
 
+
 class ColorScheme(object):
     """This is the class that colorschemes must inherit from.
 
@@ -50,7 +51,7 @@ class ColorScheme(object):
         """
         context = Context(keys)
         color = self.use(context)
-        if len(color) != 3 or not all(isinstance(value, int) \
+        if len(color) != 3 or not all(isinstance(value, int)
                 for value in color):
             raise ValueError("Bad Value from colorscheme.  Need "
                 "a tuple of (foreground_color, background_color, attribute).")
@@ -72,12 +73,14 @@ class ColorScheme(object):
         """
         return (-1, -1, 0)
 
+
 def _colorscheme_name_to_class(signal):
     # Find the colorscheme.  First look in ~/.config/ranger/colorschemes,
     # then at RANGERDIR/colorschemes.  If the file contains a class
     # named Scheme, it is used.  Otherwise, an arbitrary other class
     # is picked.
-    if isinstance(signal.value, ColorScheme): return
+    if isinstance(signal.value, ColorScheme):
+        return
 
     if not signal.value:
         signal.value = 'default'
@@ -91,7 +94,7 @@ def _colorscheme_name_to_class(signal):
     def is_scheme(x):
         try:
             return issubclass(x, ColorScheme)
-        except:
+        except Exception:
             return False
 
     # create ~/.config/ranger/colorschemes/__init__.py if it doesn't exist
@@ -117,10 +120,12 @@ def _colorscheme_name_to_class(signal):
             signal.value = ColorScheme()
         raise Exception("Cannot locate colorscheme `%s'" % scheme_name)
     else:
-        if usecustom: allow_access_to_confdir(ranger.arg.confdir, True)
+        if usecustom:
+            allow_access_to_confdir(ranger.arg.confdir, True)
         scheme_module = getattr(__import__(scheme_supermodule,
                 globals(), locals(), [scheme_name], 0), scheme_name)
-        if usecustom: allow_access_to_confdir(ranger.arg.confdir, False)
+        if usecustom:
+            allow_access_to_confdir(ranger.arg.confdir, False)
         if hasattr(scheme_module, 'Scheme') \
                 and is_scheme(scheme_module.Scheme):
             signal.value = scheme_module.Scheme()
@@ -131,6 +136,7 @@ def _colorscheme_name_to_class(signal):
                     break
             else:
                 raise Exception("The module contains no valid colorscheme!")
+
 
 def get_all_colorschemes():
     colorschemes = set()

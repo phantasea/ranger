@@ -19,6 +19,7 @@ DEFAULT_FOREGROUND = curses.COLOR_WHITE
 DEFAULT_BACKGROUND = curses.COLOR_BLACK
 COLOR_PAIRS = {10: 0}
 
+
 def get_color(fg, bg):
     """Returns the curses color pair for the given fg/bg combination."""
 
@@ -27,7 +28,7 @@ def get_color(fg, bg):
         size = len(COLOR_PAIRS)
         try:
             curses.init_pair(size, fg, bg)
-        except:
+        except Exception:
             # If curses.use_default_colors() failed during the initialization
             # of curses, then using -1 as fg or bg will fail as well, which
             # we need to handle with fallback-defaults:
@@ -38,7 +39,7 @@ def get_color(fg, bg):
 
             try:
                 curses.init_pair(size, fg, bg)
-            except:
+            except Exception:
                 # If this fails too, colors are probably not supported
                 pass
         COLOR_PAIRS[key] = size

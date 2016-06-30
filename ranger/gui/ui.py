@@ -16,23 +16,27 @@ from ranger.ext.signals import Signal
 MOUSEMASK = curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION
 
 _ASCII = ''.join(chr(c) for c in range(32, 127))
+
+
 def ascii_only(string):
     return ''.join(c if c in _ASCII else '?' for c in string)
+
 
 def _setup_mouse(signal):
     if signal['value']:
         curses.mousemask(MOUSEMASK)
         curses.mouseinterval(0)
 
-        ## this line solves this problem:
-        ## If a mouse click triggers an action that disables curses and
-        ## starts curses again, (e.g. running a ## file by clicking on its
-        ## preview) and the next key is another mouse click, the bstate of this
-        ## mouse event will be invalid.  (atm, invalid bstates are recognized
-        ## as scroll-down, so this avoids an errorneous scroll-down action)
+        # This line solves this problem:
+        # If a mouse click triggers an action that disables curses and
+        # starts curses again, (e.g. running a ## file by clicking on its
+        # preview) and the next key is another mouse click, the bstate of this
+        # mouse event will be invalid.  (atm, invalid bstates are recognized
+        # as scroll-down, so this avoids an errorneous scroll-down action)
         curses.ungetmouse(0, 0, 0, 0, 0)
     else:
         curses.mousemask(0)
+
 
 class UI(DisplayableContainer):
     ALLOWED_VIEWMODES = 'miller', 'multipane'
@@ -73,12 +77,12 @@ class UI(DisplayableContainer):
         curses.halfdelay(20)
         try:
             curses.curs_set(int(bool(self.settings.show_cursor)))
-        except:
+        except Exception:
             pass
         curses.start_color()
         try:
             curses.use_default_colors()
-        except:
+        except Exception:
             pass
 
         self.settings.signal_bind('setopt.mouse_enabled', _setup_mouse)
@@ -89,7 +93,7 @@ class UI(DisplayableContainer):
             self.setup()
             self.win.addstr("loading...")
             self.win.refresh()
-            self._draw_title = curses.tigetflag('hs') # has_status_line
+            self._draw_title = curses.tigetflag('hs')  # has_status_line
 
         self.update_size()
         self.is_on = True
@@ -112,7 +116,7 @@ class UI(DisplayableContainer):
         curses.echo()
         try:
             curses.curs_set(1)
-        except:
+        except Exception:
             pass
         if self.settings.mouse_enabled:
             _setup_mouse(dict(value=False))
@@ -309,7 +313,7 @@ class UI(DisplayableContainer):
         self.taskview.resize(1, 0, y - 2, x)
         self.pager.resize(1, 0, y - 2, x)
         self.titlebar.resize(0, 0, 1, x)
-        self.status.resize(self.settings.status_bar_on_top and 1 or y-1, 0, 1, x)
+        self.status.resize(self.settings.status_bar_on_top and 1 or y - 1, 0, 1, x)
         self.console.resize(y - 1, 0, 1, x)
 
     def draw(self):
@@ -331,7 +335,7 @@ class UI(DisplayableContainer):
                         (curses.tigetstr('tsl').decode('latin-1'), fixed_cwd,
                          curses.tigetstr('fsl').decode('latin-1')))
                 sys.stdout.flush()
-            except:
+            except Exception:
                 pass
 
         self.win.refresh()

@@ -10,6 +10,8 @@
 import ranger.api
 
 old_hook_init = ranger.api.hook_init
+
+
 def hook_init(fm):
     try:
         # Create a FIFO.
@@ -22,6 +24,7 @@ def hook_init(fm):
             import thread
         except ImportError:
             import _thread as thread
+
         def ipc_reader(filepath):
             while True:
                 with open(filepath, 'r') as fifo:

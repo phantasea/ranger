@@ -18,6 +18,7 @@ from ranger.ext.human_readable import human_readable
 from . import Widget
 from ranger.gui.bar import Bar
 
+
 class StatusBar(Widget):
     __doc__ = __doc__
     owners = {}
@@ -73,7 +74,7 @@ class StatusBar(Widget):
             self.fm.thisfile.load_if_outdated()
             try:
                 ctime = self.fm.thisfile.stat.st_ctime
-            except:
+            except Exception:
                 ctime = -1
         else:
             ctime = -1
@@ -127,7 +128,7 @@ class StatusBar(Widget):
 
             try:
                 self.addnstr(0, starting_point, string, space_left)
-            except:
+            except Exception:
                 break
             space_left -= len(string)
             starting_point += len(string)
@@ -146,7 +147,7 @@ class StatusBar(Widget):
                 return
         try:
             stat = target.stat
-        except:
+        except Exception:
             return
         if stat is None:
             return
@@ -168,7 +169,7 @@ class StatusBar(Widget):
             how = target.exists and 'good' or 'bad'
             try:
                 dest = readlink(target.path)
-            except:
+            except Exception:
                 dest = '?'
             left.add(' -> ' + dest, 'link', how)
         else:
@@ -228,8 +229,6 @@ class StatusBar(Widget):
                 return self.groups[gid]
             except KeyError:
                 return str(gid)
-
-
 
     def _get_right_part(self, bar):
         right = bar.right
@@ -314,9 +313,11 @@ class StatusBar(Widget):
                 self.color_at(0, 0, int(barwidth), ("in_statusbar", "loaded"))
                 self.color_reset()
 
+
 def get_free_space(path):
     stat = os.statvfs(path)
     return stat.f_bavail * stat.f_frsize
+
 
 class Message(object):
     elapse = None

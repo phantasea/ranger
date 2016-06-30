@@ -10,6 +10,8 @@ from ranger.ext.direction import Direction
 from ranger.ext.img_display import ImgDisplayUnsupportedException
 
 # TODO: Scrolling in embedded pager
+
+
 class Pager(Widget):
     source = None
     source_is_stream = False
@@ -20,6 +22,7 @@ class Pager(Widget):
     need_clear_image = False
     need_redraw_image = False
     max_width = None
+
     def __init__(self, win, embedded=False):
         Widget.__init__(self, win)
         self.embedded = embedded
@@ -105,7 +108,7 @@ class Pager(Widget):
         elif self.markup == 'ansi':
             try:
                 self.win.move(i, 0)
-            except:
+            except Exception:
                 pass
             else:
                 for chunk in ansi.text_with_fg_bg_attr(line):

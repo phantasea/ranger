@@ -4,6 +4,7 @@
 from ranger.core.shared import FileManagerAware
 from ranger.gui.curses_shortcuts import CursesShortcuts
 
+
 class Displayable(FileManagerAware, CursesShortcuts):
     """Displayables are objects which are displayed on the screen.
 
@@ -32,7 +33,7 @@ class Displayable(FileManagerAware, CursesShortcuts):
             be set at various places in the script and should eventually be
             handled (and unset) in the draw() method.
 
-    Read-Only: (i.e. reccomended not to change manually)
+    Read-Only: (i.e. recommended not to change manually)
         win -- the own curses window object
         parent -- the parent (DisplayableContainer) object or None
         x, y, wid, hei -- absolute coordinates and boundaries
@@ -168,13 +169,13 @@ class Displayable(FileManagerAware, CursesShortcuts):
             window_is_cleared = True
             try:
                 self.win.resize(hei, wid)
-            except:
+            except Exception:
                 # Not enough space for resizing...
                 try:
                     self.win.mvderwin(0, 0)
                     do_move = True
                     self.win.resize(hei, wid)
-                except:
+                except Exception:
                     pass
                     #raise ValueError("Resizing Failed!")
 
@@ -187,7 +188,7 @@ class Displayable(FileManagerAware, CursesShortcuts):
             #log("moving " + str(self))
             try:
                 self.win.mvderwin(y, x)
-            except:
+            except Exception:
                 pass
 
             self.paryx = self.win.getparyx()
@@ -198,6 +199,7 @@ class Displayable(FileManagerAware, CursesShortcuts):
 
     def __str__(self):
         return self.__class__.__name__
+
 
 class DisplayableContainer(Displayable):
     """DisplayableContainers are Displayables which contain other Displayables.

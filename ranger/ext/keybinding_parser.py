@@ -6,7 +6,7 @@ import copy
 import curses.ascii
 
 PY3 = sys.version_info[0] >= 3
-digits = set(range(ord('0'), ord('9')+1))
+digits = set(range(ord('0'), ord('9') + 1))
 
 # Arbitrary numbers which are not used with curses.KEY_XYZ
 ANYKEY, PASSIVE_ACTION, ALT_KEY, QUANT_KEY = range(9001, 9005)
@@ -71,7 +71,7 @@ def parse_keybinding(obj):
     (108, 111, 108, 10)
 
     >>> out = tuple(parse_keybinding("x<A-Left>"))
-    >>> out  # it's kind of dumb that you cant test for constants...
+    >>> out  # it's kind of dumb that you can't test for constants...
     (120, 9003, 260)
     >>> out[0] == ord('x')
     True
@@ -138,16 +138,17 @@ def key_to_string(key):
 def _unbind_traverse(pointer, keys, pos=0):
     if keys[pos] not in pointer:
         return
-    if len(keys) > pos+1 and isinstance(pointer, dict):
-        _unbind_traverse(pointer[keys[pos]], keys, pos=pos+1)
+    if len(keys) > pos + 1 and isinstance(pointer, dict):
+        _unbind_traverse(pointer[keys[pos]], keys, pos=pos + 1)
         if not pointer[keys[pos]]:
             del pointer[keys[pos]]
-    elif len(keys) == pos+1:
+    elif len(keys) == pos + 1:
         try:
             del pointer[keys[pos]]
             keys.pop()
-        except:
+        except Exception:
             pass
+
 
 class KeyMaps(dict):
     def __init__(self, keybuffer=None):
@@ -164,7 +165,7 @@ class KeyMaps(dict):
     def _clean_input(self, context, keys):
         try:
             pointer = self[context]
-        except:
+        except Exception:
             self[context] = pointer = dict()
         if PY3:
             keys = keys.encode('utf-8').decode('latin-1')
@@ -181,7 +182,7 @@ class KeyMaps(dict):
                     pointer = pointer[key]
                 else:
                     pointer[key] = pointer = dict()
-            except:
+            except Exception:
                 pointer[key] = pointer = dict()
         pointer[last_key] = leaf
 
@@ -192,7 +193,7 @@ class KeyMaps(dict):
         for key in clean_source:
             try:
                 pointer = pointer[key]
-            except:
+            except Exception:
                 raise KeyError("Tried to copy the keybinding `%s',"
                         " but it was not found." % source)
         self.bind(context, target, copy.deepcopy(pointer))
@@ -234,7 +235,7 @@ class KeyBuffer(object):
         if not self.finished_parsing_quantifier and key in digits:
             if self.quantifier is None:
                 self.quantifier = 0
-            self.quantifier = self.quantifier * 10 + key - 48 # (48 = ord(0))
+            self.quantifier = self.quantifier * 10 + key - 48  # (48 = ord(0))
         else:
             self.finished_parsing_quantifier = True
 

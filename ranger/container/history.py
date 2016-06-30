@@ -3,8 +3,10 @@
 
 # TODO: rewrite to use deque instead of list
 
+
 class HistoryEmptyException(Exception):
     pass
+
 
 class History(object):
     def __init__(self, maxlen=None, unique=True):
@@ -23,12 +25,12 @@ class History(object):
     def add(self, item):
         # Remove everything after index
         if self._index < len(self._history) - 2:
-            del self._history[:self._index+1]
+            del self._history[:self._index + 1]
         # Remove Duplicates
         if self.unique:
             try:
                 self._history.remove(item)
-            except:
+            except Exception:
                 pass
         else:
             if self._history and self._history[-1] == item:
@@ -45,7 +47,7 @@ class History(object):
             try:
                 self._history.remove(item)
                 self._index -= 1
-            except:
+            except Exception:
                 pass
         try:
             self._history[self._index] = item

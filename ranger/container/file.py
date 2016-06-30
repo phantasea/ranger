@@ -37,6 +37,7 @@ PREVIEW_WHITELIST = re.compile(r"""
         $
 """, re.VERBOSE | re.IGNORECASE)
 
+
 class File(FileSystemObject):
     is_file = True
     preview_data = None
@@ -49,13 +50,13 @@ class File(FileSystemObject):
     def firstbytes(self):
         try:
             return self._firstbytes
-        except:
+        except Exception:
             try:
                 f = open(self.path, 'r')
                 self._firstbytes = f.read(N_FIRST_BYTES)
                 f.close()
                 return self._firstbytes
-            except:
+            except Exception:
                 pass
 
     def is_binary(self):

@@ -69,7 +69,7 @@ class Context(object):
     def filepaths(self):
         try:
             return [f.path for f in self.files]
-        except:
+        except Exception:
             return []
 
     def __iter__(self):
@@ -102,11 +102,15 @@ class Runner(object):
     def _activate_ui(self, boolean):
         if self.ui is not None:
             if boolean:
-                try: self.ui.initialize()
-                except: self._log("Failed to initialize UI")
+                try:
+                    self.ui.initialize()
+                except Exception:
+                    self._log("Failed to initialize UI")
             else:
-                try: self.ui.suspend()
-                except: self._log("Failed to suspend UI")
+                try:
+                    self.ui.suspend()
+                except Exception:
+                    self._log("Failed to suspend UI")
 
     def __call__(self, action=None, try_app_first=False,
             app='default', files=None, mode=0,
@@ -146,7 +150,7 @@ class Runner(object):
         # Set default shell for Popen
         if popen_kws['shell']:
             # This doesn't work with fish, see #300
-            if not 'fish' in os.environ['SHELL']:
+            if 'fish' not in os.environ['SHELL']:
                 popen_kws['executable'] = os.environ['SHELL']
 
         if 'stdout' not in popen_kws:
@@ -174,7 +178,7 @@ class Runner(object):
             toggle_ui = False
             context.wait = False
         if 'w' in context.flags:
-            if not pipe_output and context.wait: # <-- sanity check
+            if not pipe_output and context.wait:  # <-- sanity check
                 wait_for_enter = True
         if 'r' in context.flags:
             # TODO: make 'r' flag work with pipes

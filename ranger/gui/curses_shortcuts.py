@@ -10,12 +10,14 @@ from ranger.core.shared import SettingsAware
 
 REVERSE_ADDCH_ARGS = sys.version[0:5] == '3.4.0'
 
+
 def _fix_surrogates(args):
     return [isinstance(arg, str) and arg.encode('utf-8', 'surrogateescape')
             .decode('utf-8', 'replace') or arg for arg in args]
 
+
 class CursesShortcuts(SettingsAware):
-    """This class defines shortcuts to faciliate operations with curses.
+    """This class defines shortcuts to facilitate operations with curses.
 
     color(*keys) -- sets the color associated with the keys from
         the current colorscheme.
@@ -29,13 +31,13 @@ class CursesShortcuts(SettingsAware):
 
         try:
             self.win.addstr(*args)
-        except:
+        except Exception:
             if len(args) > 1:
                 self.win.move(y, x)
 
                 try:
                     self.win.addstr(*_fix_surrogates(args))
-                except:
+                except Exception:
                     pass
 
     def addnstr(self, *args):
@@ -43,13 +45,13 @@ class CursesShortcuts(SettingsAware):
 
         try:
             self.win.addnstr(*args)
-        except:
+        except Exception:
             if len(args) > 2:
                 self.win.move(y, x)
 
                 try:
                     self.win.addnstr(*_fix_surrogates(args))
-                except:
+                except Exception:
                     pass
 
     def addch(self, *args):
@@ -57,7 +59,7 @@ class CursesShortcuts(SettingsAware):
             args = [args[1], args[0]] + list(args[2:])
         try:
             self.win.addch(*args)
-        except:
+        except Exception:
             pass
 
     def color(self, *keys):

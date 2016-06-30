@@ -14,12 +14,14 @@ import select
 try:
     import chardet
     HAVE_CHARDET = True
-except:
+except Exception:
     HAVE_CHARDET = False
+
 
 class Loadable(object):
     paused = False
     progressbar_supported = False
+
     def __init__(self, gen, descr):
         self.load_generator = gen
         self.description = descr
@@ -34,7 +36,7 @@ class Loadable(object):
     def unpause(self):
         try:
             del self.paused
-        except:
+        except Exception:
             pass
 
     def destroy(self):
@@ -43,6 +45,7 @@ class Loadable(object):
 
 class CopyLoader(Loadable, FileManagerAware):
     progressbar_supported = True
+
     def __init__(self, copy_buffer, do_cut=False, overwrite=False):
         self.copy_buffer = tuple(copy_buffer)
         self.do_cut = do_cut
@@ -67,7 +70,7 @@ class CopyLoader(Loadable, FileManagerAware):
             else:
                 try:
                     fstat = os.stat(fname)
-                except:
+                except Exception:
                     continue
                 size += max(step, math.ceil(fstat.st_size / step) * step)
         return size
@@ -91,7 +94,7 @@ class CopyLoader(Loadable, FileManagerAware):
                         if tf == f.path or str(tf).startswith(f.path):
                             tag = self.fm.tags.tags[tf]
                             self.fm.tags.remove(tf)
-                            self.fm.tags.tags[tf.replace(f.path, self.original_path \
+                            self.fm.tags.tags[tf.replace(f.path, self.original_path
                                     + '/' + f.basename)] = tag
                             self.fm.tags.dump()
                     d = 0
@@ -137,6 +140,7 @@ class CommandLoader(Loadable, SignalDispatcher, FileManagerAware):
     """
     finished = False
     process = None
+
     def __init__(self, args, descr, silent=False, read=False, input=None,
             kill_on_pause=False, popenArgs=None):
         SignalDispatcher.__init__(self)
@@ -207,10 +211,10 @@ class CommandLoader(Loadable, SignalDispatcher, FileManagerAware):
                 except select.error:
                     sleep(0.03)
             if not self.silent:
-                for l in process.stderr.readlines():
+                for line in process.stderr:
                     if py3:
-                        l = safeDecode(l)
-                    self.fm.notify(l, bad=True)
+                        line = safeDecode(line)
+                    self.fm.notify(line, bad=True)
             if self.read:
                 read = process.stdout.read()
                 if py3:
@@ -232,7 +236,7 @@ class CommandLoader(Loadable, SignalDispatcher, FileManagerAware):
                 return
             try:
                 self.process.send_signal(20)
-            except:
+            except Exception:
                 pass
             Loadable.pause(self)
             self.signal_emit('pause', process=self.process, loader=self)
@@ -241,7 +245,7 @@ class CommandLoader(Loadable, SignalDispatcher, FileManagerAware):
         if not self.finished and self.paused:
             try:
                 self.process.send_signal(18)
-            except:
+            except Exception:
                 pass
             Loadable.unpause(self)
             self.signal_emit('unpause', process=self.process, loader=self)
@@ -267,6 +271,9 @@ def safeDecode(string):
 
 
 class Loader(FileManagerAware):
+    """
+    The Manager of 'Loadable' objects, referenced as fm.loader
+    """
     seconds_of_work_time = 0.03
     throbber_chars = r'/-\|'
     throbber_paused = '#'
@@ -301,6 +308,7 @@ class Loader(FileManagerAware):
             self.queue.append(obj)
         else:
             self.queue.appendleft(obj)
+        self.fm.signal_emit("loader.before", loadable=obj, fm=self.fm)
         if self.paused:
             obj.pause()
         else:
@@ -337,6 +345,7 @@ class Loader(FileManagerAware):
                 item = self.queue[index]
             if hasattr(item, 'unload'):
                 item.unload()
+            self.fm.signal_emit("loader.destroy", loadable=item, fm=self.fm)
             item.destroy()
             del self.queue[index]
             if item.progressbar_supported:
@@ -404,6 +413,7 @@ class Loader(FileManagerAware):
     def _remove_current_process(self, item):
         item.load_generator = None
         self.queue.remove(item)
+        self.fm.signal_emit("loader.after", loadable=item, fm=self.fm)
         if item.progressbar_supported:
             self.fm.ui.status.request_redraw()
 

@@ -4,6 +4,7 @@ import pytest
 
 from ranger.container.bookmarks import Bookmarks
 
+
 def testbookmarks(tmpdir):
     # Bookmarks point to directory location and allow fast access to
     # 'favorite' directories. They are persisted to a bookmark file, plain text.
@@ -34,10 +35,12 @@ def testbookmarks(tmpdir):
     assert "'" in secondstore
     assert secondstore["'"] == "the milk"
 
-    # We don't uneccesary update when the file on disk does not change
+    # We don't unnecessary update when the file on disk does not change
     origupdate = secondstore.update
+
     class OutOfDateException(Exception):
         pass
+
     def crash():
         raise OutOfDateException("Don't access me")
     secondstore.update = crash

@@ -6,7 +6,7 @@
 import os.path
 import sys
 import tempfile
-import importlib
+
 
 def main():
     """initialize objects and run the filemanager"""
@@ -18,7 +18,7 @@ def main():
 
     try:
         locale.setlocale(locale.LC_ALL, '')
-    except:
+    except Exception:
         print("Warning: Unable to set locale.  Expect encoding problems.")
 
     # so that programs can know that ranger spawned them:
@@ -28,14 +28,14 @@ def main():
     else:
         os.environ[level] = '1'
 
-    if not 'SHELL' in os.environ:
+    if 'SHELL' not in os.environ:
         os.environ['SHELL'] = 'sh'
 
     ranger.arg = arg = parse_arguments()
     if arg.copy_config is not None:
         fm = FM()
         fm.copy_config_files(arg.copy_config)
-        return 1 if arg.fail_unless_cd else 0 # COMPAT
+        return 1 if arg.fail_unless_cd else 0  # COMPAT
     if arg.list_tagged_files:
         fm = FM()
         try:
@@ -43,7 +43,7 @@ def main():
                 f = open(fm.confpath('tagged'), 'r', errors='replace')
             else:
                 f = open(fm.confpath('tagged'), 'r')
-        except:
+        except Exception:
             pass
         else:
             for line in f.readlines():
@@ -52,7 +52,7 @@ def main():
                         sys.stdout.write(line[2:])
                 elif len(line) > 0 and '*' in arg.list_tagged_files:
                     sys.stdout.write(line)
-        return 1 if arg.fail_unless_cd else 0 # COMPAT
+        return 1 if arg.fail_unless_cd else 0  # COMPAT
 
     SettingsAware._setup(Settings())
 
@@ -72,6 +72,7 @@ def main():
             sys.stderr.write("Warning: Using ranger as a file launcher is "
                    "deprecated.\nPlease use the standalone file launcher "
                    "'rifle' instead.\n")
+
             def print_function(string):
                 print(string)
             from ranger.ext.rifle import Rifle
@@ -83,7 +84,7 @@ def main():
             rifle = Rifle(rifleconf)
             rifle.reload_config()
             rifle.execute(targets, number=ranger.arg.mode, flags=ranger.arg.flags)
-            return 1 if arg.fail_unless_cd else 0 # COMPAT
+            return 1 if arg.fail_unless_cd else 0  # COMPAT
 
     crash_traceback = None
     try:
@@ -102,7 +103,7 @@ def main():
             for key in range(33, 127):
                 if key not in maps:
                     print(chr(key))
-            return 1 if arg.fail_unless_cd else 0 # COMPAT
+            return 1 if arg.fail_unless_cd else 0  # COMPAT
 
         if not sys.stdin.isatty():
             sys.stderr.write("Error: Must run ranger from terminal\n")
@@ -138,8 +139,8 @@ def main():
             import pstats
             profile = None
             ranger.__fm = fm
-            cProfile.run('ranger.__fm.loop()', tempfile.gettempdir()+'/ranger_profile')
-            profile = pstats.Stats(tempfile.gettempdir()+'/ranger_profile', stream=sys.stderr)
+            cProfile.run('ranger.__fm.loop()', tempfile.gettempdir() + '/ranger_profile')
+            profile = pstats.Stats(tempfile.gettempdir() + '/ranger_profile', stream=sys.stderr)
         else:
             fm.loop()
     except Exception:
@@ -151,7 +152,7 @@ def main():
         if crash_traceback:
             try:
                 filepath = fm.thisfile.path if fm.thisfile else "None"
-            except:
+            except Exception:
                 filepath = "None"
         try:
             fm.ui.destroy()
@@ -165,10 +166,10 @@ def main():
             print("Locale: %s" % '.'.join(str(s) for s in locale.getlocale()))
             try:
                 print("Current file: %s" % filepath)
-            except:
+            except Exception:
                 pass
             print(crash_traceback)
-            print("ranger crashed.  " \
+            print("ranger crashed.  "
                 "Please report this traceback at:")
             print("https://github.com/hut/ranger/issues")
             return 1
@@ -239,9 +240,9 @@ def parse_arguments():
     arg.confdir = expanduser(arg.confdir)
     arg.cachedir = expanduser(default_cachedir)
 
-    if arg.fail_unless_cd: # COMPAT
+    if arg.fail_unless_cd:  # COMPAT
         sys.stderr.write("Warning: The option --fail-unless-cd is deprecated.\n"
-            "It was used to faciliate using ranger as a file launcher.\n"
+            "It was used to facilitate using ranger as a file launcher.\n"
             "Now, please use the standalone file launcher 'rifle' instead.\n")
 
     return arg
@@ -290,9 +291,9 @@ def load_settings(fm, clean):
         # XXX Load plugins (experimental)
         try:
             plugindir = fm.confpath('plugins')
-            plugins = [p[:-3] for p in os.listdir(plugindir) \
+            plugins = [p[:-3] for p in os.listdir(plugindir)
                     if p.endswith('.py') and not p.startswith('_')]
-        except:
+        except Exception:
             pass
         else:
             if not os.path.exists(fm.confpath('plugins', '__init__.py')):
@@ -302,7 +303,7 @@ def load_settings(fm, clean):
             ranger.fm = fm
             for plugin in sorted(plugins):
                 try:
-                    module = importlib.import_module('plugins.' + plugin)
+                    module = __import__('plugins', fromlist=[plugin])
                     fm.commands.load_commands_from_module(module)
                     fm.log.append("Loaded plugin '%s'." % plugin)
                 except Exception as e:
@@ -352,7 +353,7 @@ def allow_access_to_confdir(confdir, allow):
                 print("To run ranger without the need for configuration")
                 print("files, use the --clean option.")
                 raise SystemExit()
-        if not confdir in sys.path:
+        if confdir not in sys.path:
             sys.path[0:0] = [confdir]
     else:
         if sys.path[0] == confdir:

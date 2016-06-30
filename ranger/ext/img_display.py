@@ -28,11 +28,13 @@ W3MIMGDISPLAY_PATHS = [
     '/usr/lib/w3m/w3mimgdisplay',
     '/usr/libexec/w3m/w3mimgdisplay',
     '/usr/lib64/w3m/w3mimgdisplay',
-    '/usr/libexec64/w3m/w3mimgdisplay'
+    '/usr/libexec64/w3m/w3mimgdisplay',
 ]
+
 
 class ImgDisplayUnsupportedException(Exception):
     pass
+
 
 class ImageDisplayer(object):
     """Image display provider functions for drawing images in the terminal"""
@@ -47,6 +49,7 @@ class ImageDisplayer(object):
     def quit(self):
         """Cleanup and close"""
         pass
+
 
 class W3MImageDisplayer(ImageDisplayer):
     """Implementation of ImageDisplayer using w3mimgdisplay, an utilitary
@@ -111,11 +114,11 @@ class W3MImageDisplayer(ImageDisplayer):
         fontw, fonth = self._get_font_dimensions()
 
         cmd = "6;{x};{y};{w};{h}\n4;\n3;\n".format(
-                x = int((start_x - 0.2) * fontw),
-                y = start_y * fonth,
+                x=int((start_x - 0.2) * fontw),
+                y=start_y * fonth,
                 # y = int((start_y + 1) * fonth), # (for tmux top status bar)
-                w = int((width + 0.4) * fontw),
-                h = height * fonth + 1)
+                w=int((width + 0.4) * fontw),
+                h=height * fonth + 1)
                 # h = (height - 1) * fonth + 1) # (for tmux top status bar)
 
         try:
@@ -165,12 +168,12 @@ class W3MImageDisplayer(ImageDisplayer):
             height = max_height_pixels
 
         return "0;1;{x};{y};{w};{h};;;;;{filename}\n4;\n3;\n".format(
-                x = int((start_x - 0.2) * fontw),
-                y = start_y * fonth,
+                x=int((start_x - 0.2) * fontw),
+                y=start_y * fonth,
                 # y = (start_y + 1) * fonth, # (for tmux top status bar)
-                w = width,
-                h = height,
-                filename = path)
+                w=width,
+                h=height,
+                filename=path)
 
     def quit(self):
         if self.is_initialized and self.process and self.process.poll() is None:
@@ -178,6 +181,8 @@ class W3MImageDisplayer(ImageDisplayer):
 
 # TODO: remove FileManagerAwareness, as stuff in ranger.ext should be
 # ranger-independent libraries.
+
+
 class ITerm2ImageDisplayer(ImageDisplayer, FileManagerAware):
     """Implementation of ImageDisplayer using iTerm2 image display support
     (http://iterm2.com/images.html).
@@ -225,8 +230,8 @@ class ITerm2ImageDisplayer(ImageDisplayer, FileManagerAware):
         max_height = self._minimum_font_height * max_rows
         if height > max_height:
             if width > max_width:
-                width_scale = max_width/float(width)
-                height_scale = max_height/float(height)
+                width_scale = max_width / float(width)
+                height_scale = max_height / float(height)
                 min_scale = min(width_scale, height_scale)
                 max_scale = max(width_scale, height_scale)
                 if width * max_scale <= max_width and height * max_scale <= max_height:
@@ -234,21 +239,20 @@ class ITerm2ImageDisplayer(ImageDisplayer, FileManagerAware):
                 else:
                     return (width * min_scale)
             else:
-                scale = max_height/float(height)
+                scale = max_height / float(height)
                 return (width * scale)
         elif width > max_width:
-            scale = max_width/float(width)
+            scale = max_width / float(width)
             return (width * scale)
         else:
             return width
-
 
     def _encode_image_content(self, path):
         """Read and encode the contents of path"""
         file = open(path, 'rb')
         try:
             return base64.b64encode(file.read())
-        except:
+        except Exception:
             return ""
         finally:
             file.close()
@@ -283,7 +287,7 @@ class ITerm2ImageDisplayer(ImageDisplayer, FileManagerAware):
                     size = struct.unpack('>H', file_handle.read(2))[0] - 2
                 file_handle.seek(1, 1)
                 height, width = struct.unpack('>HH', file_handle.read(4))
-            except:
+            except Exception:
                 file_handle.close()
                 return 0, 0
         else:

@@ -9,6 +9,7 @@ from ranger.container.history import History
 from ranger.core.shared import FileManagerAware, SettingsAware
 from ranger.ext.signals import SignalDispatcher
 
+
 class Tab(FileManagerAware, SettingsAware):
     def __init__(self, path):
         self.thisdir = None  # Current Working Directory
@@ -102,10 +103,11 @@ class Tab(FileManagerAware, SettingsAware):
     def inherit_history(self, other_history):
         self.history.rebase(other_history)
 
-    def enter_dir(self, path, history = True):
+    def enter_dir(self, path, history=True):
         """Enter given path"""
         # TODO: Ensure that there is always a self.thisdir
-        if path is None: return
+        if path is None:
+            return
         path = str(path)
 
         # clear filter in the folder we're leaving
@@ -124,7 +126,7 @@ class Tab(FileManagerAware, SettingsAware):
 
         try:
             os.chdir(path)
-        except:
+        except Exception:
             return True
         self.path = path
         self.thisdir = new_thisdir

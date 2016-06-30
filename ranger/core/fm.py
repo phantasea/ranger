@@ -27,6 +27,7 @@ from ranger.ext.signals import SignalDispatcher
 from ranger import __version__
 from ranger.core.loader import Loader
 
+
 class FM(Actions, SignalDispatcher):
     input_blocked = False
     input_blocked_until = 0
@@ -64,12 +65,12 @@ class FM(Actions, SignalDispatcher):
 
         try:
             self.username = pwd.getpwuid(os.geteuid()).pw_name
-        except:
+        except Exception:
             self.username = 'uid:' + str(os.geteuid())
         self.hostname = socket.gethostname()
         self.home_path = os.path.expanduser('~')
 
-        self.log.append('ranger {0} started! Process ID is {1}.' \
+        self.log.append('ranger {0} started! Process ID is {1}.'
                 .format(__version__, os.getpid()))
         self.log.append('Running on Python ' + sys.version.replace('\n', ''))
 
@@ -80,7 +81,7 @@ class FM(Actions, SignalDispatcher):
     def initialize(self):
         """If ui/bookmarks are None, they will be initialized here."""
 
-        self.tabs = dict((n+1, Tab(path)) for n, path in
+        self.tabs = dict((n + 1, Tab(path)) for n, path in
                 enumerate(self.start_paths))
         tab_list = self._get_tab_list()
         if tab_list:
@@ -139,7 +140,7 @@ class FM(Actions, SignalDispatcher):
                     re.match(r'^(feh|sxiv|imv|pqiv) ', command):
 
                 images = [f.relative_path for f in self.thisdir.files if f.image]
-                escaped_filenames = " ".join(shell_quote(f) \
+                escaped_filenames = " ".join(shell_quote(f)
                         for f in images if "\x00" not in f)
 
                 if images and self.thisfile.relative_path in images and \
@@ -153,7 +154,7 @@ class FM(Actions, SignalDispatcher):
 
                     if command[0:4] == 'feh ':
                         new_command = command.replace("feh ",
-                            "feh --start-at %s " % \
+                            "feh --start-at %s " %
                             shell_quote(self.thisfile.relative_path), 1)
 
                     if command[0:4] == 'imv ':
@@ -164,7 +165,7 @@ class FM(Actions, SignalDispatcher):
                     if command[0:5] == 'pqiv ':
                         number = images.index(self.thisfile.relative_path)
                         new_command = command.replace("pqiv ",
-                                "pqiv --action \"goto_file_byindex(%d)\" " % \
+                                "pqiv --action \"goto_file_byindex(%d)\" " %
                                 number, 1)
 
                     if new_command:
@@ -187,13 +188,13 @@ class FM(Actions, SignalDispatcher):
         if self.ui:
             try:
                 self.ui.destroy()
-            except:
+            except Exception:
                 if debug:
                     raise
         if self.loader:
             try:
                 self.loader.destroy()
-            except:
+            except Exception:
                 if debug:
                     raise
 
@@ -235,6 +236,7 @@ class FM(Actions, SignalDispatcher):
             return
         import shutil
         from errno import EEXIST
+
         def copy(_from, to):
             if os.path.exists(self.confpath(to)):
                 sys.stderr.write("already exists: %s\n" % self.confpath(to))

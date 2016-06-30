@@ -31,10 +31,12 @@ from ranger.core.linemode import DEFAULT_LINEMODE
 
 MACRO_FAIL = "<\x01\x01MACRO_HAS_NO_VALUE\x01\01>"
 
+
 class _MacroTemplate(string.Template):
     """A template for substituting macros in commands"""
     delimiter = ranger.MACRO_DELIMITER
     idpattern = r"[_a-z0-9]*"
+
 
 class Actions(FileManagerAware, SettingsAware):
     # --------------------------
@@ -92,7 +94,6 @@ class Actions(FileManagerAware, SettingsAware):
 
         self.settings.set(option_name, self._parse_option_value(option_name, value), localpath, tags)
 
-
     def _parse_option_value(self, name, value):
         types = self.fm.settings.types_of(name)
         if bool in types:
@@ -120,7 +121,7 @@ class Actions(FileManagerAware, SettingsAware):
         """
         if self.mode == 'normal':
             self._visual_reverse = reverse
-            if narg != None:
+            if narg is not None:
                 self.mark_files(val=not reverse, narg=narg)
             self.change_mode('visual')
         else:
@@ -133,7 +134,7 @@ class Actions(FileManagerAware, SettingsAware):
         """
         try:
             cwd = self.thisdir
-        except:
+        except Exception:
             pass
         else:
             cwd.unload()
@@ -148,7 +149,7 @@ class Actions(FileManagerAware, SettingsAware):
             if ranger.arg.debug:
                 raise
             bad = True
-        elif bad == True and ranger.arg.debug:
+        elif bad is True and ranger.arg.debug:
             raise Exception(str(text))
         text = str(text)
         self.log.appendleft(text)
@@ -165,7 +166,7 @@ class Actions(FileManagerAware, SettingsAware):
         """
         try:
             item = self.loader.queue[0]
-        except:
+        except Exception:
             self.notify("Type Q or :quit<Enter> to exit ranger")
         else:
             self.notify("Aborting: " + item.get_description())
@@ -204,7 +205,7 @@ class Actions(FileManagerAware, SettingsAware):
             return
         cmd = cmd_class(string)
         if cmd.resolve_macros and _MacroTemplate.delimiter in string:
-            macros = dict(('any%d'%i, key_to_string(char)) \
+            macros = dict(('any%d' % i, key_to_string(char))
                     for i, char in enumerate(wildcards))
             if 'any0' in macros:
                 macros['any'] = macros['any0']
@@ -282,7 +283,7 @@ class Actions(FileManagerAware, SettingsAware):
         for i in range(1, 10):
             try:
                 tab = self.fm.tabs[i]
-            except:
+            except Exception:
                 continue
             tabdir = tab.thisdir
             if not tabdir:
@@ -428,7 +429,7 @@ class Actions(FileManagerAware, SettingsAware):
                 steps *= narg
             try:
                 directory = os.path.join(*(['..'] * steps))
-            except:
+            except Exception:
                 return
             self.thistab.enter_dir(directory)
             self.change_mode('normal')
@@ -454,11 +455,11 @@ class Actions(FileManagerAware, SettingsAware):
                 if self.mode == 'visual':
                     try:
                         startpos = cwd.index(self._visual_start)
-                    except:
+                    except Exception:
                         self._visual_start = None
                         startpos = min(self._visual_start_pos, len(cwd))
                     # The files between here and _visual_start_pos
-                    targets = set(cwd.files[min(startpos, newpos):\
+                    targets = set(cwd.files[min(startpos, newpos):
                             max(startpos, newpos) + 1])
                     # The selection before activating visual mode
                     old = self._previous_selection
@@ -479,7 +480,6 @@ class Actions(FileManagerAware, SettingsAware):
                 if self.ui.pager.visible:
                     self.display_file()
 
-
     def move_parent(self, n, narg=None):
         self.change_mode('normal')
         if narg is not None:
@@ -489,7 +489,7 @@ class Actions(FileManagerAware, SettingsAware):
             if parent.pointer + n < 0:
                 n = 0 - parent.pointer
             try:
-                self.thistab.enter_dir(parent.files[parent.pointer+n])
+                self.thistab.enter_dir(parent.files[parent.pointer + n])
             except IndexError:
                 pass
 
@@ -515,7 +515,7 @@ class Actions(FileManagerAware, SettingsAware):
         # csh variable is lowercase
         cdpath = os.environ.get('CDPATH', None) or os.environ.get('cdpath', None)
         result = self.thistab.enter_dir(path, history=history)
-        if result == False and cdpath:
+        if result is False and cdpath:
             for p in cdpath.split(':'):
                 curpath = os.path.join(p, path)
                 if os.path.isdir(curpath):
@@ -645,7 +645,7 @@ class Actions(FileManagerAware, SettingsAware):
         if val is None and toggle is False:
             return
 
-        if narg == None:
+        if narg is None:
             narg = 1
         else:
             all = False
@@ -690,7 +690,7 @@ class Actions(FileManagerAware, SettingsAware):
         if isinstance(text, str) and regexp:
             try:
                 text = re.compile(text, re.L | re.U | re.I)
-            except:
+            except Exception:
                 return False
         self.thistab.last_search = text
         self.search_next(order='search', offset=offset)
@@ -819,7 +819,7 @@ class Actions(FileManagerAware, SettingsAware):
     def draw_possible_programs(self):
         try:
             target = self.thistab.get_selection()[0]
-        except:
+        except Exception:
             self.ui.browser.draw_info = []
             return
         programs = [program for program in self.rifle.list_commands([target.path],
@@ -841,7 +841,7 @@ class Actions(FileManagerAware, SettingsAware):
     def display_command_help(self, console_widget):
         try:
             command = console_widget._get_cmd_class()
-        except:
+        except Exception:
             self.notify("Feature not available!", bad=True)
             return
 
@@ -893,13 +893,13 @@ class Actions(FileManagerAware, SettingsAware):
         try:
             del self.previews[path]
             self.ui.need_redraw = True
-        except:
+        except Exception:
             return False
 
     if version_info[0] == 3:
         def sha1_encode(self, path):
             return os.path.join(ranger.arg.cachedir,
-                    sha1(path.encode('utf-8', 'backslashreplace')) \
+                    sha1(path.encode('utf-8', 'backslashreplace'))
                             .hexdigest()) + '.jpg'
     else:
         def sha1_encode(self, path):
@@ -924,19 +924,18 @@ class Actions(FileManagerAware, SettingsAware):
             # PDF file.
             try:
                 data = self.previews[path]
-            except:
+            except Exception:
                 data = self.previews[path] = {'loading': False}
             else:
                 if data['loading']:
                     return None
 
-
             found = data.get((-1, -1), data.get((width, -1),
                 data.get((-1, height), data.get((width, height), False))))
-            if found == False:
+            if found is False:
                 try:
                     stat_ = os.stat(self.settings.preview_script)
-                except:
+                except Exception:
                     self.fm.notify("Preview Script `%s' doesn't exist!" %
                             self.settings.preview_script, bad=True)
                     return None
@@ -967,6 +966,7 @@ class Actions(FileManagerAware, SettingsAware):
                     path, str(width), str(height), cacheimg,
                     str(self.settings.preview_images)], read=True,
                     silent=True, descr="Getting preview of %s" % path)
+
                 def on_after(signal):
                     exit = signal.process.poll()
                     content = signal.loader.stdout_buffer
@@ -1012,10 +1012,11 @@ class Actions(FileManagerAware, SettingsAware):
                         else:
                             pager.set_source(self.thisfile.get_preview_source(
                                 pager.wid, pager.hei))
+
                 def on_destroy(signal):
                     try:
                         del self.previews[path]
-                    except:
+                    except Exception:
                         pass
                 loadable.signal_bind('after', on_after)
                 loadable.signal_bind('destroy', on_destroy)
@@ -1026,7 +1027,7 @@ class Actions(FileManagerAware, SettingsAware):
         else:
             try:
                 return codecs.open(path, 'r', errors='ignore')
-            except:
+            except Exception:
                 return None
 
     # --------------------------
@@ -1081,7 +1082,7 @@ class Actions(FileManagerAware, SettingsAware):
         if self.restorable_tabs:
             tab = self.restorable_tabs.pop()
             for name in range(1, len(self.tabs) + 2):
-                if not name in self.tabs:
+                if name not in self.tabs:
                     self.current_tab = name
                     self.tabs[name] = tab
                     tab.enter_dir(tab.path, history=False)
@@ -1105,7 +1106,7 @@ class Actions(FileManagerAware, SettingsAware):
         if narg:
             return self.tab_open(narg, path)
         for i in range(1, 10):
-            if not i in self.tabs:
+            if i not in self.tabs:
                 return self.tab_open(i, path)
 
     def tab_switch(self, path, create_directory=False):
@@ -1164,6 +1165,7 @@ class Actions(FileManagerAware, SettingsAware):
             contexts = 'browser', 'console', 'pager', 'taskview'
 
         temporary_file = tempfile.NamedTemporaryFile()
+
         def write(string):
             temporary_file.write(string.encode('utf-8'))
 
@@ -1189,6 +1191,7 @@ class Actions(FileManagerAware, SettingsAware):
 
     def dump_commands(self):
         temporary_file = tempfile.NamedTemporaryFile()
+
         def write(string):
             temporary_file.write(string.encode('utf-8'))
 
@@ -1214,6 +1217,7 @@ class Actions(FileManagerAware, SettingsAware):
 
     def dump_settings(self):
         temporary_file = tempfile.NamedTemporaryFile()
+
         def write(string):
             temporary_file.write(string.encode('utf-8'))
 

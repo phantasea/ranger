@@ -33,8 +33,10 @@ _safe_string_table = maketrans(_unsafe_chars, '?' * len(_unsafe_chars))
 _extract_number_re = re.compile(r'(\d+|\D)')
 _integers = set("0123456789")
 
+
 def safe_path(path):
     return path.translate(_safe_string_table)
+
 
 class FileSystemObject(FileManagerAware, SettingsAware):
     (basename,
@@ -89,7 +91,7 @@ class FileSystemObject(FileManagerAware, SettingsAware):
             path = abspath(path)
         self.path = path
         self.basename = basename(path)
-        if basename_is_rel_to == None:
+        if basename_is_rel_to is None:
             self.relative_path = self.basename
         else:
             self.relative_path = relpath(path, basename_is_rel_to)
@@ -119,7 +121,6 @@ class FileSystemObject(FileManagerAware, SettingsAware):
                     self._linemode = linemode
                     break
 
-
     def __repr__(self):
         return "<{0} {1}>".format(self.__class__.__name__, self.path)
 
@@ -136,12 +137,12 @@ class FileSystemObject(FileManagerAware, SettingsAware):
 
     @lazy_property
     def basename_natural(self):
-        return [('0', int(s)) if s in _integers else (s, 0) \
+        return [('0', int(s)) if s in _integers else (s, 0)
                 for s in _extract_number_re.split(self.relative_path)]
 
     @lazy_property
     def basename_natural_lower(self):
-        return [('0', int(s)) if s in _integers else (s, 0) \
+        return [('0', int(s)) if s in _integers else (s, 0)
                 for s in _extract_number_re.split(self.relative_path_lower)]
 
     @lazy_property
@@ -152,14 +153,14 @@ class FileSystemObject(FileManagerAware, SettingsAware):
     def user(self):
         try:
             return getpwuid(self.stat.st_uid)[0]
-        except:
+        except Exception:
             return str(self.stat.st_uid)
 
     @lazy_property
     def group(self):
         try:
             return getgrgid(self.stat.st_gid)[0]
-        except:
+        except Exception:
             return str(self.stat.st_gid)
 
     for attr in ('video', 'audio', 'image', 'media', 'document', 'container'):
@@ -174,7 +175,7 @@ class FileSystemObject(FileManagerAware, SettingsAware):
         """Used in garbage-collecting.  Override in Directory"""
 
     def look_up_cumulative_size(self):
-        pass # normal files have no cumulative size
+        pass  # normal files have no cumulative size
 
     def set_mimetype(self):
         """assign attributes such as self.video according to the mimetype"""
@@ -204,7 +205,7 @@ class FileSystemObject(FileManagerAware, SettingsAware):
     def mimetype(self):
         try:
             return self._mimetype
-        except:
+        except Exception:
             self.set_mimetype()
             return self._mimetype
 
@@ -212,7 +213,7 @@ class FileSystemObject(FileManagerAware, SettingsAware):
     def mimetype_tuple(self):
         try:
             return self._mimetype_tuple
-        except:
+        except Exception:
             self.set_mimetype()
             return self._mimetype_tuple
 
@@ -229,7 +230,7 @@ class FileSystemObject(FileManagerAware, SettingsAware):
         if self.is_link:
             try:
                 return realpath(self.path)
-            except:
+            except Exception:
                 return None  # it is impossible to get the link destination
         return self.path
 
@@ -263,7 +264,7 @@ class FileSystemObject(FileManagerAware, SettingsAware):
                 if self.is_link:
                     new_stat = stat(path)
                 self.exists = True
-            except:
+            except Exception:
                 self.exists = False
 
         # Set some attributes

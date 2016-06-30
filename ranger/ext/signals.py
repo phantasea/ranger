@@ -60,6 +60,7 @@ True
 import weakref
 from types import MethodType
 
+
 class Signal(dict):
     """Signals are passed to the bound functions as an argument.
 
@@ -71,6 +72,7 @@ class Signal(dict):
     To delete a signal handler from inside a signal, raise a ReferenceError.
     """
     stopped = False
+
     def __init__(self, **keywords):
         dict.__init__(self, keywords)
         self.__dict__ = self
@@ -90,6 +92,7 @@ class SignalHandler:
     "active" to False.
     """
     active = True
+
     def __init__(self, signal_name, function, priority, pass_signal):
         self._priority = max(0, min(1, priority))
         self._signal_name = signal_name
@@ -131,7 +134,7 @@ class SignalDispatcher(object):
         assert isinstance(weak, bool)
         try:
             handlers = self._signals[signal_name]
-        except:
+        except Exception:
             handlers = self._signals[signal_name] = []
         nargs = function.__code__.co_argcount
 
@@ -170,13 +173,13 @@ class SignalDispatcher(object):
         """
         try:
             handlers = self._signals[signal_handler._signal_name]
-        except:
+        except Exception:
             pass
         else:
             try:
                 signal_handler._function = None
                 handlers.remove(signal_handler)
-            except:
+            except Exception:
                 pass
 
     def signal_garbage_collect(self):

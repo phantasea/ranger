@@ -6,6 +6,7 @@ import re
 import os
 ALLOWED_KEYS = string.ascii_letters + string.digits + "`'"
 
+
 class Bookmarks(object):
     """Bookmarks is a container which associates keys with bookmarks.
 
@@ -61,7 +62,8 @@ class Bookmarks(object):
     def remember(self, value):
         """Bookmarks <value> to the key '"""
         self["'"] = value
-        if self.autosave: self.save()
+        if self.autosave:
+            self.save()
 
     def __delitem__(self, key):
         """Delete the bookmark with the given key"""
@@ -69,8 +71,8 @@ class Bookmarks(object):
             key = "'"
         if key in self.dct:
             del self.dct[key]
-            if self.autosave: self.save()
-
+            if self.autosave:
+                self.save()
 
     def __iter__(self):
         return iter(self.dct.items())
@@ -94,7 +96,8 @@ class Bookmarks(object):
             key = "'"
         if key in ALLOWED_KEYS:
             self.dct[key] = value
-            if self.autosave: self.save()
+            if self.autosave:
+                self.save()
 
     def __contains__(self, key):
         """Test whether a bookmark-key is defined"""
@@ -148,23 +151,23 @@ class Bookmarks(object):
         if self.path is None:
             return
         if os.access(self.path, os.W_OK):
-            f = open(self.path+".new", 'w')
+            f = open(self.path + ".new", 'w')
             for key, value in self.dct.items():
                 if type(key) == str\
                         and key in ALLOWED_KEYS:
                     try:
                         f.write("{0}:{1}\n".format(str(key), str(value)))
-                    except:
+                    except Exception:
                         pass
 
             f.close()
             old_perms = os.stat(self.path)
             try:
-                os.chown(self.path+".new", old_perms.st_uid, old_perms.st_gid)
-                os.chmod(self.path+".new", old_perms.st_mode)
+                os.chown(self.path + ".new", old_perms.st_uid, old_perms.st_gid)
+                os.chmod(self.path + ".new", old_perms.st_mode)
             except OSError:
                 pass
-            os.rename(self.path+".new", self.path)
+            os.rename(self.path + ".new", self.path)
         self._update_mtime()
 
     def _load_dict(self):
@@ -176,7 +179,7 @@ class Bookmarks(object):
         if not os.path.exists(self.path):
             try:
                 f = open(self.path, 'w')
-            except:
+            except Exception:
                 raise OSError('Cannot read the given path')
             f.close()
 

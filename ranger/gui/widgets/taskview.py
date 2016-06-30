@@ -6,6 +6,7 @@
 from . import Widget
 from ranger.ext.accumulator import Accumulator
 
+
 class TaskView(Widget, Accumulator):
     old_lst = None
 
@@ -51,7 +52,7 @@ class TaskView(Widget, Accumulator):
                     descr = obj.get_description()
                     if obj.progressbar_supported and obj.percent >= 0 \
                             and obj.percent <= 100:
-                        self.addstr(y, 0, "%3.2f%% - %s" % \
+                        self.addstr(y, 0, "%3.2f%% - %s" %
                                 (obj.percent, descr), self.wid)
                         wid = int(self.wid / 100.0 * obj.percent)
                         self.color_at(y, 0, self.wid, tuple(clr))
@@ -70,7 +71,6 @@ class TaskView(Widget, Accumulator):
     def finalize(self):
         y = self.y + 1 + self.pointer - self.scroll_begin
         self.fm.ui.win.move(y, self.x)
-
 
     def task_remove(self, i=None):
         if i is None:

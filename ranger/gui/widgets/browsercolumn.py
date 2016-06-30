@@ -16,6 +16,7 @@ from ranger.core import linemode
 
 from ranger.gui.color import *
 
+
 class BrowserColumn(Pager):
     main_column = False
     display_infostring = False
@@ -81,7 +82,7 @@ class BrowserColumn(Pager):
                         elif self.level == 0:
                             self.fm.thisdir.move_to_obj(clicked_file)
                             self.fm.execute_file(clicked_file)
-                    except:
+                    except Exception:
                         pass
 
         else:
@@ -102,7 +103,7 @@ class BrowserColumn(Pager):
         """
         try:
             self.win.move(line, 0)
-        except:
+        except Exception:
             return
         for entry in commands:
             text, attr = entry
@@ -301,7 +302,7 @@ class BrowserColumn(Pager):
 
             text = current_linemode.filetitle(drawn, metadata)
 
-            if drawn.marked and (self.main_column or \
+            if drawn.marked and (self.main_column or
                     self.settings.display_tags_in_all_columns):
                 #mod by Chris
                 #text = " " + text

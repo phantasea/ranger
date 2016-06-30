@@ -11,6 +11,7 @@ NARROW = 1
 WIDE = 2
 WIDE_SYMBOLS = set('WF')
 
+
 def uwid(string):
     """Return the width of a string"""
     if not PY3:
@@ -60,7 +61,7 @@ class WideString(object):
             # would str(string) raise a UnicodeEncodeError?
             try:
                 self.string = string.encode('latin-1', 'ignore')
-            except:
+            except Exception:
                 self.string = ""
         if chars is None:
             self.chars = string_to_charlist(string)
@@ -149,7 +150,7 @@ class WideString(object):
         """
         if isinstance(i, slice):
             return self.__getslice__(i.start, i.stop)
-        return self.__getslice__(i, i+1)
+        return self.__getslice__(i, i + 1)
 
     def __len__(self):
         """
