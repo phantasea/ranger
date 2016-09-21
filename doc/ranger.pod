@@ -234,6 +234,8 @@ The macro %space expands to a space character. You can use it to add spaces to
 the end of a command when needed, while preventing editors to strip spaces off
 the end of the line automatically.
 
+To write a literal %, you need to escape it by writing %%.
+
 =head2 BOOKMARKS
 
 Type B<m<keyE<gt>> to bookmark the current directory. You can re-enter this
@@ -1063,7 +1065,7 @@ Examples:
 =item filter [I<string>]
 
 Displays only the files which contain the I<string> in their basename.  Running
-this command without any parameter will reset the fitler.
+this command without any parameter will reset the filter.
 
 This command is based on the I<scout> command and supports all of its options.
 
