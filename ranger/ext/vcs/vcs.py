@@ -7,6 +7,7 @@ import os
 import subprocess
 import threading
 import time
+from ranger.ext.spawn import spawn
 
 # Python2 compatibility
 try:
@@ -119,14 +120,13 @@ class Vcs(object):  # pylint: disable=too-many-instance-attributes
         with open(os.devnull, 'w') as devnull:
             try:
                 if catchout:
-                    output = subprocess.check_output(cmd, cwd=path, stderr=devnull)
-                    if retbytes:
-                        return output
-                    else:
-                        output = output.decode('UTF-8')
+                    output = spawn(cmd, cwd=path, stderr=devnull,
+                            decode=not retbytes)
+                    if (not retbytes and rstrip_newline and
+                            output.endswith('\n')):
                         if rstrip_newline and output.endswith('\n'):
                             return output[:-1]
-                        return output
+                    return output
                 else:
                     subprocess.check_call(cmd, cwd=path, stdout=devnull, stderr=devnull)
             except (subprocess.CalledProcessError, FileNotFoundError):
@@ -460,15 +460,20 @@ class VcsThread(threading.Thread):  # pylint: disable=too-many-instance-attribut
             self.paused.clear()
             self.awoken.clear()
 
-            self._queue_process()
+            try:
+                self._queue_process()
 
-            if self.redraw:
-                self.redraw = False
-                for column in self.ui.browser.columns:
-                    if column.target and column.target.is_directory:
-                        column.need_redraw = True
-                self.ui.status.need_redraw = True
-                self.ui.redraw()
+                if self.redraw:
+                    self.redraw = False
+                    for column in self.ui.browser.columns:
+                        if column.target and column.target.is_directory:
+                            column.need_redraw = True
+                    self.ui.status.need_redraw = True
+                    self.ui.redraw()
+            except Exception:  # pylint: disable=broad-except
+                import traceback
+                self.ui.fm.log.extendleft(reversed(traceback.format_exc().splitlines()))
+                self.ui.fm.notify('VCS Exception', bad=True)
 
     def pause(self):
         """Pause thread"""

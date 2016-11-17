@@ -15,6 +15,7 @@ import sys
 import ranger.api
 from ranger.core.actions import Actions
 from ranger.core.tab import Tab
+from ranger.container import settings
 from ranger.container.tags import Tags, TagsDummy
 from ranger.gui.ui import UI
 from ranger.container.bookmarks import Bookmarks
@@ -49,7 +50,7 @@ class FM(Actions, SignalDispatcher):
             self.ui = ui
         self.start_paths = paths
         self.directories = dict()
-        self.log = deque(maxlen=20)
+        self.log = deque(maxlen=1000)
         self.bookmarks = bookmarks
         self.current_tab = 1
         self.tabs = {}
@@ -70,9 +71,9 @@ class FM(Actions, SignalDispatcher):
         self.hostname = socket.gethostname()
         self.home_path = os.path.expanduser('~')
 
-        self.log.append('ranger {0} started! Process ID is {1}.'
+        self.log.appendleft('ranger {0} started! Process ID is {1}.'
                 .format(__version__, os.getpid()))
-        self.log.append('Running on Python ' + sys.version.replace('\n', ''))
+        self.log.appendleft('Running on Python ' + sys.version.replace('\n', ''))
 
         mimetypes.knownfiles.append(os.path.expanduser('~/.mime.types'))
         mimetypes.knownfiles.append(self.relpath('data/mime.types'))
@@ -97,7 +98,13 @@ class FM(Actions, SignalDispatcher):
             rifleconf = self.relpath('config/rifle.conf')
         self.rifle = Rifle(rifleconf)
         self.rifle.reload_config()
-        self.image_displayer = self._get_image_displayer()
+
+        def set_image_displayer():
+            self.image_displayer = self._get_image_displayer()
+        set_image_displayer()
+        self.settings.signal_bind('setopt.preview_images_method',
+                set_image_displayer,
+                priority=settings.SIGNAL_PRIORITY_AFTER_SYNC)
 
         if not ranger.arg.clean and self.tags is None:
             self.tags = Tags(self.confpath('tagged'))
@@ -203,6 +210,10 @@ class FM(Actions, SignalDispatcher):
             return W3MImageDisplayer()
         elif self.settings.preview_images_method == "iterm2":
             return ITerm2ImageDisplayer()
+        elif self.settings.preview_images_method == "urxvt":
+            return URXVTImageDisplayer()
+        elif self.settings.preview_images_method == "urxvt-full":
+            return URXVTImageFSDisplayer()
         else:
             return ImageDisplayer()
 
