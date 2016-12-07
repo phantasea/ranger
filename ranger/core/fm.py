@@ -5,6 +5,7 @@
 
 from time import time
 from collections import deque
+import logging
 import mimetypes
 import os.path
 import pwd
@@ -25,8 +26,10 @@ from ranger.core.metadata import MetadataManager
 from ranger.ext.rifle import Rifle
 from ranger.container.directory import Directory
 from ranger.ext.signals import SignalDispatcher
-from ranger import __version__
 from ranger.core.loader import Loader
+from ranger.ext import logutils
+
+log = logging.getLogger(__name__)
 
 
 class FM(Actions, SignalDispatcher):
@@ -50,7 +53,6 @@ class FM(Actions, SignalDispatcher):
             self.ui = ui
         self.start_paths = paths
         self.directories = dict()
-        self.log = deque(maxlen=1000)
         self.bookmarks = bookmarks
         self.current_tab = 1
         self.tabs = {}
@@ -70,10 +72,6 @@ class FM(Actions, SignalDispatcher):
             self.username = 'uid:' + str(os.geteuid())
         self.hostname = socket.gethostname()
         self.home_path = os.path.expanduser('~')
-
-        self.log.appendleft('ranger {0} started! Process ID is {1}.'
-                .format(__version__, os.getpid()))
-        self.log.appendleft('Running on Python ' + sys.version.replace('\n', ''))
 
         mimetypes.knownfiles.append(os.path.expanduser('~/.mime.types'))
         mimetypes.knownfiles.append(self.relpath('data/mime.types'))
@@ -204,6 +202,15 @@ class FM(Actions, SignalDispatcher):
             except Exception:
                 if debug:
                     raise
+
+    def get_log(self):
+        """Return the current log
+
+        The log is returned as a list of string
+        """
+        for log in logutils.log_queue:
+            for line in log.split('\n'):
+                yield line
 
     def _get_image_displayer(self):
         if self.settings.preview_images_method == "w3m":

@@ -13,6 +13,7 @@ from inspect import cleandoc
 from stat import S_IEXEC
 from hashlib import sha1
 from sys import version_info
+from logging import getLogger
 
 import ranger
 from ranger.ext.direction import Direction
@@ -30,6 +31,8 @@ from ranger.container.settings import ALLOWED_SETTINGS, ALLOWED_VALUES
 from ranger.core.linemode import DEFAULT_LINEMODE
 
 MACRO_FAIL = "<\x01\x01MACRO_HAS_NO_VALUE\x01\01>"
+
+log = getLogger(__name__)
 
 
 class _MacroTemplate(string.Template):
@@ -152,7 +155,7 @@ class Actions(FileManagerAware, SettingsAware):
         elif bad is True and ranger.arg.debug:
             raise Exception(str(text))
         text = str(text)
-        self.log.appendleft(text)
+        log.debug("Command notify invoked: [Bad: {0}, Text: '{1}']".format(bad, text))
         if self.ui and self.ui.is_on:
             self.ui.status.notify("  ".join(text.split("\n")),
                     duration=duration, bad=bad)
@@ -344,9 +347,10 @@ class Actions(FileManagerAware, SettingsAware):
         Load a config file.
         """
         filename = os.path.expanduser(filename)
+        log.debug("Sourcing config file '{0}'".format(filename))
         with open(filename, 'r') as f:
             for line in f:
-                line = line.lstrip().rstrip("\r\n")
+                line = line.strip(" \r\n")
                 if line.startswith("#") or not line.strip():
                     continue
                 try:
@@ -419,7 +423,7 @@ class Actions(FileManagerAware, SettingsAware):
         Example:
         self.move(down=4, pages=True)  # moves down by 4 pages.
         self.move(to=2, pages=True)  # moves to page 2.
-        self.move(to=1, percentage=True)  # moves to 80%
+        self.move(to=80, percentage=True)  # moves to 80%
         """
         cwd = self.thisdir
         direction = Direction(kw)
@@ -869,11 +873,13 @@ class Actions(FileManagerAware, SettingsAware):
             self.notify("Could not find manpage.", bad=True)
 
     def display_log(self):
+        logs = list(self.get_log())
         pager = self.ui.open_pager()
-        if self.log:
-            pager.set_source(["Message Log:"] + list(self.log))
+        if logs:
+            pager.set_source(["Message Log:"] + logs)
         else:
             pager.set_source(["Message Log:", "No messages!"])
+        pager.move(to=100, percentage=True)
 
     def display_file(self):
         if not self.thisfile or not self.thisfile.is_file:

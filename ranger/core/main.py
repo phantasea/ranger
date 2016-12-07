@@ -6,6 +6,10 @@
 import os.path
 import sys
 import tempfile
+from ranger import __version__
+from logging import getLogger
+
+log = getLogger(__name__)
 
 
 def main():
@@ -15,6 +19,14 @@ def main():
     from ranger.container.settings import Settings
     from ranger.core.shared import FileManagerAware, SettingsAware
     from ranger.core.fm import FM
+    from ranger.ext.logutils import setup_logging
+
+    ranger.arg = arg = parse_arguments()
+    setup_logging(debug=arg.debug, logfile=arg.logfile)
+
+    log.info("Ranger version {0}".format(__version__))
+    log.info('Running on Python ' + sys.version.replace('\n', ''))
+    log.info("Process ID is {0}".format(os.getpid()))
 
     try:
         locale.setlocale(locale.LC_ALL, '')
@@ -31,7 +43,9 @@ def main():
     if 'SHELL' not in os.environ:
         os.environ['SHELL'] = 'sh'
 
-    ranger.arg = arg = parse_arguments()
+    log.debug("config dir: '{0}'".format(arg.confdir))
+    log.debug("cache dir: '{0}'".format(arg.cachedir))
+
     if arg.copy_config is not None:
         fm = FM()
         fm.copy_config_files(arg.copy_config)
@@ -73,8 +87,6 @@ def main():
                    "deprecated.\nPlease use the standalone file launcher "
                    "'rifle' instead.\n")
 
-            def print_function(string):
-                print(string)
             from ranger.ext.rifle import Rifle
             fm = FM()
             if not arg.clean and os.path.isfile(fm.confpath('rifle.conf')):
@@ -112,7 +124,7 @@ def main():
         if fm.username == 'root':
             fm.settings.preview_files = False
             fm.settings.use_preview_script = False
-            fm.log.appendleft("Running as root, disabling the file previews.")
+            log.info("Running as root, disabling the file previews.")
         if not arg.debug:
             from ranger.ext import curses_interrupt_handler
             curses_interrupt_handler.install_interrupt_handler()
@@ -199,6 +211,8 @@ def parse_arguments():
             help="activate debug mode")
     parser.add_option('-c', '--clean', action='store_true',
             help="don't touch/require any config files. ")
+    parser.add_option('--logfile', type='string', metavar='file',
+            help="log file to use, '-' for stderr")
     parser.add_option('-r', '--confdir', type='string',
             metavar='dir', default=default_confdir,
             help="change the configuration directory. (%default)")
@@ -265,14 +279,18 @@ def load_settings(fm, clean):
         allow_access_to_confdir(ranger.arg.confdir, True)
 
         # Load custom commands
-        if os.path.exists(fm.confpath('commands.py')):
+        custom_comm_path = fm.confpath('commands.py')
+        if os.path.exists(custom_comm_path):
             old_bytecode_setting = sys.dont_write_bytecode
             sys.dont_write_bytecode = True
             try:
                 import commands
                 fm.commands.load_commands_from_module(commands)
-            except ImportError:
-                pass
+            except ImportError as e:
+                log.debug("Failed to import custom commands from '{0}'".format(custom_comm_path))
+                log.exception(e)
+            else:
+                log.debug("Loaded custom commands from '{0}'".format(custom_comm_path))
             sys.dont_write_bytecode = old_bytecode_setting
 
         allow_access_to_confdir(ranger.arg.confdir, False)
@@ -297,6 +315,7 @@ def load_settings(fm, clean):
             pass
         else:
             if not os.path.exists(fm.confpath('plugins', '__init__.py')):
+                log.debug("Creating missing '__init__.py' file in plugin folder")
                 f = open(fm.confpath('plugins', '__init__.py'), 'w')
                 f.close()
 
@@ -313,11 +332,12 @@ def load_settings(fm, clean):
                     else:
                         module = importlib.import_module('plugins.' + plugin)
                         fm.commands.load_commands_from_module(module)
-                    fm.log.appendleft("Loaded plugin '%s'." % plugin)
-                except Exception:
-                    import traceback
-                    fm.log.extendleft(reversed(traceback.format_exc().splitlines()))
-                    fm.notify("Error in plugin '%s'" % plugin, bad=True)
+                    log.debug("Loaded plugin '{0}'".format(plugin))
+                except Exception as e:
+                    mex = "Error while loading plugin '{0}'".format(plugin)
+                    log.error(mex)
+                    log.exception(e)
+                    fm.notify(mex, bad=True)
             ranger.fm = None
 
         # COMPAT: Load the outdated options.py
@@ -360,6 +380,8 @@ def allow_access_to_confdir(confdir, allow):
                 print("To run ranger without the need for configuration")
                 print("files, use the --clean option.")
                 raise SystemExit()
+        else:
+            log.debug("Created config directory '{0}'".format(confdir))
         if confdir not in sys.path:
             sys.path[0:0] = [confdir]
     else:
