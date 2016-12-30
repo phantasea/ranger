@@ -8,7 +8,8 @@ import subprocess
 import threading
 import time
 from logging import getLogger
-from ranger.ext.spawn import spawn
+
+from ranger.ext import spawn
 
 # Python2 compatibility
 try:
@@ -20,7 +21,9 @@ try:
 except NameError:
     FileNotFoundError = OSError  # pylint: disable=redefined-builtin
 
-log = getLogger(__name__)
+
+LOG = getLogger(__name__)
+
 
 class VcsError(Exception):
     """VCS exception"""
@@ -119,20 +122,17 @@ class Vcs(object):  # pylint: disable=too-many-instance-attributes
         if path is None:
             path = self.path
 
-        with open(os.devnull, 'w') as devnull:
-            try:
-                if catchout:
-                    output = spawn(cmd, cwd=path, stderr=devnull,
-                            decode=not retbytes)
-                    if (not retbytes and rstrip_newline and
-                            output.endswith('\n')):
-                        if rstrip_newline and output.endswith('\n'):
-                            return output[:-1]
-                    return output
-                else:
-                    subprocess.check_call(cmd, cwd=path, stdout=devnull, stderr=devnull)
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                raise VcsError('{0:s}: {1:s}'.format(str(cmd), path))
+        try:
+            if catchout:
+                output = spawn.check_output(cmd, cwd=path, decode=not retbytes)
+                if not retbytes and rstrip_newline and output.endswith('\n'):
+                    return output[:-1]
+                return output
+            else:
+                with open(os.devnull, mode='w') as fd_devnull:
+                    subprocess.check_call(cmd, cwd=path, stdout=fd_devnull, stderr=fd_devnull)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            raise VcsError('{0:s}: {1:s}'.format(str(cmd), path))
 
     def _get_repotype(self, path):
         """Get type for path"""
@@ -236,7 +236,9 @@ class VcsRoot(Vcs):  # pylint: disable=abstract-method
             self.branch = self.data_branch()
             self.obj.vcsremotestatus = self.data_status_remote()
             self.obj.vcsstatus = self.data_status_root()
-        except VcsError:
+        except VcsError as error:
+            LOG.exception(error)
+            self.obj.fm.notify('VCS Exception: View log for more info', bad=True)
             return False
         self.rootinit = True
         return True
@@ -249,7 +251,9 @@ class VcsRoot(Vcs):  # pylint: disable=abstract-method
             self.status_subpaths = self.data_status_subpaths()
             self.obj.vcsremotestatus = self.data_status_remote()
             self.obj.vcsstatus = self._status_root()
-        except VcsError:
+        except VcsError as error:
+            LOG.exception(error)
+            self.obj.fm.notify('VCS Exception: View log for more info', bad=True)
             return False
         self.rootinit = True
         self.updatetime = time.time()
@@ -472,9 +476,9 @@ class VcsThread(threading.Thread):  # pylint: disable=too-many-instance-attribut
                             column.need_redraw = True
                     self.ui.status.need_redraw = True
                     self.ui.redraw()
-            except Exception as e:  # pylint: disable=broad-except
-                log.exception(e)
-                self.ui.fm.notify('VCS Exception', bad=True)
+            except Exception as error:  # pylint: disable=broad-except
+                LOG.exception(error)
+                self.ui.fm.notify('VCS Exception: View log for more info', bad=True)
 
     def pause(self):
         """Pause thread"""
