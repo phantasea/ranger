@@ -83,7 +83,7 @@
 # of ranger.
 # ===================================================================
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 from collections import deque
 import os
@@ -131,8 +131,9 @@ class alias(Command):
     def execute(self):
         if not self.arg(1) or not self.arg(2):
             self.fm.notify('Syntax: alias <newcommand> <oldcommand>', bad=True)
-        else:
-            self.fm.commands.alias(self.arg(1), self.rest(2))
+            return
+
+        self.fm.commands.alias(self.arg(1), self.rest(2))
 
 
 class echo(Command):
@@ -289,7 +290,7 @@ class open_with(Command):
 
         examples:
         "mplayer f 1" => ("mplayer", "f", 1)
-        "aunpack 4" => ("aunpack", "", 4)
+        "atool 4" => ("atool", "", 4)
         "p" => ("", "p", 0)
         "" => None
         """
@@ -414,25 +415,34 @@ class setlocal(set_):
 
     Gives an option a new value.
     """
-    PATH_RE = re.compile(r'^\s*path="?(.*?)"?\s*$')
+    PATH_RE_DQUOTED = re.compile(r'^setlocal\s+path="(.*?)"')
+    PATH_RE_SQUOTED = re.compile(r"^setlocal\s+path='(.*?)'")
+    PATH_RE_UNQUOTED = re.compile(r'^path=(.*?)$')
+
+    def _re_shift(self, match):
+        if not match:
+            return None
+        path = os.path.expanduser(match.group(1))
+        for _ in range(len(path.split())):
+            self.shift()
+        return path
 
     def execute(self):
-        match = self.PATH_RE.match(self.arg(1))
-        if match:
-            path = os.path.normpath(os.path.expanduser(match.group(1)))
-            self.shift()
-        elif self.fm.thisdir:
+        path = self._re_shift(self.PATH_RE_DQUOTED.match(self.line))
+        if path is None:
+            path = self._re_shift(self.PATH_RE_SQUOTED.match(self.line))
+        if path is None:
+            path = self._re_shift(self.PATH_RE_UNQUOTED.match(self.arg(1)))
+        if path is None and self.fm.thisdir:
             path = self.fm.thisdir.path
-        else:
-            path = None
+        if not path:
+            return
 
-        if path:
-            name = self.arg(1)
-            name, value, _ = self.parse_setting_line()
-            self.fm.set_option_from_string(name, value, localpath=path)
+        name, value, _ = self.parse_setting_line()
+        self.fm.set_option_from_string(name, value, localpath=path)
 
 
-class setintag(setlocal):
+class setintag(set_):
     """:setintag <tag or tags> <option name>=<option value>
 
     Sets an option for directories that are tagged with a specific tag.
@@ -481,7 +491,7 @@ class default_linemode(Command):
         self.fm.default_linemodes.appendleft(entry)
 
         # Redraw the columns
-        if hasattr(self.fm.ui, "browser"):
+        if self.fm.ui.browser:
             for col in self.fm.ui.browser.columns:
                 col.need_redraw = True
 
@@ -590,6 +600,49 @@ class delete(Command):
             self.fm.delete(files)
 
 
+class jump_non(Command):
+    """:jump_non [-FLAGS...]
+
+    Jumps to first non-directory if highlighted file is a directory and vice versa.
+
+    Flags:
+     -r    Jump in reverse order
+     -w    Wrap around if reaching end of filelist
+    """
+    def __init__(self, *args, **kwargs):
+        super(jump_non, self).__init__(*args, **kwargs)
+
+        flags, _ = self.parse_flags()
+        self._flag_reverse = 'r' in flags
+        self._flag_wrap = 'w' in flags
+
+    @staticmethod
+    def _non(fobj, is_directory):
+        return fobj.is_directory if not is_directory else not fobj.is_directory
+
+    def execute(self):
+        tfile = self.fm.thisfile
+        passed = False
+        found_before = None
+        found_after = None
+        for fobj in self.fm.thisdir.files[::-1] if self._flag_reverse else self.fm.thisdir.files:
+            if fobj.path == tfile.path:
+                passed = True
+                continue
+
+            if passed:
+                if self._non(fobj, tfile.is_directory):
+                    found_after = fobj.path
+                    break
+            elif not found_before and self._non(fobj, tfile.is_directory):
+                found_before = fobj.path
+
+        if found_after:
+            self.fm.select_file(found_after)
+        elif self._flag_wrap and found_before:
+            self.fm.select_file(found_before)
+
+
 class mark_tag(Command):
     """:mark_tag [<tags>]
 
@@ -625,9 +678,10 @@ class console(Command):
         if self.arg(1)[0:2] == '-p':
             try:
                 position = int(self.arg(1)[2:])
-                self.shift()
-            except Exception:
+            except ValueError:
                 pass
+            else:
+                self.shift()
         self.fm.open_console(self.rest(1), position=position)
 
 
@@ -641,10 +695,10 @@ class load_copy_buffer(Command):
     def execute(self):
         from ranger.container.file import File
         from os.path import exists
+        fname = self.fm.confpath(self.copy_buffer_filename)
         try:
-            fname = self.fm.confpath(self.copy_buffer_filename)
             fobj = open(fname, 'r')
-        except Exception:
+        except OSError:
             return self.fm.notify(
                 "Cannot open %s" % (fname or self.copy_buffer_filename), bad=True)
         self.fm.copy_buffer = set(File(g)
@@ -662,10 +716,10 @@ class save_copy_buffer(Command):
 
     def execute(self):
         fname = None
+        fname = self.fm.confpath(self.copy_buffer_filename)
         try:
-            fname = self.fm.confpath(self.copy_buffer_filename)
             fobj = open(fname, 'w')
-        except Exception:
+        except OSError:
             return self.fm.notify("Cannot open %s" %
                                   (fname or self.copy_buffer_filename), bad=True)
         fobj.write("\n".join(fobj.path for fobj in self.fm.copy_buffer))
@@ -771,7 +825,7 @@ class eval_(Command):
             else:
                 if result and not quiet:
                     p(result)
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             p(err)
 
 
@@ -787,57 +841,63 @@ class rename(Command):
 
         new_name = self.rest(1)
 
-        tagged = {}
-        old_name = self.fm.thisfile.relative_path
-        for fobj in self.fm.tags.tags:
-            if str(fobj).startswith(self.fm.thisfile.path):
-                tagged[fobj] = self.fm.tags.tags[fobj]
-                self.fm.tags.remove(fobj)
-
         if not new_name:
             return self.fm.notify('Syntax: rename <newname>', bad=True)
 
-        if new_name == old_name:
+        if new_name == self.fm.thisfile.relative_path:
             return
 
         if access(new_name, os.F_OK):
             return self.fm.notify("Can't rename: file already exists!", bad=True)
 
         if self.fm.rename(self.fm.thisfile, new_name):
-            fobj = File(new_name)
-            # Update bookmarks that were pointing on the previous name
-            obsoletebookmarks = [b for b in self.fm.bookmarks
-                                 if b[1].path == self.fm.thisfile]
-            if obsoletebookmarks:
-                for key, _ in obsoletebookmarks:
-                    self.fm.bookmarks[key] = fobj
-                self.fm.bookmarks.update_if_outdated()
-
-            self.fm.thisdir.pointed_obj = fobj
-            self.fm.thisfile = fobj
-
-            for fobj in tagged:
-                self.fm.tags.tags[fobj.replace(old_name, new_name)] = tagged[fobj]
-                self.fm.tags.dump()
+            file_new = File(new_name)
+            self.fm.bookmarks.update_path(self.fm.thisfile.path, file_new)
+            self.fm.tags.update_path(self.fm.thisfile.path, file_new.path)
+            self.fm.thisdir.pointed_obj = file_new
+            self.fm.thisfile = file_new
 
     def tab(self, tabnum):
         return self._tab_directory_content()
 
 
 class rename_append(Command):
-    """:rename_append
+    """:rename_append [-FLAGS...]
 
-    Creates an open_console for the rename command, automatically placing
-    the cursor before the file extension.
+    Opens the console with ":rename <current file>" with the cursor positioned
+    before the file extension.
+
+    Flags:
+     -a    Position before all extensions
+     -r    Remove everything before extensions
     """
+    def __init__(self, *args, **kwargs):
+        super(rename_append, self).__init__(*args, **kwargs)
+
+        flags, _ = self.parse_flags()
+        self._flag_ext_all = 'a' in flags
+        self._flag_remove = 'r' in flags
 
     def execute(self):
         tfile = self.fm.thisfile
-        path = tfile.relative_path.replace("%", "%%")
-        if path.find('.') != 0 and path.rfind('.') != -1 and not tfile.is_directory:
-            self.fm.open_console('rename ' + path, position=(7 + path.rfind('.')))
+        relpath = tfile.relative_path.replace('%', '%%')
+        basename = tfile.basename.replace('%', '%%')
+
+        if basename.find('.') <= 0:
+            self.fm.open_console('rename ' + relpath)
+            return
+
+        if self._flag_ext_all:
+            pos_ext = re.search(r'[^.]+', basename).end(0)
         else:
-            self.fm.open_console('rename ' + path)
+            pos_ext = basename.rindex('.')
+        pos = len(relpath) - len(basename) + pos_ext
+
+        if self._flag_remove:
+            relpath = relpath[:-len(basename)] + basename[pos_ext:]
+            pos -= pos_ext
+
+        self.fm.open_console('rename ' + relpath, position=(7 + pos))
 
 
 class chmod(Command):
@@ -868,15 +928,12 @@ class chmod(Command):
         for fobj in self.fm.thistab.get_selection():
             try:
                 os.chmod(fobj.path, mode)
-            except Exception as ex:
+            except OSError as ex:
                 self.fm.notify(ex)
 
-        try:
-            # reloading directory.  maybe its better to reload the selected
-            # files only.
-            self.fm.thisdir.load_content()
-        except Exception:
-            pass
+        # reloading directory.  maybe its better to reload the selected
+        # files only.
+        self.fm.thisdir.content_outdated = True
 
 
 class bulkrename(Command):
@@ -1145,26 +1202,25 @@ class pmap(map_):
 
 
 class scout(Command):
-    """:scout [-FLAGS] <pattern>
+    """:scout [-FLAGS...] <pattern>
 
     Swiss army knife command for searching, traveling and filtering files.
-    The command takes various flags as arguments which can be used to
-    influence its behaviour:
 
-    -a = automatically open a file on unambiguous match
-    -e = open the selected file when pressing enter
-    -f = filter files that match the current search pattern
-    -g = interpret pattern as a glob pattern
-    -i = ignore the letter case of the files
-    -k = keep the console open when changing a directory with the command
-    -l = letter skipping; e.g. allow "rdme" to match the file "readme"
-    -m = mark the matching files after pressing enter
-    -M = unmark the matching files after pressing enter
-    -p = permanent filter: hide non-matching files after pressing enter
-    -r = interpret pattern as a regular expression pattern
-    -s = smart case; like -i unless pattern contains upper case letters
-    -t = apply filter and search pattern as you type
-    -v = inverts the match
+    Flags:
+     -a    Automatically open a file on unambiguous match
+     -e    Open the selected file when pressing enter
+     -f    Filter files that match the current search pattern
+     -g    Interpret pattern as a glob pattern
+     -i    Ignore the letter case of the files
+     -k    Keep the console open when changing a directory with the command
+     -l    Letter skipping; e.g. allow "rdme" to match the file "readme"
+     -m    Mark the matching files after pressing enter
+     -M    Unmark the matching files after pressing enter
+     -p    Permanent filter: hide non-matching files after pressing enter
+     -r    Interpret pattern as a regular expression pattern
+     -s    Smart case; like -i unless pattern contains upper case letters
+     -t    Apply filter and search pattern as you type
+     -v    Inverts the match
 
     Multiple flags can be combined.  For example, ":scout -gpt" would create
     a :filter-like command using globbing.
@@ -1186,8 +1242,8 @@ class scout(Command):
     INVERT        = 'v'
     # pylint: enable=bad-whitespace
 
-    def __init__(self, *args, **kws):
-        Command.__init__(self, *args, **kws)
+    def __init__(self, *args, **kwargs):
+        super(scout, self).__init__(*args, **kwargs)
         self._regex = None
         self.flags, self.pattern = self.parse_flags()
 
@@ -1218,11 +1274,8 @@ class scout(Command):
         self.cancel()
 
         if self.OPEN_ON_ENTER in flags or \
-                self.AUTO_OPEN in flags and count == 1:
-            if os.path.exists(pattern):
-                self.fm.cd(pattern)
-            else:
-                self.fm.move(right=1)
+                (self.AUTO_OPEN in flags and count == 1):
+            self.fm.move(right=1)
 
         if self.KEEP_OPEN in flags and thisdir != self.fm.thisdir:
             # reopen the console:
@@ -1297,7 +1350,7 @@ class scout(Command):
         # pylint: enable=no-member
         try:
             self._regex = re.compile(regex, options)
-        except Exception:
+        except re.error:
             self._regex = re.compile("")
         return self._regex
 
@@ -1523,7 +1576,7 @@ class linemode(default_linemode):
             self.fm.notify("Unhandled linemode: `%s'" % mode, bad=True)
             return
 
-        self.fm.thisdir._set_linemode_of_children(mode)  # pylint: disable=protected-access
+        self.fm.thisdir.set_linemode_of_children(mode)
 
         # Ask the browsercolumns to redraw
         for col in self.fm.ui.browser.columns:

@@ -3,11 +3,10 @@
 
 """The File Manager, putting the pieces together"""
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 from time import time
 from collections import deque
-import logging
 import mimetypes
 import os.path
 import pwd
@@ -31,9 +30,6 @@ from ranger.container.directory import Directory
 from ranger.ext.signals import SignalDispatcher
 from ranger.core.loader import Loader
 from ranger.ext import logutils
-
-
-LOG = logging.getLogger(__name__)
 
 
 class FM(Actions,  # pylint: disable=too-many-instance-attributes
@@ -74,7 +70,7 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
 
         try:
             self.username = pwd.getpwuid(os.geteuid()).pw_name
-        except Exception:
+        except KeyError:
             self.username = 'uid:' + str(os.geteuid())
         self.hostname = socket.gethostname()
         self.home_path = os.path.expanduser('~')
@@ -87,7 +83,7 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
         """If ui/bookmarks are None, they will be initialized here."""
 
         self.tabs = dict((n + 1, Tab(path)) for n, path in enumerate(self.start_paths))
-        tab_list = self._get_tab_list()
+        tab_list = self.get_tab_list()
         if tab_list:
             self.current_tab = tab_list[0]
             self.thistab = self.tabs[self.current_tab]
@@ -195,13 +191,13 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
         if self.ui:
             try:
                 self.ui.destroy()
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 if debug:
                     raise
         if self.loader:
             try:
                 self.loader.destroy()
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 if debug:
                     raise
 
@@ -209,10 +205,10 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
     def get_log():
         """Return the current log
 
-        The log is returned as a list of string
+        The log is returned as a generator over its entries' lines
         """
-        for log in logutils.log_queue:
-            for line in log.split('\n'):
+        for entry in logutils.QUEUE:
+            for line in entry.splitlines():
                 yield line
 
     def _get_image_displayer(self):
@@ -270,10 +266,10 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
                         print(ranger.args.confdir)
                         print("To run ranger without the need for configuration")
                         print("files, use the --clean option.")
-                        raise SystemExit()
+                        raise SystemExit
                 try:
                     shutil.copy(self.relpath(src), self.confpath(dest))
-                except Exception as ex:
+                except OSError as ex:
                     sys.stderr.write("  ERROR: %s\n" % str(ex))
         if which == 'rifle' or which == 'all':
             copy('config/rifle.conf', 'rifle.conf')
@@ -302,24 +298,22 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
 
     @staticmethod
     def confpath(*paths):
-        """returns the path relative to rangers configuration directory"""
-        if ranger.args.clean:
-            assert 0, "Should not access relpath_conf in clean mode!"
-        else:
-            return os.path.join(ranger.args.confdir, *paths)
+        """returns path to ranger's configuration directory"""
+        assert not ranger.args.clean, "Accessed configuration directory in clean mode"
+        return os.path.join(ranger.args.confdir, *paths)
 
     @staticmethod
     def relpath(*paths):
         """returns the path relative to rangers library directory"""
         return os.path.join(ranger.RANGERDIR, *paths)
 
-    def get_directory(self, path):
+    def get_directory(self, path, **dir_kwargs):
         """Get the directory object at the given path"""
         path = os.path.abspath(path)
         try:
             return self.directories[path]
         except KeyError:
-            obj = Directory(path)
+            obj = Directory(path, **dir_kwargs)
             self.directories[path] = obj
             return obj
 
@@ -356,7 +350,6 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
         ui = self.ui
         throbber = ui.throbber
         loader = self.loader
-        has_throbber = hasattr(ui, 'throbber')
         zombies = self.run.zombies
 
         ranger.api.hook_ready(self)
@@ -364,11 +357,10 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
         try:  # pylint: disable=too-many-nested-blocks
             while True:
                 loader.work()
-                if has_throbber:
-                    if loader.has_work():
-                        throbber(loader.status)
-                    else:
-                        throbber(remove=True)
+                if loader.has_work():
+                    throbber(loader.status)
+                else:
+                    throbber(remove=True)
 
                 ui.redraw()
 
@@ -398,6 +390,7 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
             if ranger.args.choosedir and self.thisdir and self.thisdir.path:
                 # XXX: UnicodeEncodeError: 'utf-8' codec can't encode character
                 # '\udcf6' in position 42: surrogates not allowed
-                open(ranger.args.choosedir, 'w').write(self.thisdir.path)
+                with open(ranger.args.choosedir, 'w') as fobj:
+                    fobj.write(self.thisdir.path)
             self.bookmarks.remember(self.thisdir)
             self.bookmarks.save()

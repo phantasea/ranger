@@ -6,7 +6,7 @@
 It displays the current path among other things.
 """
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 from os.path import basename
 
@@ -57,7 +57,7 @@ class TitleBar(Widget):
             return False
 
         pos = self.wid - 1
-        for tabname in reversed(self.fm._get_tab_list()):  # pylint: disable=protected-access
+        for tabname in reversed(self.fm.get_tab_list()):
             tabtext = self._get_tab_text(tabname)
             pos -= len(tabtext)
             if event.x > pos:
@@ -74,10 +74,7 @@ class TitleBar(Widget):
                 elif i == 2:
                     self.fm.enter_dir("/")
                 else:
-                    try:
-                        self.fm.enter_dir(part.directory)
-                    except Exception:
-                        pass
+                    self.fm.enter_dir(part.directory)
                 return True
         return False
 
@@ -93,15 +90,16 @@ class TitleBar(Widget):
 
     def _get_left_part(self, bar):
         # TODO: Properly escape non-printable chars without breaking unicode
-        if self.fm.username == 'root':
-            clr = 'bad'
-        else:
-            clr = 'good'
+        if self.settings.hostname_in_titlebar:
+            if self.fm.username == 'root':
+                clr = 'bad'
+            else:
+                clr = 'good'
 
-        bar.add(self.fm.username, 'hostname', clr, fixed=True)
-        bar.add('@', 'hostname', clr, fixed=True)
-        bar.add(self.fm.hostname, 'hostname', clr, fixed=True)
-        bar.add(' ', 'hostname', clr, fixed=True)
+            bar.add(self.fm.username, 'hostname', clr, fixed=True)
+            bar.add('@', 'hostname', clr, fixed=True)
+            bar.add(self.fm.hostname, 'hostname', clr, fixed=True)
+            bar.add(' ', 'hostname', clr, fixed=True)
 
         pathway = self.fm.thistab.pathway
         if self.settings.tilde_in_titlebar and \
@@ -130,7 +128,7 @@ class TitleBar(Widget):
         bar.addright('  ', 'space', fixed=True)
         self.tab_width = 0
         if len(self.fm.tabs) > 1:
-            for tabname in self.fm._get_tab_list():  # pylint: disable=protected-access
+            for tabname in self.fm.get_tab_list():
                 tabtext = self._get_tab_text(tabname)
                 self.tab_width += len(tabtext)
                 clr = 'good' if tabname == self.fm.current_tab else 'bad'

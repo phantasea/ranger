@@ -1,7 +1,7 @@
 # This file is part of ranger, the console file manager.
 # License: GNU GPL version 3, see the file "AUTHORS" for details.
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 import re
 import os.path
@@ -66,6 +66,7 @@ ALLOWED_SETTINGS = {
     'sort_unicode': bool,
     'sort': str,
     'status_bar_on_top': bool,
+    'hostname_in_titlebar': bool,
     'tilde_in_titlebar': bool,
     'unicode_ellipsis': bool,
     'update_title': bool,
@@ -82,13 +83,13 @@ ALLOWED_SETTINGS = {
 }
 
 ALLOWED_VALUES = {
-    'confirm_on_delete': ['always', 'multiple', 'never'],
+    'confirm_on_delete': ['multiple', 'always', 'never'],
     'line_numbers': ['false', 'absolute', 'relative'],
     'preview_images_method': ['w3m', 'iterm2', 'urxvt', 'urxvt-full'],
-    'vcs_backend_bzr': ['enabled', 'local', 'disabled'],
-    'vcs_backend_git': ['enabled', 'local', 'disabled'],
-    'vcs_backend_hg': ['enabled', 'local', 'disabled'],
-    'vcs_backend_svn': ['enabled', 'local', 'disabled'],
+    'vcs_backend_bzr': ['disabled', 'local', 'enabled'],
+    'vcs_backend_git': ['enabled', 'disabled', 'local'],
+    'vcs_backend_hg': ['disabled', 'local', 'enabled'],
+    'vcs_backend_svn': ['disabled', 'local', 'enabled'],
     'viewmode': ['miller', 'multipane'],
 }
 
@@ -115,6 +116,10 @@ class Settings(SignalDispatcher, FileManagerAware):
                              priority=SIGNAL_PRIORITY_SANITIZE)
             self.signal_bind('setopt.' + name, self._raw_set_with_signal,
                              priority=SIGNAL_PRIORITY_SYNC)
+        for name, values in ALLOWED_VALUES.items():
+            assert values
+            assert name in ALLOWED_SETTINGS
+            self._raw_set(name, values[0])
 
     def _sanitize(self, signal):
         name, value = signal.setting, signal.value
@@ -140,8 +145,7 @@ class Settings(SignalDispatcher, FileManagerAware):
                     signal.value = None
 
         elif name == 'use_preview_script':
-            if self._settings['preview_script'] is None and value \
-                    and self.fm.ui.is_on:
+            if self._settings.get('preview_script') is None and value and self.fm.ui.is_on:
                 self.fm.notify("Preview script undefined or not found!",
                                bad=True)
 
@@ -166,8 +170,8 @@ class Settings(SignalDispatcher, FileManagerAware):
         else:
             try:
                 localpath = self.fm.thisdir.path
-            except Exception:
-                localpath = path
+            except AttributeError:
+                localpath = None
 
         if localpath:
             for pattern, regex in self._localregexes.items():
@@ -236,8 +240,7 @@ class Settings(SignalDispatcher, FileManagerAware):
             if path not in self._localsettings:
                 try:
                     regex = re.compile(path)
-                except Exception:
-                    # Bad regular expression
+                except re.error:  # Bad regular expression
                     return
                 self._localregexes[path] = regex
                 self._localsettings[path] = dict()

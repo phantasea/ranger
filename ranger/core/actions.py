@@ -3,13 +3,14 @@
 
 # pylint: disable=too-many-lines,attribute-defined-outside-init
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 import codecs
 import os
 from os import link, symlink, getcwd, listdir, stat
 from os.path import join, isdir, realpath, exists
 import re
+import shlex
 import shutil
 import string
 import tempfile
@@ -32,6 +33,7 @@ from ranger.container.directory import Directory
 from ranger.container.file import File
 from ranger.core.loader import CommandLoader, CopyLoader
 from ranger.container.settings import ALLOWED_SETTINGS, ALLOWED_VALUES
+
 
 MACRO_FAIL = "<\x01\x01MACRO_HAS_NO_VALUE\x01\01>"
 
@@ -57,7 +59,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
 
         Exit the program.
         """
-        raise SystemExit()
+        raise SystemExit
 
     def reset(self):
         """:reset
@@ -143,25 +145,35 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         """
         try:
             cwd = self.thisdir
-        except Exception:
+        except AttributeError:
             pass
         else:
             cwd.unload()
             cwd.load_content()
 
-    def notify(self, text, duration=4, bad=False):
+    def notify(self, obj, duration=4, bad=False, exception=None):
         """:notify <text>
 
         Display the text in the statusbar.
         """
-        if isinstance(text, Exception):
+        if isinstance(obj, Exception):
             if ranger.args.debug:
-                raise text
+                raise obj
+            exception = obj
             bad = True
-        elif bad is True and ranger.args.debug:
-            raise Exception(str(text))
-        text = str(text)
-        LOG.debug("Command notify invoked: [Bad: %s, Text: '%s']", bad, text)
+        elif bad and ranger.args.debug:
+            raise Exception(str(obj))
+
+        text = str(obj)
+
+        text_log = 'Notification: {0}'.format(text)
+        if bad:
+            LOG.error(text_log)
+        else:
+            LOG.info(text_log)
+        if exception:
+            LOG.exception(exception)
+
         if self.ui and self.ui.is_on:
             self.ui.status.notify("  ".join(text.split("\n")),
                                   duration=duration, bad=bad)
@@ -175,7 +187,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         """
         try:
             item = self.loader.queue[0]
-        except Exception:
+        except IndexError:
             self.notify("Type Q or :quit<Enter> to exit ranger")
         else:
             self.notify("Aborting: " + item.get_description())
@@ -214,23 +226,26 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         if cmd_class is None:
             self.notify("Command not found: `%s'" % command_name, bad=True)
             return
-        cmd = cmd_class(string)
-        if cmd.resolve_macros and _MacroTemplate.delimiter in string:
+        cmd = cmd_class(string, quantifier=quantifier)
+
+        if cmd.resolve_macros and _MacroTemplate.delimiter in cmd.line:
             macros = dict(('any%d' % i, key_to_string(char))
                           for i, char in enumerate(wildcards if wildcards is not None else []))
             if 'any0' in macros:
                 macros['any'] = macros['any0']
             try:
-                string = self.substitute_macros(string, additional=macros,
-                                                escape=cmd.escape_macros_for_shell)
+                line = self.substitute_macros(cmd.line, additional=macros,
+                                              escape=cmd.escape_macros_for_shell)
             except ValueError as ex:
                 if ranger.args.debug:
                     raise
                 else:
                     return self.notify(ex)
+            cmd.init_line(line)
+
         try:
-            cmd_class(string, quantifier=quantifier).execute()
-        except Exception as ex:
+            cmd.execute()
+        except Exception as ex:  # pylint: disable=broad-except
             if ranger.args.debug:
                 raise
             else:
@@ -238,7 +253,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
 
     def substitute_macros(self, string,  # pylint: disable=redefined-outer-name
                           additional=None, escape=False):
-        macros = self._get_macros()
+        macros = self.get_macros()
         if additional:
             macros.update(additional)
         if escape:
@@ -256,11 +271,12 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             raise ValueError("Could not apply macros to `%s'" % string)
         return result
 
-    def _get_macros(self):  # pylint: disable=too-many-branches,too-many-statements
+    def get_macros(self):  # pylint: disable=too-many-branches,too-many-statements
         macros = {}
 
         macros['rangerdir'] = ranger.RANGERDIR
-        macros['confdir'] = self.fm.confpath()
+        if not ranger.args.clean:
+            macros['confdir'] = self.fm.confpath()
         macros['space'] = ' '
 
         if self.fm.thisfile:
@@ -296,7 +312,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         for i in range(1, 10):
             try:
                 tab = self.fm.tabs[i]
-            except Exception:
+            except KeyError:
                 continue
             tabdir = tab.thisdir
             if not tabdir:
@@ -365,7 +381,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                     continue
                 try:
                     self.execute_console(line)
-                except Exception as ex:
+                except Exception as ex:  # pylint: disable=broad-except
                     if ranger.args.debug:
                         raise
                     else:
@@ -392,11 +408,18 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                 open(ranger.args.choosefile, 'w').write(self.fm.thisfile.path)
 
             if ranger.args.choosefiles:
-                open(ranger.args.choosefiles, 'w').write("".join(
-                    fobj.path + "\n" for fobj in self.fm.thistab.get_selection()))
+                paths = []
+                for hist in self.fm.thistab.history:
+                    for fobj in hist.files:
+                        if fobj.marked and fobj.path not in paths:
+                            paths += [fobj.path]
+                paths += [f.path for f in self.fm.thistab.get_selection() if f.path not in paths]
+
+                with open(ranger.args.choosefiles, 'w') as fobj:
+                    fobj.write('\n'.join(paths) + '\n')
 
             if ranger.args.choosefile or ranger.args.choosefiles:
-                raise SystemExit()
+                raise SystemExit
 
         if isinstance(files, set):
             files = list(files)
@@ -408,7 +431,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             files = [self.fm.thisfile]
 
         self.signal_emit('execute.before', keywords=kw)
-        filenames = [fobj.path for fobj in files]
+        filenames = [f.path for f in files]
         label = kw.get('label', kw.get('app', None))
         try:
             return self.rifle.execute(filenames, mode, label, flags, None)
@@ -440,57 +463,57 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             steps = direction.left()
             if narg is not None:
                 steps *= narg
-            try:
-                directory = os.path.join(*(['..'] * steps))
-            except Exception:
-                return
+            directory = os.path.join(*(['..'] * steps))
             self.thistab.enter_dir(directory)
             self.change_mode('normal')
-        if cwd and cwd.accessible and cwd.content_loaded:
-            if 'right' in direction:
-                mode = 0
-                if narg is not None:
-                    mode = narg
-                tfile = self.thisfile
-                selection = self.thistab.get_selection()
-                if not self.thistab.enter_dir(tfile) and selection:
-                    result = self.execute_file(selection, mode=mode)
-                    if result in (False, ASK_COMMAND):
-                        self.open_console('open_with ')
-            elif direction.vertical() and cwd.files:
-                newpos = direction.move(
-                    direction=direction.down(),
-                    override=narg,
-                    maximum=len(cwd),
-                    current=cwd.pointer,
-                    pagesize=self.ui.browser.hei)
-                cwd.move(to=newpos)
-                if self.mode == 'visual':
-                    try:
-                        startpos = cwd.index(self._visual_start)
-                    except Exception:
-                        self._visual_start = None
-                        startpos = min(self._visual_start_pos, len(cwd))
-                    # The files between here and _visual_start_pos
-                    targets = set(cwd.files[min(startpos, newpos):(max(startpos, newpos) + 1)])
-                    # The selection before activating visual mode
-                    old = self._previous_selection
-                    # The current selection
-                    current = set(cwd.marked_items)
 
-                    # Set theory anyone?
-                    if not self._visual_reverse:
-                        for fobj in targets - current:
-                            cwd.mark_item(fobj, True)
-                        for fobj in current - old - targets:
-                            cwd.mark_item(fobj, False)
-                    else:
-                        for fobj in targets & current:
-                            cwd.mark_item(fobj, False)
-                        for fobj in old - current - targets:
-                            cwd.mark_item(fobj, True)
-                if self.ui.pager.visible:
-                    self.display_file()
+        if not cwd or not cwd.accessible or not cwd.content_loaded:
+            return
+
+        if 'right' in direction:
+            mode = 0
+            if narg is not None:
+                mode = narg
+            tfile = self.thisfile
+            selection = self.thistab.get_selection()
+            if not self.thistab.enter_dir(tfile) and selection:
+                result = self.execute_file(selection, mode=mode)
+                if result in (False, ASK_COMMAND):
+                    self.open_console('open_with ')
+        elif direction.vertical() and cwd.files:
+            newpos = direction.move(
+                direction=direction.down(),
+                override=narg,
+                maximum=len(cwd),
+                current=cwd.pointer,
+                pagesize=self.ui.browser.hei)
+            cwd.move(to=newpos)
+            if self.mode == 'visual':
+                try:
+                    startpos = cwd.files.index(self._visual_start)
+                except ValueError:
+                    self._visual_start = None
+                    startpos = min(self._visual_start_pos, len(cwd))
+                # The files between here and _visual_start_pos
+                targets = set(cwd.files[min(startpos, newpos):(max(startpos, newpos) + 1)])
+                # The selection before activating visual mode
+                old = self._previous_selection
+                # The current selection
+                current = set(cwd.marked_items)
+
+                # Set theory anyone?
+                if not self._visual_reverse:
+                    for fobj in targets - current:
+                        cwd.mark_item(fobj, True)
+                    for fobj in current - old - targets:
+                        cwd.mark_item(fobj, False)
+                else:
+                    for fobj in targets & current:
+                        cwd.mark_item(fobj, False)
+                    for fobj in old - current - targets:
+                        cwd.mark_item(fobj, True)
+            if self.ui.pager.visible:
+                self.display_file()
 
     def move_parent(self, n, narg=None):
         self.change_mode('normal')
@@ -579,7 +602,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
     def pager_close(self):
         if self.ui.pager.visible:
             self.ui.close_pager()
-        if hasattr(self.ui.browser, 'pager') and self.ui.browser.pager.visible:
+        if self.ui.browser.pager and self.ui.browser.pager.visible:
             self.ui.close_embedded_pager()
 
     def taskview_open(self):
@@ -703,7 +726,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         if isinstance(text, str) and regexp:
             try:
                 text = re.compile(text, re.UNICODE | re.IGNORECASE)  # pylint: disable=no-member
-            except Exception:
+            except re.error:
                 return False
         self.thistab.last_search = text
         self.search_next(order='search', offset=offset)
@@ -839,7 +862,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
     def draw_possible_programs(self):
         try:
             target = self.thistab.get_selection()[0]
-        except Exception:
+        except IndexError:
             self.ui.browser.draw_info = []
             return
         programs = [program for program in self.rifle.list_commands([target.path], None)]
@@ -859,8 +882,8 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
 
     def display_command_help(self, console_widget):
         try:
-            command = console_widget._get_cmd_class()  # pylint: disable=protected-access
-        except Exception:
+            command = console_widget.get_cmd_class()
+        except KeyError:
             self.notify("Feature not available!", bad=True)
             return
 
@@ -912,9 +935,10 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
     def update_preview(self, path):
         try:
             del self.previews[path]
-            self.ui.need_redraw = True
-        except Exception:
+        except KeyError:
             return False
+        self.ui.need_redraw = True
+        return True
 
     @staticmethod
     def sha1_encode(path):
@@ -930,136 +954,141 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         if not path or not os.path.exists(path):
             return None
 
-        if self.settings.preview_script and self.settings.use_preview_script:
-            # self.previews is a 2 dimensional dict:
-            # self.previews['/tmp/foo.jpg'][(80, 24)] = "the content..."
-            # self.previews['/tmp/foo.jpg']['loading'] = False
-            # A -1 in tuples means "any"; (80, -1) = wid. of 80 and any hei.
-            # The key 'foundpreview' is added later. Values in (True, False)
-            # XXX: Previews can break when collapse_preview is on and the
-            # preview column is popping out as you move the cursor on e.g. a
-            # PDF file.
+        if not self.settings.preview_script or not self.settings.use_preview_script:
             try:
-                data = self.previews[path]
-            except Exception:
-                data = self.previews[path] = {'loading': False}
-            else:
-                if data['loading']:
-                    return None
+                return codecs.open(path, 'r', errors='ignore')
+            except OSError:
+                return None
 
-            found = data.get(
-                (-1, -1), data.get(
-                    (width, -1), data.get(
-                        (-1, height), data.get(
-                            (width, height), False
-                        )
+        # self.previews is a 2 dimensional dict:
+        # self.previews['/tmp/foo.jpg'][(80, 24)] = "the content..."
+        # self.previews['/tmp/foo.jpg']['loading'] = False
+        # A -1 in tuples means "any"; (80, -1) = wid. of 80 and any hei.
+        # The key 'foundpreview' is added later. Values in (True, False)
+        # XXX: Previews can break when collapse_preview is on and the
+        # preview column is popping out as you move the cursor on e.g. a
+        # PDF file.
+        try:
+            data = self.previews[path]
+        except KeyError:
+            data = self.previews[path] = {'loading': False}
+        else:
+            if data['loading']:
+                return None
+
+        found = data.get(
+            (-1, -1), data.get(
+                (width, -1), data.get(
+                    (-1, height), data.get(
+                        (width, height), False
                     )
                 )
             )
-            if found is False:
+        )
+        if found is not False:
+            return found
+
+        try:
+            stat_ = os.stat(self.settings.preview_script)
+        except OSError:
+            self.fm.notify(
+                "Preview Script `%s' doesn't exist!" % self.settings.preview_script,
+                bad=True,
+            )
+            return None
+
+        if not stat_.st_mode & S_IEXEC:
+            self.fm.notify(
+                "Preview Script `%s' is not executable!" % self.settings.preview_script,
+                bad=True,
+            )
+            return None
+
+        data['loading'] = True
+
+        if 'directimagepreview' in data:
+            data['foundpreview'] = True
+            data['imagepreview'] = True
+            pager.set_image(path)
+            data['loading'] = False
+            return path
+
+        cacheimg = os.path.join(ranger.args.cachedir, self.sha1_encode(path))
+        if os.path.isfile(cacheimg) and \
+                os.path.getmtime(cacheimg) > os.path.getmtime(path):
+            data['foundpreview'] = True
+            data['imagepreview'] = True
+            pager.set_image(cacheimg)
+            data['loading'] = False
+            return cacheimg
+
+        def on_after(signal):
+            rcode = signal.process.poll()
+            content = signal.loader.stdout_buffer
+            data['foundpreview'] = True
+
+            if rcode == 0:
+                data[(width, height)] = content
+            elif rcode == 3:
+                data[(-1, height)] = content
+            elif rcode == 4:
+                data[(width, -1)] = content
+            elif rcode == 5:
+                data[(-1, -1)] = content
+            elif rcode == 6:
+                data['imagepreview'] = True
+            elif rcode == 7:
+                data['directimagepreview'] = True
+            elif rcode == 1:
+                data[(-1, -1)] = None
+                data['foundpreview'] = False
+            elif rcode == 2:
+                fobj = codecs.open(path, 'r', errors='ignore')
                 try:
-                    stat_ = os.stat(self.settings.preview_script)
-                except Exception:
-                    self.fm.notify(
-                        "Preview Script `%s' doesn't exist!" % self.settings.preview_script,
-                        bad=True,
-                    )
-                    return None
-
-                if not stat_.st_mode & S_IEXEC:
-                    self.fm.notify(
-                        "Preview Script `%s' is not executable!" % self.settings.preview_script,
-                        bad=True,
-                    )
-                    return None
-
-                data['loading'] = True
-
-                if 'directimagepreview' in data:
-                    data['foundpreview'] = True
-                    data['imagepreview'] = True
-                    pager.set_image(path)
-                    data['loading'] = False
-                    return path
-
-                cacheimg = os.path.join(ranger.args.cachedir, self.sha1_encode(path))
-                if os.path.isfile(cacheimg) and \
-                        os.path.getmtime(cacheimg) > os.path.getmtime(path):
-                    data['foundpreview'] = True
-                    data['imagepreview'] = True
-                    pager.set_image(cacheimg)
-                    data['loading'] = False
-                    return cacheimg
-
-                loadable = CommandLoader(
-                    args=[self.settings.preview_script, path, str(width), str(height),
-                          cacheimg, str(self.settings.preview_images)],
-                    read=True,
-                    silent=True,
-                    descr="Getting preview of %s" % path,
-                )
-
-                def on_after(signal):
-                    rcode = signal.process.poll()
-                    content = signal.loader.stdout_buffer
-                    data['foundpreview'] = True
-                    if rcode == 0:
-                        data[(width, height)] = content
-                    elif rcode == 3:
-                        data[(-1, height)] = content
-                    elif rcode == 4:
-                        data[(width, -1)] = content
-                    elif rcode == 5:
-                        data[(-1, -1)] = content
-                    elif rcode == 6:
-                        data['imagepreview'] = True
-                    elif rcode == 7:
-                        data['directimagepreview'] = True
-                    elif rcode == 1:
-                        data[(-1, -1)] = None
-                        data['foundpreview'] = False
-                    elif rcode == 2:
-                        fobj = codecs.open(path, 'r', errors='ignore')
-                        try:
-                            data[(-1, -1)] = fobj.read(1024 * 32)
-                        except UnicodeDecodeError:
-                            fobj.close()
-                            fobj = codecs.open(path, 'r', encoding='latin-1', errors='ignore')
-                            data[(-1, -1)] = fobj.read(1024 * 32)
-                        fobj.close()
-                    else:
-                        data[(-1, -1)] = None
-                    if self.thisfile and self.thisfile.realpath == path:
-                        self.ui.browser.need_redraw = True
-                    data['loading'] = False
-                    pager = self.ui.get_pager()
-                    if self.thisfile and self.thisfile.is_file:
-                        if 'imagepreview' in data:
-                            pager.set_image(cacheimg)
-                            return cacheimg
-                        elif 'directimagepreview' in data:
-                            pager.set_image(path)
-                            return path
-                        else:
-                            pager.set_source(self.thisfile.get_preview_source(
-                                pager.wid, pager.hei))
-
-                def on_destroy(signal):  # pylint: disable=unused-argument
-                    try:
-                        del self.previews[path]
-                    except Exception:
-                        pass
-                loadable.signal_bind('after', on_after)
-                loadable.signal_bind('destroy', on_destroy)
-                self.loader.add(loadable)
-                return None
+                    data[(-1, -1)] = fobj.read(1024 * 32)
+                except UnicodeDecodeError:
+                    fobj.close()
+                    fobj = codecs.open(path, 'r', encoding='latin-1', errors='ignore')
+                    data[(-1, -1)] = fobj.read(1024 * 32)
+                fobj.close()
             else:
-                return found
-        else:
+                data[(-1, -1)] = None
+
+            if self.thisfile and self.thisfile.realpath == path:
+                self.ui.browser.need_redraw = True
+
+            data['loading'] = False
+
+            pager = self.ui.get_pager()
+            if self.thisfile and self.thisfile.is_file:
+                if 'imagepreview' in data:
+                    pager.set_image(cacheimg)
+                    return cacheimg
+                elif 'directimagepreview' in data:
+                    pager.set_image(path)
+                    return path
+                else:
+                    pager.set_source(self.thisfile.get_preview_source(
+                        pager.wid, pager.hei))
+
+        def on_destroy(signal):  # pylint: disable=unused-argument
             try:
-                return codecs.open(path, 'r', errors='ignore')
-            except Exception:
-                return None
+                del self.previews[path]
+            except KeyError:
+                pass
+
+        loadable = CommandLoader(
+            args=[self.settings.preview_script, path, str(width), str(height),
+                  cacheimg, str(self.settings.preview_images)],
+            read=True,
+            silent=True,
+            descr="Getting preview of %s" % path,
+        )
+        loadable.signal_bind('after', on_after)
+        loadable.signal_bind('destroy', on_destroy)
+        self.loader.add(loadable)
+
+        return None
 
     # --------------------------
     # -- Tabs
@@ -1097,7 +1126,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             name = self.current_tab
         tab = self.tabs[name]
         if name == self.current_tab:
-            direction = -1 if name == self._get_tab_list()[-1] else 1
+            direction = -1 if name == self.get_tab_list()[-1] else 1
             previous = self.current_tab
             self.tab_move(direction)
             if previous == self.current_tab:
@@ -1126,7 +1155,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         if narg:
             return self.tab_open(narg)
         assert isinstance(offset, int)
-        tablist = self._get_tab_list()
+        tablist = self.get_tab_list()
         current_index = tablist.index(self.current_tab)
         newtab = tablist[(current_index + offset) % len(tablist)]
         if newtab != self.current_tab:
@@ -1183,13 +1212,16 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         if file_selection:
             self.fm.select_file(file_selection)
 
-    def _get_tab_list(self):
+    def get_tab_list(self):
         assert self.tabs, "There must be at least 1 tab at all times"
         return sorted(self.tabs)
 
     # --------------------------
     # -- Overview of internals
     # --------------------------
+
+    def _run_pager(self, path):
+        self.run(shlex.split(os.environ.get('PAGER', ranger.DEFAULT_PAGER)) + [path])
 
     def dump_keybindings(self, *contexts):
         if not contexts:
@@ -1217,8 +1249,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             write("\n")
 
         temporary_file.flush()
-        pager = os.environ.get('PAGER', ranger.DEFAULT_PAGER)
-        self.run([pager, temporary_file.name])
+        self._run_pager(temporary_file.name)
 
     def dump_commands(self):
         temporary_file = tempfile.NamedTemporaryFile()
@@ -1243,8 +1274,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                 write("    :%s\n" % cmd.get_name())
 
         temporary_file.flush()
-        pager = os.environ.get('PAGER', ranger.DEFAULT_PAGER)
-        self.run([pager, temporary_file.name])
+        self._run_pager(temporary_file.name)
 
     def dump_settings(self):
         temporary_file = tempfile.NamedTemporaryFile()
@@ -1256,8 +1286,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             write("%30s = %s\n" % (setting, getattr(self.settings, setting)))
 
         temporary_file.flush()
-        pager = os.environ.get('PAGER', ranger.DEFAULT_PAGER)
-        self.run([pager, temporary_file.name])
+        self._run_pager(temporary_file.name)
 
     # --------------------------
     # -- File System Operations
@@ -1317,31 +1346,34 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
     def paste_symlink(self, relative=False):
         copied_files = self.copy_buffer
         for fobj in copied_files:
-            self.notify(next_available_filename(fobj.basename))
+            new_name = next_available_filename(fobj.basename)
+            self.notify(new_name)
             try:
-                new_name = next_available_filename(fobj.basename)
                 if relative:
                     relative_symlink(fobj.path, join(getcwd(), new_name))
                 else:
                     symlink(fobj.path, join(getcwd(), new_name))
-            except Exception as ex:
-                self.notify(ex)
+            except OSError as ex:
+                self.notify('Failed to paste symlink: View log for more info',
+                            bad=True, exception=ex)
 
     def paste_hardlink(self):
         for fobj in self.copy_buffer:
+            new_name = next_available_filename(fobj.basename)
             try:
-                new_name = next_available_filename(fobj.basename)
                 link(fobj.path, join(getcwd(), new_name))
-            except Exception as ex:
-                self.notify(ex)
+            except OSError as ex:
+                self.notify('Failed to paste hardlink: View log for more info',
+                            bad=True, exception=ex)
 
     def paste_hardlinked_subtree(self):
         for fobj in self.copy_buffer:
             try:
                 target_path = join(getcwd(), fobj.basename)
                 self._recurse_hardlinked_tree(fobj.path, target_path)
-            except Exception as ex:
-                self.notify(ex)
+            except OSError as ex:
+                self.notify('Failed to paste hardlinked subtree: View log for more info',
+                            bad=True, exception=ex)
 
     def _recurse_hardlinked_tree(self, source_path, target_path):
         if isdir(source_path):

@@ -3,9 +3,7 @@
 # License: GNU GPL version 3, see the file "AUTHORS" for details.
 # Author: Wojciech Siewierski <wojciech.siewierski@onet.pl>, 2015
 
-from __future__ import (absolute_import, print_function)
-
-import sys
+from __future__ import (absolute_import, division, print_function)
 
 from abc import ABCMeta, abstractproperty, abstractmethod
 from datetime import datetime
@@ -102,11 +100,9 @@ class FileInfoLinemode(LinemodeBase):
         if not fobj.is_directory:
             from subprocess import CalledProcessError
             try:
-                fileinfo = spawn.check_output(["file", "-bL", fobj.path]).strip()
+                fileinfo = spawn.check_output(["file", "-Lb", fobj.path]).strip()
             except CalledProcessError:
                 return "unknown"
-            if sys.version_info[0] >= 3:
-                fileinfo = fileinfo.decode("utf-8")
             return fileinfo
         else:
             raise NotImplementedError
@@ -119,6 +115,8 @@ class MtimeLinemode(LinemodeBase):
         return fobj.relative_path
 
     def infostring(self, fobj, metadata):
+        if fobj.stat is None:
+            return '?'
         return datetime.fromtimestamp(fobj.stat.st_mtime).strftime("%Y-%m-%d %H:%M")
 
 
@@ -129,5 +127,7 @@ class SizeMtimeLinemode(LinemodeBase):
         return fobj.relative_path
 
     def infostring(self, fobj, metadata):
+        if fobj.stat is None:
+            return '?'
         return "%s %s" % (human_readable(fobj.size),
                           datetime.fromtimestamp(fobj.stat.st_mtime).strftime("%Y-%m-%d %H:%M"))

@@ -1,7 +1,7 @@
 # This file is part of ranger, the console file manager.
 # License: GNU GPL version 3, see the file "AUTHORS" for details.
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 import curses
 
@@ -32,7 +32,7 @@ class MouseEvent(object):
         """Returns whether the mouse key n is pressed"""
         try:
             return (self.bstate & MouseEvent.PRESSED[n]) != 0
-        except Exception:
+        except IndexError:
             return False
 
     def mouse_wheel_direction(self):

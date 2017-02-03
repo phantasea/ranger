@@ -24,7 +24,7 @@ Define which colorscheme in your settings (e.g. ~/.config/ranger/rc.conf):
 set colorscheme yourschemename
 """
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 import os.path
 from curses import color_pair
@@ -35,6 +35,10 @@ from ranger.gui.context import Context
 from ranger.core.main import allow_access_to_confdir
 from ranger.ext.cached_function import cached_function
 from ranger.ext.iter_tools import flatten
+
+
+class ColorSchemeError(Exception):
+    pass
 
 
 class ColorScheme(object):
@@ -96,7 +100,7 @@ def _colorscheme_name_to_class(signal):  # pylint: disable=too-many-branches
     def is_scheme(cls):
         try:
             return issubclass(cls, ColorScheme)
-        except Exception:
+        except TypeError:
             return False
 
     # create ~/.config/ranger/colorschemes/__init__.py if it doesn't exist
@@ -120,7 +124,7 @@ def _colorscheme_name_to_class(signal):  # pylint: disable=too-many-branches
             signal.value = signal.previous
         else:
             signal.value = ColorScheme()
-        raise Exception("Cannot locate colorscheme `%s'" % scheme_name)
+        raise ColorSchemeError("Cannot locate colorscheme `%s'" % scheme_name)
     else:
         if usecustom:
             allow_access_to_confdir(ranger.args.confdir, True)
@@ -128,8 +132,7 @@ def _colorscheme_name_to_class(signal):  # pylint: disable=too-many-branches
             __import__(scheme_supermodule, globals(), locals(), [scheme_name], 0), scheme_name)
         if usecustom:
             allow_access_to_confdir(ranger.args.confdir, False)
-        if hasattr(scheme_module, 'Scheme') \
-                and is_scheme(scheme_module.Scheme):
+        if hasattr(scheme_module, 'Scheme') and is_scheme(scheme_module.Scheme):
             signal.value = scheme_module.Scheme()
         else:
             for var in scheme_module.__dict__.values():
@@ -137,7 +140,7 @@ def _colorscheme_name_to_class(signal):  # pylint: disable=too-many-branches
                     signal.value = var()
                     break
             else:
-                raise Exception("The module contains no valid colorscheme!")
+                raise ColorSchemeError("The module contains no valid colorscheme!")
 
 
 def get_all_colorschemes():

@@ -9,7 +9,7 @@ This module provides functions to draw images in the terminal using supported
 implementations, which are currently w3m, iTerm2 and urxvt.
 """
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 import base64
 import curses
@@ -33,6 +33,10 @@ W3MIMGDISPLAY_PATHS = [
     '/usr/lib64/w3m/w3mimgdisplay',
     '/usr/libexec64/w3m/w3mimgdisplay',
 ]
+
+
+class ImageDisplayError(Exception):
+    pass
 
 
 class ImgDisplayUnsupportedException(Exception):
@@ -83,9 +87,9 @@ class W3MImageDisplayer(ImageDisplayer):
         for path in paths:
             if path is not None and os.path.exists(path):
                 return path
-        raise RuntimeError("No w3mimgdisplay executable found.  Please set "
-                           "the path manually by setting the %s environment variable.  (see "
-                           "man page)" % W3MIMGDISPLAY_ENV)
+        raise ImageDisplayError("No w3mimgdisplay executable found.  Please set "
+                                "the path manually by setting the %s environment variable.  (see "
+                                "man page)" % W3MIMGDISPLAY_ENV)
 
     def _get_font_dimensions(self):
         # Get the height and width of a character displayed in the terminal in
@@ -110,7 +114,11 @@ class W3MImageDisplayer(ImageDisplayer):
     def draw(self, path, start_x, start_y, width, height):
         if not self.is_initialized or self.process.poll() is not None:
             self.initialize()
-        self.process.stdin.write(self._generate_w3m_input(path, start_x, start_y, width, height))
+        try:
+            input_gen = self._generate_w3m_input(path, start_x, start_y, width, height)
+        except ImageDisplayError:
+            raise
+        self.process.stdin.write(input_gen)
         self.process.stdin.flush()
         self.process.stdout.readline()
 
@@ -146,7 +154,7 @@ class W3MImageDisplayer(ImageDisplayer):
         """
         fontw, fonth = self._get_font_dimensions()
         if fontw == 0 or fonth == 0:
-            raise ImgDisplayUnsupportedException()
+            raise ImgDisplayUnsupportedException
 
         max_width_pixels = max_width * fontw
         max_height_pixels = max_height * fonth - 2
@@ -161,7 +169,7 @@ class W3MImageDisplayer(ImageDisplayer):
         output = self.process.stdout.readline().split()
 
         if len(output) != 2:
-            raise Exception('Failed to execute w3mimgdisplay', output)
+            raise ImageDisplayError('Failed to execute w3mimgdisplay', output)
 
         width = int(output[0])
         height = int(output[1])
@@ -238,18 +246,18 @@ class ITerm2ImageDisplayer(ImageDisplayer, FileManagerAware):
         max_height = self._minimum_font_height * max_rows
         if height > max_height:
             if width > max_width:
-                width_scale = max_width / float(width)
-                height_scale = max_height / float(height)
+                width_scale = max_width / width
+                height_scale = max_height / height
                 min_scale = min(width_scale, height_scale)
                 max_scale = max(width_scale, height_scale)
                 if width * max_scale <= max_width and height * max_scale <= max_height:
                     return width * max_scale
                 return width * min_scale
 
-            scale = max_height / float(height)
+            scale = max_height / height
             return width * scale
         elif width > max_width:
-            scale = max_width / float(width)
+            scale = max_width / width
             return width * scale
 
         return width
@@ -257,13 +265,8 @@ class ITerm2ImageDisplayer(ImageDisplayer, FileManagerAware):
     @staticmethod
     def _encode_image_content(path):
         """Read and encode the contents of path"""
-        fobj = open(path, 'rb')
-        try:
+        with open(path, 'rb') as fobj:
             return base64.b64encode(fobj.read())
-        except Exception:
-            return ""
-        finally:
-            fobj.close()
 
     @staticmethod
     def _get_image_dimensions(path):
@@ -296,7 +299,7 @@ class ITerm2ImageDisplayer(ImageDisplayer, FileManagerAware):
                     size = struct.unpack('>H', file_handle.read(2))[0] - 2
                 file_handle.seek(1, 1)
                 height, width = struct.unpack('>HH', file_handle.read(4))
-            except Exception:
+            except OSError:
                 file_handle.close()
                 return 0, 0
         else:
@@ -313,6 +316,14 @@ class URXVTImageDisplayer(ImageDisplayer, FileManagerAware):
     Ranger must be running in urxvt for this to work.
 
     """
+
+    def __init__(self):
+        self.display_protocol = "\033"
+        self.close_protocol = "\a"
+        if "screen" in os.environ['TERM']:
+            self.display_protocol += "Ptmux;\033\033"
+            self.close_protocol += "\033\\"
+        self.display_protocol += "]20;"
 
     @staticmethod
     def _get_max_sizes():
@@ -361,20 +372,25 @@ class URXVTImageDisplayer(ImageDisplayer, FileManagerAware):
         pct_width, pct_height = self._get_sizes()
 
         sys.stdout.write(
-            "\033]20;{path};{pct_width}x{pct_height}+{pct_x}+{pct_y}:op=keep-aspect\a".format(
-                path=path, pct_width=pct_width, pct_height=pct_height,
-                pct_x=pct_x, pct_y=pct_y,
-            )
+            self.display_protocol +
+            path +
+            ";{pct_width}x{pct_height}+{pct_x}+{pct_y}:op=keep-aspect".format(
+                pct_width=pct_width, pct_height=pct_height, pct_x=pct_x, pct_y=pct_y
+            ) +
+            self.close_protocol
         )
         sys.stdout.flush()
 
     def clear(self, start_x, start_y, width, height):
-        sys.stdout.write("\033]20;;100x100+1000+1000\a")
+        sys.stdout.write(
+            self.display_protocol +
+            ";100x100+1000+1000" +
+            self.close_protocol
+        )
         sys.stdout.flush()
 
     def quit(self):
-        sys.stdout.write("\033]20;;100x100+1000+1000\a")
-        sys.stdout.flush()
+        self.clear(0, 0, 0, 0)  # dummy assignments
 
 
 class URXVTImageFSDisplayer(URXVTImageDisplayer):

@@ -1,17 +1,18 @@
 # This file is part of ranger, the console file manager.
 # License: GNU GPL version 3, see the file "AUTHORS" for details.
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 import os
 import sys
 import threading
 import curses
-import _curses
+from subprocess import CalledProcessError
 
 from ranger.ext.keybinding_parser import KeyBuffer, KeyMaps, ALT_KEY
 from ranger.ext.lazy_property import lazy_property
 from ranger.ext.signals import Signal
+from ranger.ext.spawn import check_output
 
 from .displayable import DisplayableContainer
 from .mouse_event import MouseEvent
@@ -64,6 +65,7 @@ class UI(  # pylint: disable=too-many-instance-attributes,too-many-public-method
         self.console = None
         self.pager = None
         self._draw_title = None
+        self._tmux_automatic_rename = None
         self.browser = None
 
         if fm is not None:
@@ -73,7 +75,7 @@ class UI(  # pylint: disable=too-many-instance-attributes,too-many-public-method
         os.environ['ESCDELAY'] = '25'   # don't know a cleaner way
         try:
             self.win = curses.initscr()
-        except _curses.error as ex:
+        except curses.error as ex:
             if ex.args[0] == "setupterm: could not find terminal":
                 os.environ['TERM'] = 'linux'
                 self.win = curses.initscr()
@@ -91,12 +93,12 @@ class UI(  # pylint: disable=too-many-instance-attributes,too-many-public-method
         curses.halfdelay(20)
         try:
             curses.curs_set(int(bool(self.settings.show_cursor)))
-        except Exception:
+        except curses.error:
             pass
         curses.start_color()
         try:
             curses.use_default_colors()
-        except Exception:
+        except curses.error:
             pass
 
         self.settings.signal_bind('setopt.mouse_enabled', _setup_mouse)
@@ -108,6 +110,14 @@ class UI(  # pylint: disable=too-many-instance-attributes,too-many-public-method
             self.win.addstr("loading...")
             self.win.refresh()
             self._draw_title = curses.tigetflag('hs')  # has_status_line
+
+            # Save tmux setting `automatic-rename`
+            if self.settings.update_tmux_title:
+                try:
+                    self._tmux_automatic_rename = check_output(
+                        ['tmux', 'show-window-options', '-v', 'automatic-rename']).strip()
+                except CalledProcessError:
+                    self._tmux_automatic_rename = None
 
         self.update_size()
         self.is_on = True
@@ -130,7 +140,7 @@ class UI(  # pylint: disable=too-many-instance-attributes,too-many-public-method
         curses.echo()
         try:
             curses.curs_set(1)
-        except Exception:
+        except curses.error:
             pass
         if self.settings.mouse_enabled:
             _setup_mouse(dict(value=False))
@@ -154,23 +164,40 @@ class UI(  # pylint: disable=too-many-instance-attributes,too-many-public-method
 
     def destroy(self):
         """Destroy all widgets and turn off curses"""
+        if 'vcsthread' in self.__dict__:
+            if not self.vcsthread.stop():
+                self.fm.notify('Failed to stop `UI.vcsthread`', bad=True)
+            del self.__dict__['vcsthread']
         DisplayableContainer.destroy(self)
+
+        # Restore tmux setting `automatic-rename`
+        if self.settings.update_tmux_title:
+            if self._tmux_automatic_rename:
+                try:
+                    check_output(['tmux', 'set-window-option',
+                                  'automatic-rename', self._tmux_automatic_rename])
+                except CalledProcessError:
+                    pass
+            else:
+                try:
+                    check_output(['tmux', 'set-window-option', '-u', 'automatic-rename'])
+                except CalledProcessError:
+                    pass
+
         self.suspend()
 
     def handle_mouse(self):
         """Handles mouse input"""
         try:
             event = MouseEvent(curses.getmouse())
-        except _curses.error:
+        except curses.error:
             return
         if not self.console.visible:
             DisplayableContainer.click(self, event)
 
     def handle_key(self, key):
         """Handles key input"""
-
-        if hasattr(self, 'hint'):
-            self.hint()
+        self.hint()
 
         if key < 0:
             self.keybuffer.clear()
@@ -253,7 +280,7 @@ class UI(  # pylint: disable=too-many-instance-attributes,too-many-public-method
         from ranger.gui.widgets.taskview import TaskView
         from ranger.gui.widgets.pager import Pager
 
-        # Create a title bar
+        # Create a titlebar
         self.titlebar = TitleBar(self.win)
         self.add_child(self.titlebar)
 
@@ -346,14 +373,16 @@ class UI(  # pylint: disable=too-many-instance-attributes,too-many-public-method
             try:
                 fixed_cwd = cwd.encode('utf-8', 'surrogateescape'). \
                     decode('utf-8', 'replace')
-                sys.stdout.write("%sranger:%s%s" % (
+                fmt_tup = (
                     curses.tigetstr('tsl').decode('latin-1'),
                     fixed_cwd,
                     curses.tigetstr('fsl').decode('latin-1'),
-                ))
-                sys.stdout.flush()
-            except Exception:
+                )
+            except UnicodeError:
                 pass
+            else:
+                sys.stdout.write("%sranger:%s%s" % fmt_tup)
+                sys.stdout.flush()
 
         self.win.refresh()
 
@@ -365,7 +394,7 @@ class UI(  # pylint: disable=too-many-instance-attributes,too-many-public-method
     def draw_images(self):
         if self.pager.visible:
             self.pager.draw_image()
-        elif hasattr(self.browser, 'pager'):
+        elif self.browser.pager:
             if self.browser.pager.visible:
                 self.browser.pager.draw_image()
             else:
@@ -438,7 +467,7 @@ class UI(  # pylint: disable=too-many-instance-attributes,too-many-public-method
         self.status.hint = text
 
     def get_pager(self):
-        if hasattr(self.browser, 'pager') and self.browser.pager.visible:
+        if self.browser.pager and self.browser.pager.visible:
             return self.browser.pager
         return self.pager
 

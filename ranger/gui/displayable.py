@@ -1,7 +1,9 @@
 # This file is part of ranger, the console file manager.
 # License: GNU GPL version 3, see the file "AUTHORS" for details.
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
+
+import curses
 
 from ranger.core.shared import FileManagerAware
 from ranger.gui.curses_shortcuts import CursesShortcuts
@@ -101,8 +103,7 @@ class Displayable(  # pylint: disable=too-many-instance-attributes
 
     def destroy(self):
         """Called when the object is destroyed."""
-        if hasattr(self, 'win'):
-            del self.win
+        self.win = None
 
     def contains_point(self, y, x):
         """Test whether the point lies inside this object.
@@ -176,13 +177,13 @@ class Displayable(  # pylint: disable=too-many-instance-attributes
             window_is_cleared = True
             try:
                 self.win.resize(hei, wid)
-            except Exception:
+            except curses.error:
                 # Not enough space for resizing...
                 try:
                     self.win.mvderwin(0, 0)
                     do_move = True
                     self.win.resize(hei, wid)
-                except Exception:
+                except curses.error:
                     pass
                     # raise ValueError("Resizing Failed!")
 
@@ -195,7 +196,7 @@ class Displayable(  # pylint: disable=too-many-instance-attributes
             # log("moving " + str(self))
             try:
                 self.win.mvderwin(y, x)
-            except Exception:
+            except curses.error:
                 pass
 
             self.paryx = self.win.getparyx()
@@ -264,7 +265,7 @@ class DisplayableContainer(Displayable):
 
     def press(self, key):
         """Recursively called on objects in container"""
-        focused_obj = self._get_focused_obj()
+        focused_obj = self.get_focused_obj()
 
         if focused_obj:
             focused_obj.press(key)
@@ -273,7 +274,7 @@ class DisplayableContainer(Displayable):
 
     def click(self, event):
         """Recursively called on objects in container"""
-        focused_obj = self._get_focused_obj()
+        focused_obj = self.get_focused_obj()
         if focused_obj and focused_obj.click(event):
             return True
 
@@ -312,13 +313,13 @@ class DisplayableContainer(Displayable):
         else:
             obj.parent = None
 
-    def _get_focused_obj(self):
+    def get_focused_obj(self):
         # Finds a focused displayable object in the container.
         for displayable in self.container:
             if displayable.focused:
                 return displayable
             try:
-                obj = displayable._get_focused_obj()  # pylint: disable=protected-access
+                obj = displayable.get_focused_obj()
             except AttributeError:
                 pass
             else:

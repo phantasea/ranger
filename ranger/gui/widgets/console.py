@@ -3,9 +3,10 @@
 
 """The Console widget implements a vim-like console"""
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 import curses
+import os
 import re
 from collections import deque
 
@@ -40,14 +41,15 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
         # load history from files
         if not ranger.args.clean:
             self.historypath = self.fm.confpath('history')
-            try:
-                fobj = open(self.historypath, 'r')
-            except Exception:
-                pass
-            else:
-                for line in fobj:
-                    self.history.add(line[:-1])
-                fobj.close()
+            if os.path.exists(self.historypath):
+                try:
+                    fobj = open(self.historypath, 'r')
+                except OSError as ex:
+                    self.fm.notify('Failed to read history file', bad=True, exception=ex)
+                else:
+                    for line in fobj:
+                        self.history.add(line[:-1])
+                    fobj.close()
         self.history_backup = History(self.history)
 
         # NOTE: the console is considered in the "question mode" when the
@@ -70,8 +72,8 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
         if self.historypath:
             try:
                 fobj = open(self.historypath, 'w')
-            except Exception:
-                pass
+            except OSError as ex:
+                self.fm.notify('Failed to write history file', bad=True, exception=ex)
             else:
                 for entry in self.history_backup:
                     try:
@@ -102,13 +104,13 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
         if self.question_queue:
             try:
                 move(self.y, len(self.question_queue[0][0]))
-            except Exception:
+            except curses.error:
                 pass
         else:
             try:
                 pos = uwid(self.line[0:self.pos]) + len(self.prompt)
                 move(self.y, self.x + min(self.wid - 1, pos))
-            except Exception:
+            except curses.error:
                 pass
 
     def open(self, string='', prompt=None, position=None):
@@ -121,7 +123,7 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
         if self.last_cursor_mode is None:
             try:
                 self.last_cursor_mode = curses.curs_set(1)
-            except Exception:
+            except curses.error:
                 pass
         self.allow_close = False
         self.tab_deque = None
@@ -150,14 +152,11 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
         if trigger_cancel_function:
             cmd = self._get_cmd(quiet=True)
             if cmd:
-                try:
-                    cmd.cancel()
-                except Exception as error:
-                    self.fm.notify(error)
+                cmd.cancel()
         if self.last_cursor_mode is not None:
             try:
                 curses.curs_set(self.last_cursor_mode)
-            except Exception:
+            except curses.error:
                 pass
             self.last_cursor_mode = None
         self.fm.hide_console_info()
@@ -441,17 +440,16 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
 
     def _get_cmd(self, quiet=False):
         try:
-            command_class = self._get_cmd_class()
+            command_class = self.get_cmd_class()
+        except IndexError:
+            return None
         except KeyError:
             if not quiet:
-                error = "Command not found: `%s'" % self.line.split()[0]
-                self.fm.notify(error, bad=True)
-        except Exception:
+                self.fm.notify("Command not found: `%s'" % self.line.split()[0], bad=True)
             return None
-        else:
-            return command_class(self.line)
+        return command_class(self.line)
 
-    def _get_cmd_class(self):
+    def get_cmd_class(self):
         return self.fm.commands.get_command(self.line.split()[0])
 
     def _get_tab(self, tabnum):
@@ -488,7 +486,7 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
     def on_line_change(self):
         self.history_search_pattern = self.line
         try:
-            cls = self._get_cmd_class()
+            cls = self.get_cmd_class()
         except (KeyError, ValueError, IndexError):
             pass
         else:

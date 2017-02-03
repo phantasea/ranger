@@ -1,7 +1,7 @@
 # This file is part of ranger, the console file manager.
 # License: GNU GPL version 3, see the file "AUTHORS" for details.
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 import locale
 import os.path
@@ -125,7 +125,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
     vcs = None
     has_vcschild = False
 
-    _cumulative_size_calculated = False
+    cumulative_size_calculated = False
 
     sort_dict = {
         'basename': sort_by_basename,
@@ -149,12 +149,10 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
         self.marked_items = list()
 
         for opt in ('sort_directories_first', 'sort', 'sort_reverse', 'sort_case_insensitive'):
-            self.settings.signal_bind('setopt.' + opt, self.request_resort,
-                                      weak=True, autosort=False)
+            self.settings.signal_bind('setopt.' + opt, self.sort, weak=True, autosort=False)
 
         for opt in ('hidden_filter', 'show_hidden'):
-            self.settings.signal_bind('setopt.' + opt, self.refilter,
-                                      weak=True, autosort=False)
+            self.settings.signal_bind('setopt.' + opt, self.refilter, weak=True, autosort=False)
 
         self.settings = LocalSettings(path, self.settings)
 
@@ -173,7 +171,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
         return self.files
 
     def mark_item(self, item, val):
-        item._mark(val)  # pylint: disable=protected-access
+        item.mark_set(val)
         if val:
             if item in self.files and item not in self.marked_items:
                 self.marked_items.append(item)
@@ -208,7 +206,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
 
     def _clear_marked_items(self):
         for item in self.marked_items:
-            item._mark(False)  # pylint: disable=protected-access
+            item.mark_set(False)
         del self.marked_items[:]
 
     def get_selection(self):
@@ -298,7 +296,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
                                  for fname in filelist]
                     self.load_content_mtime = os.stat(mypath).st_mtime
 
-                if self._cumulative_size_calculated:
+                if self.cumulative_size_calculated:
                     # If self.content_loaded is true, this is not the first
                     # time loading.  So I can't really be sure if the
                     # size has changed and I'll add a "?".
@@ -331,25 +329,25 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
                             file_stat = os_stat(name)
                         else:
                             file_stat = file_lstat
+                    except OSError:
+                        file_lstat = None
+                        file_stat = None
+                    if file_lstat and file_stat:
                         stats = (file_stat, file_lstat)
                         is_a_dir = file_stat.st_mode & 0o170000 == 0o040000
-                    except Exception:
+                    else:
                         stats = None
                         is_a_dir = False
+
                     if is_a_dir:
-                        try:
-                            item = self.fm.get_directory(name)
-                            item.load_if_outdated()
-                        except Exception:
-                            item = Directory(name, preload=stats, path_is_abs=True,
-                                             basename_is_rel_to=basename_is_rel_to)
-                            item.load()
+                        item = self.fm.get_directory(name, preload=stats, path_is_abs=True,
+                                                     basename_is_rel_to=basename_is_rel_to)
+                        item.load_if_outdated()
+                        if self.flat:
+                            item.relative_path = os.path.relpath(item.path, self.path)
                         else:
-                            if self.flat:
-                                item.relative_path = os.path.relpath(item.path, self.path)
-                            else:
-                                item.relative_path = item.basename
-                            item.relative_path_lower = item.relative_path.lower()
+                            item.relative_path = item.basename
+                        item.relative_path_lower = item.relative_path.lower()
                         if item.vcs and item.vcs.track:
                             if item.vcs.is_root_pointer:
                                 has_vcschild = True
@@ -381,10 +379,10 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
                 self._clear_marked_items()
                 for item in self.files_all:
                     if item.path in marked_paths:
-                        item._mark(True)  # pylint: disable=protected-access
+                        item.mark_set(True)
                         self.marked_items.append(item)
                     else:
-                        item._mark(False)  # pylint: disable=protected-access
+                        item.mark_set(False)
 
                 self.sort()
 
@@ -454,7 +452,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
 
         try:
             sort_func = self.sort_dict[self.settings.sort]
-        except Exception:
+        except KeyError:
             sort_func = sort_by_basename
 
         if self.settings.sort_case_insensitive and \
@@ -494,13 +492,13 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
                         stat = os_stat(realpath(dirpath + "/" + fname))
                     else:
                         stat = os_stat(dirpath + "/" + fname)
-                    cum += stat.st_size
-                except Exception:
-                    pass
+                except OSError:
+                    continue
+                cum += stat.st_size
         return cum
 
     def look_up_cumulative_size(self):
-        self._cumulative_size_calculated = True
+        self.cumulative_size_calculated = True
         self.size = self._get_cumulative_size()
         self.infostring = ('-> ' if self.is_link else ' ') + human_readable(self.size)
 
@@ -548,7 +546,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
     def move_to_obj(self, arg, attr=None):
         try:
             arg = arg.path
-        except Exception:
+        except AttributeError:
             pass
         self.load_content_once(schedule=False)
         if self.empty():
@@ -557,11 +555,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
         Accumulator.move_to_obj(self, arg, attr='path')
 
     def search_fnc(self, fnc, offset=1, forward=True):
-        if not hasattr(fnc, '__call__'):
-            return False
-
         length = len(self)
-
         if forward:
             generator = ((self.pointer + (x + offset)) % length
                          for x in range(length - 1))
@@ -594,11 +588,11 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
         """Make sure the pointer is in the valid range"""
         Accumulator.correct_pointer(self)
 
-        try:
-            if self == self.fm.thisdir:
+        if self == self.fm.thisdir:
+            try:
                 self.fm.thisfile = self.pointed_obj
-        except Exception:
-            pass
+            except AttributeError:
+                pass
 
     def load_content_once(self, *a, **k):
         """Load the contents of the directory if not done yet"""
@@ -658,9 +652,9 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
         """Is the directory empty?"""
         return self.files is None or len(self.files) == 0
 
-    def _set_linemode_of_children(self, mode):
+    def set_linemode_of_children(self, mode):
         for fobj in self.files:
-            fobj._set_linemode(mode)  # pylint: disable=protected-access
+            fobj.set_linemode(mode)
 
     def __nonzero__(self):
         """Always True"""

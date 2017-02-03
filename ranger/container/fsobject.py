@@ -1,7 +1,7 @@
 # This file is part of ranger, the console file manager.
 # License: GNU GPL version 3, see the file "AUTHORS" for details.
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 import re
 from grp import getgrgid
@@ -18,9 +18,10 @@ from ranger.ext import spawn
 from ranger.ext.lazy_property import lazy_property
 from ranger.ext.human_readable import human_readable
 
-if hasattr(str, 'maketrans'):
+# Python 2 compatibility
+try:
     maketrans = str.maketrans  # pylint: disable=invalid-name,no-member
-else:
+except AttributeError:
     from string import maketrans  # pylint: disable=no-name-in-module
 
 
@@ -35,17 +36,13 @@ DOCUMENT_BASENAMES = ('bugs', 'bugs', 'changelog', 'copying', 'credits',
 
 BAD_INFO = '?'
 
-
-# pylint: disable=invalid-name
-_unsafe_chars = '\n' + ''.join(map(chr, range(32))) + ''.join(map(chr, range(128, 256)))
-_safe_string_table = maketrans(_unsafe_chars, '?' * len(_unsafe_chars))
-_extract_number_re = re.compile(r'(\d+|\D)')
-_integers = set("0123456789")
-# pylint: enable=invalid-name
+_UNSAFE_CHARS = '\n' + ''.join(map(chr, range(32))) + ''.join(map(chr, range(128, 256)))
+_SAFE_STRING_TABLE = maketrans(_UNSAFE_CHARS, '?' * len(_UNSAFE_CHARS))
+_EXTRACT_NUMBER_RE = re.compile(r'(\d+|\D)')
 
 
 def safe_path(path):
-    return path.translate(_safe_string_table)
+    return path.translate(_SAFE_STRING_TABLE)
 
 
 class FileSystemObject(  # pylint: disable=too-many-instance-attributes
@@ -90,7 +87,7 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes
     vcsstatus = None
     vcsremotestatus = None
 
-    _linemode = DEFAULT_LINEMODE
+    linemode = DEFAULT_LINEMODE
     linemode_dict = dict(
         (linemode.name, linemode()) for linemode in
         [DefaultLinemode, TitleLinemode, PermissionsLinemode, FileInfoLinemode,
@@ -122,14 +119,14 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes
         for method, argument, linemode in self.fm.default_linemodes:
             if linemode in self.linemode_dict:
                 if method == "always":
-                    self._linemode = linemode
+                    self.linemode = linemode
                     break
                 if method == "path" and argument.search(path):
-                    self._linemode = linemode
+                    self.linemode = linemode
                     break
                 if method == "tag" and self.realpath in self.fm.tags and \
                         self.fm.tags.marker(self.realpath) in argument:
-                    self._linemode = linemode
+                    self.linemode = linemode
                     break
 
     def __repr__(self):
@@ -148,30 +145,40 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes
 
     @lazy_property
     def basename_natural(self):
-        return [('0', int(s)) if s in _integers else (s, 0)
-                for s in _extract_number_re.split(self.relative_path)]
+        basename_list = []
+        for string in _EXTRACT_NUMBER_RE.split(self.relative_path):
+            try:
+                basename_list += [('0', int(string))]
+            except ValueError:
+                basename_list += [(string, 0)]
+        return basename_list
 
     @lazy_property
     def basename_natural_lower(self):
-        return [('0', int(s)) if s in _integers else (s, 0)
-                for s in _extract_number_re.split(self.relative_path_lower)]
+        basename_list = []
+        for string in _EXTRACT_NUMBER_RE.split(self.relative_path_lower):
+            try:
+                basename_list += [('0', int(string))]
+            except ValueError:
+                basename_list += [(string, 0)]
+        return basename_list
 
     @lazy_property
     def safe_basename(self):
-        return self.basename.translate(_safe_string_table)
+        return self.basename.translate(_SAFE_STRING_TABLE)
 
     @lazy_property
     def user(self):
         try:
             return getpwuid(self.stat.st_uid)[0]
-        except Exception:
+        except KeyError:
             return str(self.stat.st_uid)
 
     @lazy_property
     def group(self):
         try:
             return getgrgid(self.stat.st_gid)[0]
-        except Exception:
+        except KeyError:
             return str(self.stat.st_gid)
 
     for attr in ('video', 'audio', 'image', 'media', 'document', 'container'):
@@ -220,7 +227,7 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes
     def mimetype(self):
         try:
             return self._mimetype
-        except Exception:
+        except AttributeError:
             self.set_mimetype()
             return self._mimetype
 
@@ -228,7 +235,7 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes
     def mimetype_tuple(self):
         try:
             return self._mimetype_tuple
-        except Exception:
+        except AttributeError:
             self.set_mimetype()
             return self._mimetype_tuple
 
@@ -236,7 +243,7 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes
         directory = self.fm.get_directory(self.dirname)
         directory.mark_item(self)
 
-    def _mark(self, boolean):
+    def mark_set(self, boolean):
         """Called by directory.mark_item() and similar functions"""
         self.marked = bool(boolean)
 
@@ -245,7 +252,7 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes
         if self.is_link:
             try:
                 return realpath(self.path)
-            except Exception:
+            except OSError:
                 return None  # it is impossible to get the link destination
         return self.path
 
@@ -279,7 +286,7 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes
                 if self.is_link:
                     new_stat = stat(path)
                 self.exists = True
-            except Exception:
+            except OSError:
                 self.exists = False
 
         # Set some attributes
@@ -350,5 +357,5 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes
             return True
         return False
 
-    def _set_linemode(self, mode):
-        self._linemode = mode
+    def set_linemode(self, mode):
+        self.linemode = mode

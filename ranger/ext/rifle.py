@@ -14,7 +14,7 @@ Example usage:
     rifle.execute(["file1", "file2"])
 """
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 import os.path
 import re
@@ -34,13 +34,13 @@ ENCODING = 'utf-8'
 try:
     from ranger.ext.get_executables import get_executables
 except ImportError:
-    _cached_executables = None  # pylint: disable=invalid-name
+    _CACHED_EXECUTABLES = None
 
     def get_executables():
         """Return all executable files in $PATH + Cache them."""
-        global _cached_executables  # pylint: disable=global-statement,invalid-name
-        if _cached_executables is not None:
-            return _cached_executables
+        global _CACHED_EXECUTABLES  # pylint: disable=global-statement
+        if _CACHED_EXECUTABLES is not None:
+            return _CACHED_EXECUTABLES
 
         if 'PATH' in os.environ:
             paths = os.environ['PATH'].split(':')
@@ -49,7 +49,7 @@ except ImportError:
 
         from stat import S_IXOTH, S_IFREG
         paths_seen = set()
-        _cached_executables = set()
+        _CACHED_EXECUTABLES = set()
         for path in paths:
             if path in paths_seen:
                 continue
@@ -65,8 +65,8 @@ except ImportError:
                 except OSError:
                     continue
                 if filestat.st_mode & (S_IXOTH | S_IFREG):
-                    _cached_executables.add(item)
-        return _cached_executables
+                    _CACHED_EXECUTABLES.add(item)
+        return _CACHED_EXECUTABLES
 
 
 try:
@@ -94,7 +94,7 @@ def _is_terminal():
         os.ttyname(0)
         os.ttyname(1)
         os.ttyname(2)
-    except Exception:
+    except OSError:
         return False
     return True
 
@@ -168,17 +168,13 @@ class Rifle(object):  # pylint: disable=too-many-instance-attributes
             line = line.strip()
             if line.startswith('#') or line == '':
                 continue
-            try:
-                if self.delimiter1 not in line:
-                    raise Exception("Line without delimiter")
-                tests, command = line.split(self.delimiter1, 1)
-                tests = tests.split(self.delimiter2)
-                tests = tuple(tuple(f.strip().split(None, 1)) for f in tests)
-                command = command.strip()
-                self.rules.append((command, tests))
-            except Exception as ex:
-                self.hook_logger(
-                    "Syntax error in %s line %d (%s)" % (config_file, lineno, str(ex)))
+            if self.delimiter1 not in line:
+                raise ValueError("Line without delimiter")
+            tests, command = line.split(self.delimiter1, 1)
+            tests = tests.split(self.delimiter2)
+            tests = tuple(tuple(f.strip().split(None, 1)) for f in tests)
+            command = command.strip()
+            self.rules.append((command, tests))
         fobj.close()
 
     def _eval_condition(self, condition, files, label):
@@ -220,7 +216,7 @@ class Rifle(object):  # pylint: disable=too-many-instance-attributes
         elif function == 'path':
             return bool(re.search(argument, os.path.abspath(files[0])))
         elif function == 'mime':
-            return bool(re.search(argument, self._get_mimetype(files[0])))
+            return bool(re.search(argument, self.get_mimetype(files[0])))
         elif function == 'has':
             if argument.startswith("$"):
                 if argument[1:] in os.environ:
@@ -249,7 +245,7 @@ class Rifle(object):  # pylint: disable=too-many-instance-attributes
         elif function == 'else':
             return True
 
-    def _get_mimetype(self, fname):
+    def get_mimetype(self, fname):
         # Spawn "file" to determine the mime-type of the given file.
         if self._mimetype:
             return self._mimetype
@@ -452,7 +448,7 @@ def main():  # pylint: disable=too-many-locals
             if result == ASK_COMMAND:
                 # TODO: implement interactive asking for file type?
                 print("Unknown file type: %s" %
-                      rifle._get_mimetype(positional[0]))  # pylint: disable=protected-access
+                      rifle.get_mimetype(positional[0]))
 
 
 if __name__ == '__main__':

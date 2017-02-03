@@ -18,7 +18,7 @@ has been defined.
 False
 """
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 
 class Direction(dict):
@@ -38,19 +38,19 @@ class Direction(dict):
     def _get_bool(self, first, second, fallback=None):
         try:
             return self[first]
-        except Exception:
+        except KeyError:
             try:
                 return not self[second]
-            except Exception:
+            except KeyError:
                 return fallback
 
     def _get_direction(self, first, second, fallback=0):
         try:
             return self[first]
-        except Exception:
+        except KeyError:
             try:
                 return -self[second]
-            except Exception:
+            except KeyError:
                 return fallback
 
     def up(self):  # pylint: disable=invalid-name
@@ -98,7 +98,7 @@ class Direction(dict):
         for key in ('up', 'right', 'down', 'left'):
             try:
                 self[key] *= n
-            except Exception:
+            except KeyError:
                 pass
 
     def set(self, n):
@@ -133,7 +133,7 @@ class Direction(dict):
         if self.pages():
             pos *= pagesize
         elif self.percentage():
-            pos *= maximum / 100.0
+            pos *= maximum / 100
         if self.absolute():
             if pos < minimum:
                 pos += maximum

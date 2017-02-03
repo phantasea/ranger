@@ -61,30 +61,40 @@ doc: cleandoc
 	find . -name \*.html -exec sed -i 's|'"$(CWD)"'|../..|g' -- {} \;
 
 TEST_PATHS_MAIN = \
-	$(shell find ranger -mindepth 1 -maxdepth 1 -type d -and -not -name '__pycache__' -and -not -path 'ranger/config' -and -not -path 'ranger/data') \
-	ranger/__init__.py \
-	$(shell find . '(' -path './ranger' -or -path './tests' ')' -prune -or -type f -name '*.py' -print) \
-	tests
-TEST_PATH_CONFIG = ranger/config
+	$(shell find ./ranger -mindepth 1 -maxdepth 1 -type d \
+		-and -not -name '__pycache__' \
+		-and -not -path './ranger/config' \
+		-and -not -path './ranger/data' \
+	) \
+	./ranger/__init__.py \
+	$(shell find ./doc/tools ./examples -type f -name '*.py') \
+	./ranger.py \
+	./setup.py \
+	./tests
+TEST_PATH_CONFIG = ./ranger/config
 
-test:
+test_pylint:
 	@echo "Running pylint..."
 	pylint $(TEST_PATHS_MAIN)
 	pylint --rcfile=$(TEST_PATH_CONFIG)/pylintrc $(TEST_PATH_CONFIG)
+
+test_flake8:
 	@echo "Running flake8..."
 	flake8 $(TEST_PATHS_MAIN) $(TEST_PATH_CONFIG)
+
+test_doctest:
 	@echo "Running doctests..."
 	@for FILE in $(shell grep -IHm 1 doctest -r ranger | grep $(FILTER) | cut -d: -f1); do \
 		echo "Testing $$FILE..."; \
 		RANGER_DOCTEST=1 PYTHONPATH=".:"$$PYTHONPATH ${PYTHON} $$FILE; \
 	done
-	@if type py.test > /dev/null; then \
-		echo "Running py.test tests..."; \
-		py.test tests; \
-	else \
-		echo "WARNING: Couldn't run some tests because py.test is not installed!"; \
-	fi
-	@echo "Finished testing."
+
+test_pytest:
+	echo "Running py.test tests..."
+	py.test tests
+
+test: test_pylint test_flake8 test_doctest test_pytest
+	@echo "Finished testing: All tests passed!"
 
 man:
 	pod2man --stderr --center='ranger manual' --date='$(NAME)-$(VERSION)' \

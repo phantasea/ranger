@@ -3,10 +3,9 @@
 
 """ViewMiller arranges the view in miller columns"""
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 import curses
-import _curses
 from ranger.container import settings
 from ranger.gui.widgets.view_base import ViewBase
 
@@ -56,8 +55,8 @@ class ViewMiller(ViewBase):  # pylint: disable=too-many-ancestors,too-many-insta
             self.remove_child(column)
         self.columns = []
 
-        ratio_sum = float(sum(ratios))
-        self.ratios = tuple(x / ratio_sum for x in ratios)
+        ratios_sum = sum(ratios)
+        self.ratios = tuple((x / ratios_sum) for x in ratios)
 
         last = 0.1 if self.settings.padding_right else 0
         if len(self.ratios) >= 2:
@@ -136,7 +135,7 @@ class ViewMiller(ViewBase):  # pylint: disable=too-many-ancestors,too-many-insta
             win.hline(self.hei - 1, left_start, curses.ACS_HLINE, right_end - left_start)
             win.vline(1, left_start, curses.ACS_VLINE, self.hei - 2)
             # pylint: enable=no-member
-        except _curses.error:
+        except curses.error:
             pass
 
         # Draw the vertical lines in the middle
@@ -155,7 +154,7 @@ class ViewMiller(ViewBase):  # pylint: disable=too-many-ancestors,too-many-insta
                 self.addch(0, x, curses.ACS_TTEE, 0)
                 self.addch(y, x, curses.ACS_BTEE, 0)
                 # pylint: enable=no-member
-            except Exception:
+            except curses.error:
                 # in case it's off the boundaries
                 pass
 
@@ -164,7 +163,7 @@ class ViewMiller(ViewBase):  # pylint: disable=too-many-ancestors,too-many-insta
             # pylint: disable=no-member
             win.vline(1, right_end, curses.ACS_VLINE, self.hei - 2)
             # pylint: enable=no-member
-        except _curses.error:
+        except curses.error:
             pass
 
         # pylint: disable=no-member
@@ -186,7 +185,7 @@ class ViewMiller(ViewBase):  # pylint: disable=too-many-ancestors,too-many-insta
                     self.fm.settings.use_preview_script:
                 try:
                     result = not self.fm.previews[target.realpath]['foundpreview']
-                except Exception:
+                except KeyError:
                     return self.old_collapse
 
         self.old_collapse = result

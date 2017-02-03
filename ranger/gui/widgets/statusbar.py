@@ -8,8 +8,9 @@ print for the current file.  The right side shows directory information
 such as the space used by all the files in this directory.
 """
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
+import curses
 import os
 from os import getuid, readlink
 from pwd import getpwuid
@@ -77,7 +78,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             self.fm.thisfile.load_if_outdated()
             try:
                 ctime = self.fm.thisfile.stat.st_ctime
-            except Exception:
+            except AttributeError:
                 ctime = -1
         else:
             ctime = -1
@@ -131,7 +132,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
 
             try:
                 self.addnstr(0, starting_point, string, space_left)
-            except Exception:
+            except curses.error:
                 break
             space_left -= len(string)
             starting_point += len(string)
@@ -150,7 +151,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 return
         try:
             stat = target.stat
-        except Exception:
+        except AttributeError:
             return
         if stat is None:
             return
@@ -172,7 +173,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             how = 'good' if target.exists else 'bad'
             try:
                 dest = readlink(target.path)
-            except Exception:
+            except OSError:
                 dest = '?'
             left.add(' -> ' + dest, 'link', how)
         else:
@@ -264,11 +265,8 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             if len(target.marked_items) == target.size:
                 right.add(human_readable(target.disk_usage, separator=''))
             else:
-                sumsize = sum(
-                    f.size for f in target.marked_items
-                    if not f.is_directory or
-                    f._cumulative_size_calculated  # pylint: disable=protected-access
-                )
+                sumsize = sum(f.size for f in target.marked_items
+                              if not f.is_directory or f.cumulative_size_calculated)
                 right.add(human_readable(sumsize, separator=''))
             right.add("/" + str(len(target.marked_items)))
         else:
@@ -295,7 +293,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             elif pos >= max_pos:
                 right.add('Bot', base, 'bot')
             else:
-                right.add('{0:0.0%}'.format(float(pos) / max_pos),
+                right.add('{0:0.0%}'.format((pos / max_pos)),
                           base, 'percentage')
         else:
             right.add('0/0  All', base, 'all')
@@ -314,7 +312,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                     states.append(item.percent)
             if states:
                 state = sum(states) / len(states)
-                barwidth = state / 100.0 * self.wid
+                barwidth = (state / 100) * self.wid
                 self.color_at(0, 0, int(barwidth), ("in_statusbar", "loaded"))
                 self.color_reset()
 

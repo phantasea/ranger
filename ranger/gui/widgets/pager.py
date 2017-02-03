@@ -3,7 +3,10 @@
 
 """The pager displays text and allows you to scroll inside it."""
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
+
+import curses
+import logging
 
 from ranger.gui import ansi
 from ranger.ext.direction import Direction
@@ -11,9 +14,11 @@ from ranger.ext.img_display import ImgDisplayUnsupportedException
 
 from . import Widget
 
+
+LOG = logging.getLogger(__name__)
+
+
 # TODO: Scrolling in embedded pager
-
-
 class Pager(Widget):  # pylint: disable=too-many-instance-attributes
     source = None
     source_is_stream = False
@@ -35,6 +40,14 @@ class Pager(Widget):  # pylint: disable=too-many-instance-attributes
         self.image = None
         self.image_drawn = False
 
+    def _close_source(self):
+        if self.source and self.source_is_stream:
+            try:
+                self.source.close()
+            except OSError as ex:
+                LOG.error('Unable to close pager source')
+                LOG.exception(ex)
+
     def open(self):
         self.scroll_begin = 0
         self.markup = None
@@ -52,8 +65,7 @@ class Pager(Widget):  # pylint: disable=too-many-instance-attributes
         if self.image:
             self.need_clear_image = True
             self.clear_image()
-        if self.source and self.source_is_stream:
-            self.source.close()
+        self._close_source()
 
     def destroy(self):
         self.clear_image(force=True)
@@ -99,7 +111,7 @@ class Pager(Widget):  # pylint: disable=too-many-instance-attributes
                                              self.wid, self.hei)
             except ImgDisplayUnsupportedException:
                 self.fm.settings.preview_images = False
-            except Exception as ex:
+            except Exception as ex:  # pylint: disable=broad-except
                 self.fm.notify(ex, bad=True)
             else:
                 self.image_drawn = True
@@ -110,7 +122,7 @@ class Pager(Widget):  # pylint: disable=too-many-instance-attributes
         elif self.markup == 'ansi':
             try:
                 self.win.move(i, 0)
-            except Exception:
+            except curses.error:
                 pass
             else:
                 for chunk in ansi.text_with_fg_bg_attr(line):
@@ -157,9 +169,7 @@ class Pager(Widget):  # pylint: disable=too-many-instance-attributes
         if self.image:
             self.need_clear_image = True
         self.image = image
-
-        if self.source and self.source_is_stream:
-            self.source.close()
+        self._close_source()
         self.source = None
         self.source_is_stream = False
 
@@ -167,9 +177,7 @@ class Pager(Widget):  # pylint: disable=too-many-instance-attributes
         if self.image:
             self.image = None
             self.need_clear_image = True
-
-        if self.source and self.source_is_stream:
-            self.source.close()
+        self._close_source()
 
         self.max_width = 0
         if isinstance(source, str):

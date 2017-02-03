@@ -1,7 +1,7 @@
 # This file is part of ranger, the console file manager.
 # License: GNU GPL version 3, see the file "AUTHORS" for details.
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 import re
 from ranger.container.fsobject import FileSystemObject
@@ -46,22 +46,21 @@ class File(FileSystemObject):
     preview_data = None
     preview_known = False
     preview_loading = False
-
-    _linemode = "filename"
+    linemode = "filename"
     _firstbytes = None
 
     @property
     def firstbytes(self):
         if self._firstbytes is None:
             try:
-                fobj = open(self.path, 'r')
-                self._firstbytes = fobj.read(N_FIRST_BYTES)
-                fobj.close()
-                return self._firstbytes
-            except Exception:
-                pass
-        else:
-            return self._firstbytes
+                with open(self.path, 'r') as fobj:
+                    try:
+                        self._firstbytes = fobj.read(N_FIRST_BYTES)
+                    except UnicodeDecodeError:
+                        return None
+            except OSError:
+                return None
+        return self._firstbytes
 
     def is_binary(self):
         if self.firstbytes and control_characters & set(self.firstbytes):

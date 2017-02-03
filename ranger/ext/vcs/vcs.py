@@ -3,28 +3,20 @@
 
 """VCS module"""
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 import os
 import subprocess
 import threading
 import time
-from logging import getLogger
 
 from ranger.ext import spawn
 
-# Python2 compatibility
+# Python 2 compatibility
 try:
     import queue
 except ImportError:
     import Queue as queue  # pylint: disable=import-error
-try:
-    FileNotFoundError
-except NameError:
-    FileNotFoundError = OSError  # pylint: disable=redefined-builtin
-
-
-LOG = getLogger(__name__)
 
 
 class VcsError(Exception):
@@ -133,7 +125,7 @@ class Vcs(object):  # pylint: disable=too-many-instance-attributes
             else:
                 with open(os.devnull, mode='w') as fd_devnull:
                     subprocess.check_call(cmd, cwd=path, stdout=fd_devnull, stderr=fd_devnull)
-        except (subprocess.CalledProcessError, FileNotFoundError):
+        except (subprocess.CalledProcessError, OSError):
             raise VcsError('{0:s}: {1:s}'.format(str(cmd), path))
 
     def _get_repotype(self, path):
@@ -238,9 +230,8 @@ class VcsRoot(Vcs):  # pylint: disable=abstract-method
             self.branch = self.data_branch()
             self.obj.vcsremotestatus = self.data_status_remote()
             self.obj.vcsstatus = self.data_status_root()
-        except VcsError as error:
-            LOG.exception(error)
-            self.obj.fm.notify('VCS Exception: View log for more info', bad=True)
+        except VcsError as ex:
+            self.obj.fm.notify('VCS Exception: View log for more info', bad=True, exception=ex)
             return False
         self.rootinit = True
         return True
@@ -253,9 +244,8 @@ class VcsRoot(Vcs):  # pylint: disable=abstract-method
             self.status_subpaths = self.data_status_subpaths()
             self.obj.vcsremotestatus = self.data_status_remote()
             self.obj.vcsstatus = self._status_root()
-        except VcsError as error:
-            LOG.exception(error)
-            self.obj.fm.notify('VCS Exception: View log for more info', bad=True)
+        except VcsError as ex:
+            self.obj.fm.notify('VCS Exception: View log for more info', bad=True, exception=ex)
             return False
         self.rootinit = True
         self.updatetime = time.time()
@@ -384,19 +374,20 @@ class VcsThread(threading.Thread):  # pylint: disable=too-many-instance-attribut
     def __init__(self, ui):
         super(VcsThread, self).__init__()
         self.daemon = True
-        self.ui = ui  # pylint: disable=invalid-name
-        self.queue = queue.Queue()
-        self.advance = threading.Event()
-        self.advance.set()
+        self._ui = ui
+        self._queue = queue.Queue()
+        self.__stop = threading.Event()
+        self.stopped = threading.Event()
+        self._advance = threading.Event()
+        self._advance.set()
         self.paused = threading.Event()
-        self.awoken = threading.Event()
-        self.timestamp = time.time()
-        self.redraw = False
-        self.roots = set()
+        self._awoken = threading.Event()
+        self._redraw = False
+        self._roots = set()
 
     def _is_targeted(self, dirobj):
         """Check if dirobj is targeted"""
-        if self.ui.browser.main_column and self.ui.browser.main_column.target == dirobj:
+        if self._ui.browser.main_column and self._ui.browser.main_column.target == dirobj:
             return True
         return False
 
@@ -414,14 +405,14 @@ class VcsThread(threading.Thread):  # pylint: disable=too-many-instance-attribut
             if fsobj.vcs.is_root_pointer:
                 has_vcschild = True
                 if not rootvcs.rootinit and not self._is_targeted(rootvcs.obj):
-                    self.roots.add(rootvcs.path)
+                    self._roots.add(rootvcs.path)
                     if not rootvcs.init_root():
                         rootvcs.update_tree(purge=True)
-                    self.redraw = True
+                    self._redraw = True
                 if fsobj.is_link:
                     fsobj.vcsstatus = rootvcs.obj.vcsstatus
                     fsobj.vcsremotestatus = rootvcs.obj.vcsremotestatus
-                    self.redraw = True
+                    self._redraw = True
 
         return has_vcschild
 
@@ -429,11 +420,11 @@ class VcsThread(threading.Thread):  # pylint: disable=too-many-instance-attribut
         """Process queue"""
         dirobjs = []
         paths = set()
-        self.roots.clear()
+        self._roots.clear()
 
         while True:
             try:
-                dirobjs.append(self.queue.get(block=False))
+                dirobjs.append(self._queue.get(block=False))
             except queue.Empty:
                 break
 
@@ -445,56 +436,67 @@ class VcsThread(threading.Thread):  # pylint: disable=too-many-instance-attribut
             dirobj.vcs.reinit()
             if dirobj.vcs.track:
                 rootvcs = dirobj.vcs.rootvcs
-                if rootvcs.path not in self.roots and rootvcs.check_outdated():
-                    self.roots.add(rootvcs.path)
+                if rootvcs.path not in self._roots and rootvcs.check_outdated():
+                    self._roots.add(rootvcs.path)
                     if rootvcs.update_root():
                         rootvcs.update_tree()
                     else:
                         rootvcs.update_tree(purge=True)
-                    self.redraw = True
+                    self._redraw = True
 
             has_vcschild = self._update_subroots(dirobj.files_all)
 
             if dirobj.has_vcschild != has_vcschild:
                 dirobj.has_vcschild = has_vcschild
-                self.redraw = True
+                self._redraw = True
 
     def run(self):
         while True:
             self.paused.set()
-            self.advance.wait()
-            self.awoken.wait()
-            if not self.advance.isSet():
+            self._advance.wait()
+            self._awoken.wait()
+            if self.__stop.isSet():
+                self.stopped.set()
+                return
+            if not self._advance.isSet():
                 continue
+            self._awoken.clear()
             self.paused.clear()
-            self.awoken.clear()
 
             try:
                 self._queue_process()
 
-                if self.redraw:
-                    self.redraw = False
-                    for column in self.ui.browser.columns:
+                if self._redraw:
+                    self._redraw = False
+                    for column in self._ui.browser.columns:
                         if column.target and column.target.is_directory:
                             column.need_redraw = True
-                    self.ui.status.need_redraw = True
-                    self.ui.redraw()
-            except Exception as error:  # pylint: disable=broad-except
-                LOG.exception(error)
-                self.ui.fm.notify('VCS Exception: View log for more info', bad=True)
+                    self._ui.status.need_redraw = True
+                    self._ui.redraw()
+            except Exception as ex:  # pylint: disable=broad-except
+                self._ui.fm.notify('VCS Exception: View log for more info', bad=True, exception=ex)
+
+    def stop(self):
+        """Stop thread synchronously"""
+        self.__stop.set()
+        self.paused.wait(5)
+        self._advance.set()
+        self._awoken.set()
+        self.stopped.wait(1)
+        return self.stopped.isSet()
 
     def pause(self):
         """Pause thread"""
-        self.advance.clear()
+        self._advance.clear()
 
     def unpause(self):
         """Unpause thread"""
-        self.advance.set()
+        self._advance.set()
 
     def process(self, dirobj):
         """Process dirobj"""
-        self.queue.put(dirobj)
-        self.awoken.set()
+        self._queue.put(dirobj)
+        self._awoken.set()
 
 
 # Backend imports
