@@ -8,7 +8,8 @@ ranger - visual file manager
 =head1 SYNOPSIS
 
 B<ranger> [B<--version>] [B<--help>] [B<--debug>] [B<--clean>]
-[B<--confdir>=I<directory>] [B<--copy-config>=I<which>]
+[B<--cachedir>=I<directory>] [B<--confdir>=I<directory>] [B<--datadir>=I<directory>]
+[B<--copy-config>=I<which>]
 [B<--choosefile>=I<target>] [B<--choosefiles>=I<target>]
 [B<--choosedir>=I<target>] [B<--selectfile>=I<filepath>]
 [B<--list-unused-keys>] [B<--list-tagged-files>=I<tag>]
@@ -67,9 +68,17 @@ Activate the clean mode:  ranger will not access or create any configuration
 files nor will it leave any traces on your system.  This is useful when your
 configuration is broken, when you want to avoid clutter, etc.
 
+=item B<--cachedir>=I<dir>
+
+Change the cache directory of ranger from $XDG_CACHE_HOME or ~/.cache/ranger to "dir".
+
 =item B<-r> I<dir>, B<--confdir>=I<dir>
 
-Change the configuration directory of ranger from ~/.config/ranger to "dir".
+Change the configuration directory of ranger from $XDG_CONFIG_HOME or ~/.config/ranger to "dir".
+
+=item B<--datadir>=I<dir>
+
+Change the data directory of ranger from $XDG_DATA_HOME or ~/.local/share/ranger to "dir".
 
 =item B<--copy-config>=I<file>
 
@@ -245,6 +254,8 @@ can use it for something like this command:
   alias show_commands shell less %rangerdir/config/commands.py
 
 %confdir expands to the directory given by B<--confdir>.
+
+%datadir expands to the directory given by B<--datadir>.
 
 The macro %space expands to a space character. You can use it to add spaces to
 the end of a command when needed, while preventing editors to strip spaces off
@@ -885,6 +896,11 @@ Sets the state for the version control backend. The possible values are:
  disabled   don't display any information.
  local      display only local state.
  enabled    display both, local and remote state. May be slow for hg and bzr.
+
+=item wrap_scroll [bool]
+
+Enable scroll wrapping - moving down while on the last item will wrap around to
+the top and vice versa.
 
 =item xterm_alt_key [bool]
 
@@ -1575,7 +1591,7 @@ rifle(1)
 
 =head1 BUGS
 
-Report bugs here: L<https://github.com/hut/ranger/issues>
+Report bugs here: L<https://github.com/ranger/ranger/issues>
 
 Please include as much relevant information as possible.  For the most
 diagnostic output, run ranger like this: C<PYTHONOPTIMIZE= ranger --debug>

@@ -82,14 +82,14 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         if mode == self.mode:  # pylint: disable=access-member-before-definition
             return
         if mode == 'visual':
-            self._visual_start = self.thisdir.pointed_obj
-            self._visual_start_pos = self.thisdir.pointer
+            self._visual_pos_start = self.thisdir.pointer
+            self._visual_move_cycles = 0
             self._previous_selection = set(self.thisdir.marked_items)
             self.mark_files(val=not self._visual_reverse, movedown=False)
         elif mode == 'normal':
             if self.mode == 'visual':  # pylint: disable=access-member-before-definition
-                self._visual_start = None
-                self._visual_start_pos = None
+                self._visual_pos_start = None
+                self._visual_move_cycles = None
                 self._previous_selection = None
         else:
             return
@@ -239,8 +239,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             except ValueError as ex:
                 if ranger.args.debug:
                     raise
-                else:
-                    return self.notify(ex)
+                return self.notify(ex)
             cmd.init_line(line)
 
         try:
@@ -248,8 +247,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         except Exception as ex:  # pylint: disable=broad-except
             if ranger.args.debug:
                 raise
-            else:
-                self.notify(ex)
+            self.notify(ex)
 
     def substitute_macros(self, string,  # pylint: disable=redefined-outer-name
                           additional=None, escape=False):
@@ -277,6 +275,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         macros['rangerdir'] = ranger.RANGERDIR
         if not ranger.args.clean:
             macros['confdir'] = self.fm.confpath()
+            macros['datadir'] = self.fm.datapath()
         macros['space'] = ' '
 
         if self.fm.thisfile:
@@ -384,8 +383,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                 except Exception as ex:  # pylint: disable=broad-except
                     if ranger.args.debug:
                         raise
-                    else:
-                        self.notify('Error in line `%s\':\n  %s' % (line, str(ex)), bad=True)
+                    self.notify('Error in line `%s\':\n  %s' % (line, str(ex)), bad=True)
 
     def execute_file(self, files, **kw):
         """Uses the "rifle" module to open/execute a file
@@ -442,7 +440,8 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
     # -- Moving Around
     # --------------------------
 
-    def move(self, narg=None, **kw):  # pylint: disable=too-many-locals,too-many-branches
+    def move(self,  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+             narg=None, **kw):
         """A universal movement method.
 
         Accepts these parameters:
@@ -458,6 +457,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         self.move(to=80, percentage=True)  # moves to 80%
         """
         cwd = self.thisdir
+        kw.setdefault('cycle', self.fm.settings['wrap_scroll'])
         direction = Direction(kw)
         if 'left' in direction or direction.left() > 0:
             steps = direction.left()
@@ -481,37 +481,49 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                 if result in (False, ASK_COMMAND):
                     self.open_console('open_with ')
         elif direction.vertical() and cwd.files:
-            newpos = direction.move(
+            pos_new = direction.move(
                 direction=direction.down(),
                 override=narg,
                 maximum=len(cwd),
                 current=cwd.pointer,
                 pagesize=self.ui.browser.hei)
-            cwd.move(to=newpos)
+            cwd.move(to=pos_new)
             if self.mode == 'visual':
-                try:
-                    startpos = cwd.files.index(self._visual_start)
-                except ValueError:
-                    self._visual_start = None
-                    startpos = min(self._visual_start_pos, len(cwd))
-                # The files between here and _visual_start_pos
-                targets = set(cwd.files[min(startpos, newpos):(max(startpos, newpos) + 1)])
-                # The selection before activating visual mode
-                old = self._previous_selection
+                pos_start = min(self._visual_pos_start, (len(cwd.files) - 1))
+                self._visual_move_cycles += direction.move_cycles()
+
+                # Haven't cycled
+                if self._visual_move_cycles == 0:
+                    targets = set(cwd.files[min(pos_start, pos_new):(max(pos_start, pos_new) + 1)])
+                # Cycled down once
+                elif self._visual_move_cycles == 1:
+                    if pos_new < pos_start:
+                        targets = set(cwd.files[:(pos_new + 1)] + cwd.files[pos_start:])
+                    else:
+                        targets = set(cwd.files)
+                # Cycled up once
+                elif self._visual_move_cycles == -1:
+                    if pos_new > pos_start:
+                        targets = set(cwd.files[:(pos_start + 1)] + cwd.files[pos_new:])
+                    else:
+                        targets = set(cwd.files)
+                # Cycled more than once
+                else:
+                    targets = set(cwd.files)
+
                 # The current selection
                 current = set(cwd.marked_items)
-
                 # Set theory anyone?
-                if not self._visual_reverse:
-                    for fobj in targets - current:
-                        cwd.mark_item(fobj, True)
-                    for fobj in current - old - targets:
-                        cwd.mark_item(fobj, False)
-                else:
+                if self._visual_reverse:
                     for fobj in targets & current:
                         cwd.mark_item(fobj, False)
-                    for fobj in old - current - targets:
+                    for fobj in self._previous_selection - current - targets:
                         cwd.mark_item(fobj, True)
+                else:
+                    for fobj in targets - current:
+                        cwd.mark_item(fobj, True)
+                    for fobj in current - self._previous_selection - targets:
+                        cwd.mark_item(fobj, False)
             if self.ui.pager.visible:
                 self.display_file()
 

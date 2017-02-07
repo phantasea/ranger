@@ -7,20 +7,38 @@ from __future__ import (absolute_import, division, print_function)
 
 import os
 import re
-# COMPAT pylint: disable=unused-import
-from collections import deque  # NOQA
-from ranger.api import LinemodeBase, hook_init, hook_ready, register_linemode  # NOQA
-# pylint: enable=unused-import
 
 import ranger
+from ranger import MACRO_DELIMITER, MACRO_DELIMITER_ESC
 from ranger.core.shared import FileManagerAware
 from ranger.ext.lazy_property import lazy_property
+from ranger.api import LinemodeBase, hook_init, hook_ready, register_linemode  # COMPAT
+
+
+__all__ = ['Command', 'LinemodeBase', 'hook_init', 'hook_ready', 'register_linemode']  # COMPAT
+
 
 _SETTINGS_RE = re.compile(r'^\s*([^\s]+?)=(.*)$')
+_ALIAS_LINE_RE = re.compile(r'(\s+)')
 
 
-def _alias_line(full_command, line):
-    return full_command + ''.join(re.split(r'(\s+)', line)[1:])
+def _command_init(cls):
+    # Escape macros for tab completion
+    if cls.resolve_macros:
+        tab_old = cls.tab
+
+        def tab(self, tabnum):
+            results = tab_old(self, tabnum)
+            if results is None:
+                return None
+            elif isinstance(results, str):
+                return results.replace(MACRO_DELIMITER, MACRO_DELIMITER_ESC)
+            elif hasattr(results, '__iter__'):
+                return (result.replace(MACRO_DELIMITER, MACRO_DELIMITER_ESC) for result in results)
+            return None
+        setattr(cls, 'tab', tab)
+
+    return cls
 
 
 class CommandContainer(FileManagerAware):
@@ -38,25 +56,13 @@ class CommandContainer(FileManagerAware):
         except KeyError:
             self.fm.notify('alias failed: No such command: {0}'.format(cmd_name), bad=True)
             return None
-
-        class CommandAlias(cmd):   # pylint: disable=too-few-public-methods
-            def __init__(self, line, *args, **kwargs):
-                super(CommandAlias, self).__init__(
-                    _alias_line(self.full_command, line), *args, **kwargs)
-
-        cmd_alias = type(name, (CommandAlias, ), dict(full_command=full_command))
-        if issubclass(cmd_alias, FunctionCommand):
-            cmd_alias.based_function = name
-            cmd_alias.object_name = name
-            cmd_alias.function_name = name
-        self.commands[name] = cmd_alias
+        self.commands[name] = _command_init(command_alias_factory(name, cmd, full_command))
 
     def load_commands_from_module(self, module):
         for var in vars(module).values():
             try:
-                if issubclass(var, Command) and var != Command \
-                        and var != FunctionCommand:
-                    self.commands[var.get_name()] = var
+                if issubclass(var, Command) and var != Command:
+                    self.commands[var.get_name()] = _command_init(var)
             except TypeError:
                 pass
 
@@ -66,11 +72,7 @@ class CommandContainer(FileManagerAware):
                 continue
             attribute = getattr(obj, attribute_name)
             if hasattr(attribute, '__call__'):
-                cmd = type(attribute_name, (FunctionCommand, ), dict(__doc__=attribute.__doc__))
-                cmd.based_function = attribute
-                cmd.function_name = attribute.__name__
-                cmd.object_name = obj.__class__.__name__
-                self.commands[attribute_name] = cmd
+                self.commands[attribute_name] = _command_init(command_function_factory(attribute))
 
     def get_command(self, name, abbrev=True):
         if abbrev:
@@ -380,62 +382,69 @@ class Command(FileManagerAware):
         return (self.start(1) + program for program in programs)
 
 
-class FunctionCommand(Command):
-    based_function = None
-    object_name = ""
-    function_name = "unknown"
+def command_alias_factory(name, cls, full_command):
+    class CommandAlias(cls):   # pylint: disable=too-few-public-methods
+        def __init__(self, line, *args, **kwargs):
+            super(CommandAlias, self).__init__(
+                (full_command + ''.join(_ALIAS_LINE_RE.split(line)[1:])), *args, **kwargs)
 
-    def execute(self):  # pylint: disable=too-many-branches
-        if not self.based_function:
-            return
-        if len(self.args) == 1:
-            try:
-                return self.based_function(  # pylint: disable=not-callable
-                    **{'narg': self.quantifier})
-            except TypeError:
-                return self.based_function()  # pylint: disable=not-callable
+    CommandAlias.__name__ = name
+    return CommandAlias
 
-        args, keywords = list(), dict()
-        for arg in self.args[1:]:
-            equal_sign = arg.find("=")
-            value = arg if (equal_sign is -1) else arg[equal_sign + 1:]
+
+def command_function_factory(func):
+    class CommandFunction(Command):
+        __doc__ = func.__doc__
+
+        def execute(self):  # pylint: disable=too-many-branches
+            if not func:
+                return
+            if len(self.args) == 1:
+                try:
+                    return func(**{'narg': self.quantifier})
+                except TypeError:
+                    return func()
+
+            args, kwargs = list(), dict()
+            for arg in self.args[1:]:
+                equal_sign = arg.find("=")
+                value = arg if equal_sign == -1 else arg[equal_sign + 1:]
+                try:
+                    value = int(value)
+                except ValueError:
+                    if value in ('True', 'False'):
+                        value = (value == 'True')
+                    else:
+                        try:
+                            value = float(value)
+                        except ValueError:
+                            pass
+
+                if equal_sign == -1:
+                    args.append(value)
+                else:
+                    kwargs[arg[:equal_sign]] = value
+
+            if self.quantifier is not None:
+                kwargs['narg'] = self.quantifier
+
             try:
-                value = int(value)
-            except ValueError:
-                if value in ('True', 'False'):
-                    value = (value == 'True')
+                if self.quantifier is None:
+                    return func(*args, **kwargs)
                 else:
                     try:
-                        value = float(value)
-                    except ValueError:
-                        pass
+                        return func(*args, **kwargs)
+                    except TypeError:
+                        del kwargs['narg']
+                        return func(*args, **kwargs)
+            except TypeError:
+                if ranger.args.debug:
+                    raise
+                self.fm.notify("Bad arguments for %s: %s, %s" % (func.__name__, args, kwargs),
+                               bad=True)
 
-            if equal_sign == -1:
-                args.append(value)
-            else:
-                keywords[arg[:equal_sign]] = value
-
-        if self.quantifier is not None:
-            keywords['narg'] = self.quantifier
-
-        try:
-            if self.quantifier is None:
-                return self.based_function(*args, **keywords)  # pylint: disable=not-callable
-            else:
-                try:
-                    return self.based_function(*args, **keywords)  # pylint: disable=not-callable
-                except TypeError:
-                    del keywords['narg']
-                    return self.based_function(*args, **keywords)  # pylint: disable=not-callable
-        except TypeError:
-            if ranger.args.debug:
-                raise
-            else:
-                self.fm.notify(
-                    "Bad arguments for %s.%s: %s, %s" % (
-                        self.object_name, self.function_name, repr(args), repr(keywords)),
-                    bad=True,
-                )
+    CommandFunction.__name__ = func.__name__
+    return CommandFunction
 
 
 if __name__ == '__main__':

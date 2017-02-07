@@ -397,7 +397,7 @@ class set_(Command):
             # Cycle through colorschemes when name, but no value is specified
             if name == "colorscheme":
                 return sorted(self.firstpart + colorscheme for colorscheme
-                              in get_all_colorschemes())
+                              in get_all_colorschemes(self.fm))
             return self.firstpart + str(settings[name])
         if bool in settings.types_of(name):
             if 'true'.startswith(value.lower()):
@@ -407,7 +407,7 @@ class set_(Command):
         # Tab complete colorscheme values if incomplete value is present
         if name == "colorscheme":
             return sorted(self.firstpart + colorscheme for colorscheme
-                          in get_all_colorschemes() if colorscheme.startswith(value))
+                          in get_all_colorschemes(self.fm) if colorscheme.startswith(value))
 
 
 class setlocal(set_):
@@ -688,14 +688,14 @@ class console(Command):
 class load_copy_buffer(Command):
     """:load_copy_buffer
 
-    Load the copy buffer from confdir/copy_buffer
+    Load the copy buffer from datadir/copy_buffer
     """
     copy_buffer_filename = 'copy_buffer'
 
     def execute(self):
         from ranger.container.file import File
         from os.path import exists
-        fname = self.fm.confpath(self.copy_buffer_filename)
+        fname = self.fm.datapath(self.copy_buffer_filename)
         try:
             fobj = open(fname, 'r')
         except OSError:
@@ -710,13 +710,13 @@ class load_copy_buffer(Command):
 class save_copy_buffer(Command):
     """:save_copy_buffer
 
-    Save the copy buffer to confdir/copy_buffer
+    Save the copy buffer to datadir/copy_buffer
     """
     copy_buffer_filename = 'copy_buffer'
 
     def execute(self):
         fname = None
-        fname = self.fm.confpath(self.copy_buffer_filename)
+        fname = self.fm.datapath(self.copy_buffer_filename)
         try:
             fobj = open(fname, 'w')
         except OSError:
@@ -879,9 +879,11 @@ class rename_append(Command):
         self._flag_remove = 'r' in flags
 
     def execute(self):
+        from ranger import MACRO_DELIMITER, MACRO_DELIMITER_ESC
+
         tfile = self.fm.thisfile
-        relpath = tfile.relative_path.replace('%', '%%')
-        basename = tfile.basename.replace('%', '%%')
+        relpath = tfile.relative_path.replace(MACRO_DELIMITER, MACRO_DELIMITER_ESC)
+        basename = tfile.basename.replace(MACRO_DELIMITER, MACRO_DELIMITER_ESC)
 
         if basename.find('.') <= 0:
             self.fm.open_console('rename ' + relpath)

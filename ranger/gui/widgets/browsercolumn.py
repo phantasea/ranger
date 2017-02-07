@@ -81,7 +81,7 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
                         pass
                     else:
                         if clicked_file.is_directory:
-                            self.fm.enter_dir(clicked_file.path)
+                            self.fm.enter_dir(clicked_file.path, remember=True)
                         elif self.level == 0:
                             self.fm.thisdir.move_to_obj(clicked_file)
                             self.fm.execute_file(clicked_file)
@@ -140,32 +140,37 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
 
     def draw(self):
         """Call either _draw_file() or _draw_directory()"""
-        if self.target != self.old_dir:
+        target = self.target
+
+        if target != self.old_dir:
             self.need_redraw = True
-            self.old_dir = self.target
+            self.old_dir = target
 
-        if self.target:     # don't garbage collect this directory please
-            self.target.use()
+        if target:
+            target.use()
 
-        if self.target and self.target.is_directory \
-                and (self.level <= 0 or self.settings.preview_directories):
-            if self.target.pointed_obj != self.old_thisfile:
-                self.need_redraw = True
-                self.old_thisfile = self.target.pointed_obj
-
-            if self.target.load_content_if_outdated() \
-                    or self.target.sort_if_outdated() \
-                    or self.last_redraw_time < self.target.last_update_time:
-                self.need_redraw = True
+            if target.is_directory and (self.level <= 0 or self.settings.preview_directories):
+                if self.old_thisfile != target.pointed_obj:
+                    self.old_thisfile = target.pointed_obj
+                    self.need_redraw = True
+                self.need_redraw |= target.load_content_if_outdated()
+                self.need_redraw |= target.sort_if_outdated()
+                self.need_redraw |= self.last_redraw_time < target.last_update_time
+                if target.pointed_obj:
+                    self.need_redraw |= target.pointed_obj.load_if_outdated()
+                    self.need_redraw |= self.last_redraw_time < target.pointed_obj.last_load_time
+            else:
+                self.need_redraw |= target.load_if_outdated()
+                self.need_redraw |= self.last_redraw_time < target.last_load_time
 
         if self.need_redraw:
             self.win.erase()
-            if self.target is None:
+            if target is None:
                 pass
-            elif self.target.is_file:
+            elif target.is_file:
                 Pager.open(self)
                 self._draw_file()
-            elif self.target.is_directory:
+            elif target.is_directory:
                 self._draw_directory()
                 Widget.draw(self)
             self.need_redraw = False

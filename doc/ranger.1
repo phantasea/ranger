@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "RANGER 1"
-.TH RANGER 1 "ranger-1.8.1" "2017-02-01" "ranger manual"
+.TH RANGER 1 "ranger-1.8.1" "2017-02-06" "ranger manual"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -139,7 +139,8 @@ ranger \- visual file manager
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
 \&\fBranger\fR [\fB\-\-version\fR] [\fB\-\-help\fR] [\fB\-\-debug\fR] [\fB\-\-clean\fR]
-[\fB\-\-confdir\fR=\fIdirectory\fR] [\fB\-\-copy\-config\fR=\fIwhich\fR]
+[\fB\-\-cachedir\fR=\fIdirectory\fR] [\fB\-\-confdir\fR=\fIdirectory\fR] [\fB\-\-datadir\fR=\fIdirectory\fR]
+[\fB\-\-copy\-config\fR=\fIwhich\fR]
 [\fB\-\-choosefile\fR=\fItarget\fR] [\fB\-\-choosefiles\fR=\fItarget\fR]
 [\fB\-\-choosedir\fR=\fItarget\fR] [\fB\-\-selectfile\fR=\fIfilepath\fR]
 [\fB\-\-list\-unused\-keys\fR] [\fB\-\-list\-tagged\-files\fR=\fItag\fR]
@@ -182,9 +183,15 @@ exception in the statusbar/log and try to keep running.
 Activate the clean mode:  ranger will not access or create any configuration
 files nor will it leave any traces on your system.  This is useful when your
 configuration is broken, when you want to avoid clutter, etc.
+.IP "\fB\-\-cachedir\fR=\fIdir\fR" 14
+.IX Item "--cachedir=dir"
+Change the cache directory of ranger from \f(CW$XDG_CACHE_HOME\fR or ~/.cache/ranger to \*(L"dir\*(R".
 .IP "\fB\-r\fR \fIdir\fR, \fB\-\-confdir\fR=\fIdir\fR" 14
 .IX Item "-r dir, --confdir=dir"
-Change the configuration directory of ranger from ~/.config/ranger to \*(L"dir\*(R".
+Change the configuration directory of ranger from \f(CW$XDG_CONFIG_HOME\fR or ~/.config/ranger to \*(L"dir\*(R".
+.IP "\fB\-\-datadir\fR=\fIdir\fR" 14
+.IX Item "--datadir=dir"
+Change the data directory of ranger from \f(CW$XDG_DATA_HOME\fR or ~/.local/share/ranger to \*(L"dir\*(R".
 .IP "\fB\-\-copy\-config\fR=\fIfile\fR" 14
 .IX Item "--copy-config=file"
 Create copies of the default configuration files in your local configuration
@@ -347,6 +354,8 @@ can use it for something like this command:
   alias show_commands shell less \f(CW%rangerdir\fR/config/commands.py
 .PP
 \&\f(CW%confdir\fR expands to the directory given by \fB\-\-confdir\fR.
+.PP
+\&\f(CW%datadir\fR expands to the directory given by \fB\-\-datadir\fR.
 .PP
 The macro \f(CW%space\fR expands to a space character. You can use it to add spaces to
 the end of a command when needed, while preventing editors to strip spaces off
@@ -872,6 +881,10 @@ Sets the state for the version control backend. The possible values are:
 \& local      display only local state.
 \& enabled    display both, local and remote state. May be slow for hg and bzr.
 .Ve
+.IP "wrap_scroll [bool]" 4
+.IX Item "wrap_scroll [bool]"
+Enable scroll wrapping \- moving down while on the last item will wrap around to
+the top and vice versa.
 .IP "xterm_alt_key [bool]" 4
 .IX Item "xterm_alt_key [bool]"
 Enable this if key combinations with the Alt Key don't work for you.
@@ -1448,7 +1461,7 @@ copy, run:
 \&\fIrifle\fR\|(1)
 .SH "BUGS"
 .IX Header "BUGS"
-Report bugs here: <https://github.com/hut/ranger/issues>
+Report bugs here: <https://github.com/ranger/ranger/issues>
 .PP
 Please include as much relevant information as possible.  For the most
 diagnostic output, run ranger like this: \f(CW\*(C`PYTHONOPTIMIZE= ranger \-\-debug\*(C'\fR

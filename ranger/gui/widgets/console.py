@@ -40,7 +40,7 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
         self.history = History(self.settings.max_console_history_size)
         # load history from files
         if not ranger.args.clean:
-            self.historypath = self.fm.confpath('history')
+            self.historypath = self.fm.datapath('history')
             if os.path.exists(self.historypath):
                 try:
                     fobj = open(self.historypath, 'r')
@@ -465,14 +465,12 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
         if self.tab_deque is None:
             tab_result = self._get_tab(tabnum)
 
-            if isinstance(tab_result, str):
+            if tab_result is None:
+                pass
+            elif isinstance(tab_result, str):
                 self.line = tab_result
                 self.pos = len(tab_result)
                 self.on_line_change()
-
-            elif tab_result is None:
-                pass
-
             elif hasattr(tab_result, '__iter__'):
                 self.tab_deque = deque(tab_result)
                 self.tab_deque.appendleft(self.line)
