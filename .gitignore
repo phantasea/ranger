@@ -6,8 +6,11 @@
 
 /.cache
 /build
+/build_scripts
+/dist
 /doc/ranger.1.html
 /install_log.txt
 /pytestdebug.log
+/ranger_fm.egg-info
 
 /stuff/*

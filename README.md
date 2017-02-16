@@ -1,4 +1,4 @@
-ranger v.1.8.1
+ranger 1.9.0b4
 ==============
 
 [![Build Status](https://travis-ci.org/ranger/ranger.svg?branch=master)](https://travis-ci.org/ranger/ranger)
@@ -58,7 +58,7 @@ Features
 
 Dependencies
 ------------
-* Python (tested with version 2.6, 2.7, 3.1-3.5) with the `curses` module
+* Python (`>=2.6` or `>=3.1`) with the `curses` module
   and (optionally) wide-unicode support.
 * A pager (`less` by default)
 

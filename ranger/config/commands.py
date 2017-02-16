@@ -504,32 +504,63 @@ class default_linemode(Command):
 class quit(Command):  # pylint: disable=redefined-builtin
     """:quit
 
-    Closes the current tab.  If there is only one tab, quit the program.
+    Closes the current tab, if there's only one tab.
+    Otherwise quits if there are no tasks in progress.
     """
+    def _exit_no_work(self):
+        if self.fm.loader.has_work():
+            self.fm.notify('Not quitting: Tasks in progress: Use `quit!` to force quit')
+        else:
+            self.fm.exit()
 
     def execute(self):
-        if len(self.fm.tabs) <= 1:
+        if len(self.fm.tabs) >= 2:
+            self.fm.tab_close()
+        else:
+            self._exit_no_work()
+
+
+class quit_bang(Command):
+    """:quit!
+
+    Closes the current tab, if there's only one tab.
+    Otherwise force quits immediately.
+    """
+    name = 'quit!'
+    allow_abbrev = False
+
+    def execute(self):
+        if len(self.fm.tabs) >= 2:
+            self.fm.tab_close()
+        else:
             self.fm.exit()
-        self.fm.tab_close()
 
 
 class quitall(Command):
     """:quitall
 
-    Quits the program immediately.
+    Quits if there are no tasks in progress.
     """
+    def _exit_no_work(self):
+        if self.fm.loader.has_work():
+            self.fm.notify('Not quitting: Tasks in progress: Use `quitall!` to force quit')
+        else:
+            self.fm.exit()
+
+    def execute(self):
+        self._exit_no_work()
+
+
+class quitall_bang(Command):
+    """:quitall!
+
+    Force quits immediately.
+    """
+    name = 'quitall!'
+    allow_abbrev = False
 
     def execute(self):
         self.fm.exit()
-
-
-class quit_bang(quitall):
-    """:quit!
-
-    Quits the program immediately.
-    """
-    name = 'quit!'
-    allow_abbrev = False
 
 
 class terminal(Command):
