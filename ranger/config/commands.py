@@ -205,8 +205,13 @@ class cd(Command):
             # are we in the middle of the filename?
             else:
                 _, dirnames, _ = next(os.walk(abs_dirname))
-                dirnames = [dn for dn in dirnames
-                            if dn.startswith(rel_basename)]
+                if self.fm.settings.cd_tab_case == 'insensitive' or (
+                        self.fm.settings.cd_tab_case == 'smart' and rel_basename.islower()):
+                    dirnames = [dn for dn in dirnames
+                                if dn.lower().startswith(rel_basename.lower())]
+                else:
+                    dirnames = [dn for dn in dirnames
+                                if dn.startswith(rel_basename)]
         except (OSError, StopIteration):
             # os.walk found nothing
             pass
@@ -235,6 +240,9 @@ class chain(Command):
     """
 
     def execute(self):
+        if not self.rest(1).strip():
+            self.fm.notify('Syntax: chain <command1>; <command2>; ...', bad=True)
+            return
         for command in [s.strip() for s in self.rest(1).split(";")]:
             self.fm.execute_console(command)
 
@@ -954,6 +962,9 @@ class chmod(Command):
     def execute(self):
         mode_str = self.rest(1)
         if not mode_str:
+            if not self.quantifier:
+                self.fm.notify("Syntax: chmod <octal number>", bad=True)
+                return
             mode_str = str(self.quantifier)
 
         try:
@@ -1207,7 +1218,8 @@ class map_(Command):
 
     def execute(self):
         if not self.arg(1) or not self.arg(2):
-            return self.fm.notify("Not enough arguments", bad=True)
+            self.fm.notify("Syntax: {0} <keysequence> <command>".format(self.get_name()), bad=True)
+            return
 
         self.fm.ui.keymaps.bind(self.context, self.arg(1), self.rest(2))
 
@@ -1482,6 +1494,9 @@ class flat(Command):
             level = int(level_str)
         except ValueError:
             level = self.quantifier
+        if level is None:
+            self.fm.notify("Syntax: flat <level>", bad=True)
+            return
         if level < -1:
             self.fm.notify("Need an integer number (-1, 0, 1, ...)", bad=True)
         self.fm.thisdir.unload()
@@ -1506,8 +1521,8 @@ class stage(Command):
             filelist = [f.path for f in self.fm.thistab.get_selection()]
             try:
                 self.fm.thisdir.vcs.action_add(filelist)
-            except VcsError as error:
-                self.fm.notify('Unable to stage files: {0:s}'.format(str(error)))
+            except VcsError as ex:
+                self.fm.notify('Unable to stage files: {0}'.format(ex))
             self.fm.ui.vcsthread.process(self.fm.thisdir)
         else:
             self.fm.notify('Unable to stage files: Not in repository')
@@ -1527,8 +1542,8 @@ class unstage(Command):
             filelist = [f.path for f in self.fm.thistab.get_selection()]
             try:
                 self.fm.thisdir.vcs.action_reset(filelist)
-            except VcsError as error:
-                self.fm.notify('Unable to unstage files: {0:s}'.format(str(error)))
+            except VcsError as ex:
+                self.fm.notify('Unable to unstage files: {0}'.format(ex))
             self.fm.ui.vcsthread.process(self.fm.thisdir)
         else:
             self.fm.notify('Unable to unstage files: Not in repository')
