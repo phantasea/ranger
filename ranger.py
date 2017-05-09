@@ -25,16 +25,11 @@ return $returnvalue
 from __future__ import (absolute_import, division, print_function)
 
 import sys
-from os.path import exists, abspath
 
 # Need to find out whether or not the flag --clean was used ASAP,
 # because --clean is supposed to disable bytecode compilation
 ARGV = sys.argv[1:sys.argv.index('--')] if '--' in sys.argv else sys.argv[1:]
 sys.dont_write_bytecode = '-c' in ARGV or '--clean' in ARGV
-
-# Don't import ./ranger when running an installed binary at /usr/.../ranger
-if __file__[:4] == '/usr' and exists('ranger') and abspath('.') in sys.path:
-    sys.path.remove(abspath('.'))
 
 # Start ranger
 import ranger  # NOQA pylint: disable=import-self,wrong-import-position
