@@ -119,6 +119,10 @@ def main(
         FileManagerAware.fm_set(fm)
         load_settings(fm, args.clean)
 
+        if args.show_only_dirs:
+            from ranger.container.directory import InodeFilterConstants
+            fm.settings.global_inode_type_filter = InodeFilterConstants.DIRS
+
         if args.list_unused_keys:
             from ranger.ext.keybinding_parser import (special_keys,
                                                       reversed_special_keys)
@@ -274,6 +278,8 @@ def parse_arguments():
     parser.add_option('--choosedir', type='string', metavar='PATH',
                       help="Makes ranger act like a directory chooser. When ranger quits"
                       ", it will write the name of the last visited directory to PATH")
+    parser.add_option('--show-only-dirs', action='store_true',
+                      help="Show only directories, no files or links")
     parser.add_option('--selectfile', type='string', metavar='filepath',
                       help="Open ranger with supplied file selected.")
     parser.add_option('--list-unused-keys', action='store_true',
@@ -350,19 +356,6 @@ def load_settings(  # pylint: disable=too-many-locals,too-many-branches,too-many
                 LOG.debug("Loaded custom commands from '%s'", custom_comm_path)
             sys.dont_write_bytecode = old_bytecode_setting
 
-        allow_access_to_confdir(ranger.args.confdir, False)
-
-        # Load rc.conf
-        custom_conf = fm.confpath('rc.conf')
-        default_conf = fm.relpath('config', 'rc.conf')
-
-        if os.environ.get('RANGER_LOAD_DEFAULT_RC', 'TRUE').upper() != 'FALSE':
-            fm.source(default_conf)
-        if os.access(custom_conf, os.R_OK):
-            fm.source(custom_conf)
-
-        allow_access_to_confdir(ranger.args.confdir, True)
-
         # XXX Load plugins (experimental)
         plugindir = fm.confpath('plugins')
         try:
@@ -399,6 +392,15 @@ def load_settings(  # pylint: disable=too-many-locals,too-many-branches,too-many
             ranger.fm = None
 
         allow_access_to_confdir(ranger.args.confdir, False)
+        # Load rc.conf
+        custom_conf = fm.confpath('rc.conf')
+        default_conf = fm.relpath('config', 'rc.conf')
+
+        if os.environ.get('RANGER_LOAD_DEFAULT_RC', 'TRUE').upper() != 'FALSE':
+            fm.source(default_conf)
+        if os.access(custom_conf, os.R_OK):
+            fm.source(custom_conf)
+
     else:
         fm.source(fm.relpath('config', 'rc.conf'))
 
