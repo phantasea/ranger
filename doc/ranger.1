@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "RANGER 1"
-.TH RANGER 1 "ranger-1.9.0b5" "10/01/2017" "ranger manual"
+.TH RANGER 1 "ranger-1.9.0" "2018-02-05" "ranger manual"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -139,8 +139,8 @@ ranger \- visual file manager
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
 \&\fBranger\fR [\fB\-\-version\fR] [\fB\-\-help\fR] [\fB\-\-debug\fR] [\fB\-\-clean\fR]
-[\fB\-\-cachedir\fR=\fIdirectory\fR] [\fB\-\-confdir\fR=\fIdirectory\fR] [\fB\-\-datadir\fR=\fIdirectory\fR]
-[\fB\-\-copy\-config\fR=\fIwhich\fR]
+[\fB\-\-cachedir\fR=\fIdirectory\fR] [\fB\-\-confdir\fR=\fIdirectory\fR]
+[\fB\-\-datadir\fR=\fIdirectory\fR] [\fB\-\-copy\-config\fR=\fIwhich\fR]
 [\fB\-\-choosefile\fR=\fItarget\fR] [\fB\-\-choosefiles\fR=\fItarget\fR]
 [\fB\-\-choosedir\fR=\fItarget\fR] [\fB\-\-selectfile\fR=\fIfilepath\fR]
 [\fB\-\-show\-only\-dirs\fR]
@@ -295,6 +295,10 @@ This only works in iTerm2 compiled with image preview support, but works over
 ssh.
 .PP
 To enable this feature, set the option \f(CW\*(C`preview_images_method\*(C'\fR to iterm2.
+.PP
+This feature relies on the dimensions of the terminal's font.  By default, a
+width of 8 and height of 11 are used.  To use other values, set the options
+\&\f(CW\*(C`iterm2_font_width\*(C'\fR and \f(CW\*(C`iterm2_font_height\*(C'\fR to the desired values.
 .PP
 \fIurxvt\fR
 .IX Subsection "urxvt"
@@ -504,7 +508,7 @@ Redraw the screen
 Inspect the current file in a bigger window.
 .IP "E" 14
 .IX Item "E"
-Edit the current file in \f(CW$EDITOR\fR (\*(L"nano\*(R" by default)
+Edit the current file in \f(CW$VISUAL\fR otherwise \f(CW$EDITOR\fR otherwise \*(L"vim\*(R"
 .IP "S" 14
 .IX Item "S"
 Open a shell in the current directory
@@ -725,9 +729,10 @@ Changes case sensitivity for the \*(L"cd\*(R" command tab completion. Possible v
 \& insensitive
 \& smart
 .Ve
-.IP "cd_tab_smart [bool]" 4
-.IX Item "cd_tab_smart [bool]"
-Use smart tab completion with less typing? E.g. \*(L":cd /f/b/b<tab>\*(R" yields \*(L":cd /foo/bar/baz\*(R".
+.IP "cd_tab_fuzzy [bool]" 4
+.IX Item "cd_tab_fuzzy [bool]"
+Use fuzzy tab completion with the \*(L"cd\*(R" command. For example,
+\&\fB:cd /u/lo/b<\s-1TAB\s0>\fR expands to \fB:cd /usr/local/bin\fR.
 .IP "clear_filters_on_dir_change [bool]" 4
 .IX Item "clear_filters_on_dir_change [bool]"
 If set to 'true', persistent filters would be cleared upon leaving the directory
@@ -779,6 +784,14 @@ disadvantage is that when you type commands blindly, some keys might get lost.
 When active, directories and files will not be loaded, improving performance
 when all the files you need are already loaded.  This does not affect file
 previews.
+.IP "global_inode_type_filter [string]" 4
+.IX Item "global_inode_type_filter [string]"
+Like filter_inode_type, but globally for all directories.  Useful in
+combination with \fB\-\-choosedir\fR:
+.Sp
+.Vb 1
+\& ranger \-\-choosedir=/tmp/x \-\-cmd=\*(Aqset global_inode_type_filter d\*(Aq
+.Ve
 .IP "hidden_filter [string]" 4
 .IX Item "hidden_filter [string]"
 A regular expression pattern for files which should be hidden.  For example,
@@ -792,6 +805,14 @@ this pattern will hide all files that start with a dot or end with a tilde.
 The delay that ranger idly waits for user input, in milliseconds, with a
 resolution of 100ms.  Lower delay reduces lag between directory updates but
 increases \s-1CPU\s0 load.
+.IP "iterm2_font_height [integer]" 4
+.IX Item "iterm2_font_height [integer]"
+Change the assumed font height in iTerm2, which may help with iTerm image
+previews
+.IP "iterm2_font_width [integer]" 4
+.IX Item "iterm2_font_width [integer]"
+Change the assumed font width in iTerm2, which may help with iTerm image
+previews
 .IP "line_numbers [string]" 4
 .IX Item "line_numbers [string]"
 Show line numbers in main column.  Possible values are:
@@ -824,6 +845,10 @@ Start line numbers from 1.  Possible values are:
 \& false      start line numbers from 0
 \& true       start line numbers from 1
 .Ve
+.IP "open_all_images [bool]" 4
+.IX Item "open_all_images [bool]"
+Open all images in this directory when running certain image viewers like feh
+or sxiv?  You can still open selected files by marking them.
 .IP "padding_right [bool]" 4
 .IX Item "padding_right [bool]"
 When collapse_preview is on and there is no preview, should there remain a
@@ -838,6 +863,10 @@ Preview files in the preview column?
 .IP "preview_images [bool]" 4
 .IX Item "preview_images [bool]"
 Draw images inside the console with the external program w3mimgpreview?
+.IP "preview_images_method [string]" 4
+.IX Item "preview_images_method [string]"
+Set the preview image method. Supported methods: w3m, iterm2, urxvt,
+urxvt-full, terminology.  See \fI\s-1PREVIEWS\s0\fR section.
 .IP "preview_max_size [int]" 4
 .IX Item "preview_max_size [int]"
 Avoid previewing files that exceed a certain size, in bytes.  Use a value of 0
@@ -876,6 +905,9 @@ Show dotfiles in the bookmark preview window? (Type ')
 .IP "show_hidden [bool] <zh>, <^H>" 4
 .IX Item "show_hidden [bool] <zh>, <^H>"
 Show hidden files?
+.IP "show_selection_in_titlebar [bool]" 4
+.IX Item "show_selection_in_titlebar [bool]"
+Add the highlighted file to the path in the titlebar
 .IP "sort_case_insensitive [bool] <zc>" 4
 .IX Item "sort_case_insensitive [bool] <zc>"
 Sort case-insensitively?  If true, \*(L"a\*(R" will be listed before \*(L"B\*(R" even though
@@ -921,8 +953,8 @@ Use the preview script defined in the setting \fIpreview_script\fR?
 .IP "vcs_aware [bool]" 4
 .IX Item "vcs_aware [bool]"
 Gather and display data about version control systems. Supported vcs: git, hg.
-.IP "vcs_backend_git, vcs_backend_hg, vcs_backend_bzr [string]" 4
-.IX Item "vcs_backend_git, vcs_backend_hg, vcs_backend_bzr [string]"
+.IP "vcs_backend_git, vcs_backend_hg, vcs_backend_bzr, vcs_backend_svn [string]" 4
+.IX Item "vcs_backend_git, vcs_backend_hg, vcs_backend_bzr, vcs_backend_svn [string]"
 Sets the state for the version control backend. The possible values are:
 .Sp
 .Vb 3
@@ -930,6 +962,11 @@ Sets the state for the version control backend. The possible values are:
 \& local      display only local state.
 \& enabled    display both, local and remote state. May be slow for hg and bzr.
 .Ve
+.IP "viewmode [string]" 4
+.IX Item "viewmode [string]"
+Sets the view mode, which can be \fBmiller\fR to display the files in the
+traditional miller column view that shows multiple levels of the hierarchy, or
+\&\fBmultipane\fR to use multiple panes (one per tab) similar to midnight-commander.
 .IP "wrap_scroll [bool]" 4
 .IX Item "wrap_scroll [bool]"
 Enable scroll wrapping \- moving down while on the last item will wrap around to
@@ -1453,9 +1490,14 @@ by checking for this variable.
 If this variable is set to \s-1FALSE,\s0 ranger will not load the default rc.conf.
 This can save time if you copied the whole rc.conf to ~/.config/ranger/ and
 don't need the default one at all.
+.IP "\s-1VISUAL\s0" 8
+.IX Item "VISUAL"
+Defines the editor to be used for the \*(L"E\*(R" key.  Falls back to \s-1EDITOR\s0 if
+undefined or empty.
 .IP "\s-1EDITOR\s0" 8
 .IX Item "EDITOR"
-Defines the editor to be used for the \*(L"E\*(R" key.  Defaults to \*(L"nano\*(R".
+Defines the editor to be used for the \*(L"E\*(R" key if \s-1VISUAL\s0 is undefined or empty.
+Defaults to \*(L"vim\*(R".
 .IP "\s-1SHELL\s0" 8
 .IX Item "SHELL"
 Defines the shell that ranger is going to use with the :shell command and
@@ -1491,13 +1533,13 @@ provided along with the source code.
 \&\s-1GNU\s0 General Public License 3 or (at your option) any later version.
 .SH "LINKS"
 .IX Header "LINKS"
-.IP "Download: <http://ranger.nongnu.org/ranger\-stable.tar.gz>" 4
-.IX Item "Download: <http://ranger.nongnu.org/ranger-stable.tar.gz>"
+.IP "Download: <https://ranger.github.io/ranger\-stable.tar.gz>" 4
+.IX Item "Download: <https://ranger.github.io/ranger-stable.tar.gz>"
 .PD 0
-.IP "The project page: <http://ranger.nongnu.org/>" 4
-.IX Item "The project page: <http://ranger.nongnu.org/>"
-.IP "The mailing list: <http://savannah.nongnu.org/mail/?group=ranger>" 4
-.IX Item "The mailing list: <http://savannah.nongnu.org/mail/?group=ranger>"
+.IP "The project page: <https://ranger.github.io/>" 4
+.IX Item "The project page: <https://ranger.github.io/>"
+.IP "The mailing list: <https://savannah.nongnu.org/mail/?group=ranger>" 4
+.IX Item "The mailing list: <https://savannah.nongnu.org/mail/?group=ranger>"
 .IP "\s-1IRC\s0 channel: #ranger on freenode.net" 4
 .IX Item "IRC channel: #ranger on freenode.net"
 .PD

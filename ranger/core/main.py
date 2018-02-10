@@ -267,21 +267,21 @@ def parse_arguments():
     parser.add_option('--copy-config', type='string', metavar='which',
                       help="copy the default configs to the local config directory. "
                       "Possible values: all, rc, rifle, commands, commands_full, scope")
-    parser.add_option('--choosefile', type='string', metavar='PATH',
+    parser.add_option('--choosefile', type='string', metavar='OUTFILE',
                       help="Makes ranger act like a file chooser. When opening "
                       "a file, it will quit and write the name of the selected "
-                      "file to PATH.")
-    parser.add_option('--choosefiles', type='string', metavar='PATH',
+                      "file to OUTFILE.")
+    parser.add_option('--choosefiles', type='string', metavar='OUTFILE',
                       help="Makes ranger act like a file chooser for multiple files "
                       "at once. When opening a file, it will quit and write the name "
-                      "of all selected files to PATH.")
-    parser.add_option('--choosedir', type='string', metavar='PATH',
+                      "of all selected files to OUTFILE.")
+    parser.add_option('--choosedir', type='string', metavar='OUTFILE',
                       help="Makes ranger act like a directory chooser. When ranger quits"
-                      ", it will write the name of the last visited directory to PATH")
-    parser.add_option('--show-only-dirs', action='store_true',
-                      help="Show only directories, no files or links")
+                      ", it will write the name of the last visited directory to OUTFILE")
     parser.add_option('--selectfile', type='string', metavar='filepath',
                       help="Open ranger with supplied file selected.")
+    parser.add_option('--show-only-dirs', action='store_true',
+                      help="Show only directories, no files or links")
     parser.add_option('--list-unused-keys', action='store_true',
                       help="List common keys which are not bound to any action.")
     parser.add_option('--list-tagged-files', type='string', default=None,

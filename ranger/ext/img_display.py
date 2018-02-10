@@ -32,6 +32,7 @@ W3MIMGDISPLAY_PATHS = [
     '/usr/libexec/w3m/w3mimgdisplay',
     '/usr/lib64/w3m/w3mimgdisplay',
     '/usr/libexec64/w3m/w3mimgdisplay',
+    '/usr/local/libexec/w3m/w3mimgdisplay',
 ]
 
 
@@ -121,6 +122,8 @@ class W3MImageDisplayer(ImageDisplayer):
         self.process.stdin.write(input_gen)
         self.process.stdin.flush()
         self.process.stdout.readline()
+        self.quit()
+        self.is_initialized = False
 
     def clear(self, start_x, start_y, width, height):
         if not self.is_initialized or self.process.poll() is not None:
@@ -205,8 +208,6 @@ class ITerm2ImageDisplayer(ImageDisplayer, FileManagerAware):
 
     Ranger must be running in iTerm2 for this to work.
     """
-    _minimum_font_width = 8
-    _minimum_font_height = 11
 
     def draw(self, path, start_x, start_y, width, height):
         curses.putp(curses.tigetstr("sc"))
@@ -246,8 +247,8 @@ class ITerm2ImageDisplayer(ImageDisplayer, FileManagerAware):
         return text
 
     def _fit_width(self, width, height, max_cols, max_rows):
-        max_width = self._minimum_font_width * max_cols
-        max_height = self._minimum_font_height * max_rows
+        max_width = self.fm.settings.iterm2_font_width * max_cols
+        max_height = self.fm.settings.iterm2_font_height * max_rows
         if height > max_height:
             if width > max_width:
                 width_scale = max_width / width
@@ -290,6 +291,7 @@ class ITerm2ImageDisplayer(ImageDisplayer, FileManagerAware):
         elif image_type == 'gif':
             width, height = struct.unpack('<HH', file_header[6:10])
         elif image_type == 'jpeg':
+            unreadable = IOError if sys.version_info[0] < 3 else OSError
             try:
                 file_handle.seek(0)
                 size = 2
@@ -303,14 +305,70 @@ class ITerm2ImageDisplayer(ImageDisplayer, FileManagerAware):
                     size = struct.unpack('>H', file_handle.read(2))[0] - 2
                 file_handle.seek(1, 1)
                 height, width = struct.unpack('>HH', file_handle.read(4))
-            except OSError:
-                file_handle.close()
-                return 0, 0
+            except unreadable:
+                height, width = 0, 0
         else:
             file_handle.close()
             return 0, 0
         file_handle.close()
         return width, height
+
+
+class TerminologyImageDisplayer(ImageDisplayer, FileManagerAware):
+    """Implementation of ImageDisplayer using terminology image display support
+    (https://github.com/billiob/terminology).
+
+    Ranger must be running in terminology for this to work.
+    Doesn't work with TMUX :/
+    """
+
+    def __init__(self):
+        self.display_protocol = "\033"
+        self.close_protocol = "\000"
+
+    def draw(self, path, start_x, start_y, width, height):
+        # Save cursor
+        curses.putp(curses.tigetstr("sc"))
+
+        y = start_y
+        # Move to drawing zone
+        self._move_to(start_x, y)
+
+        # Write intent
+        sys.stdout.write("%s}ic#%d;%d;%s%s" % (
+            self.display_protocol,
+            width, height,
+            path,
+            self.close_protocol))
+
+        # Write Replacement commands ('#')
+        for _ in range(0, height):
+            sys.stdout.write("%s}ib%s%s%s}ie%s" % (
+                self.display_protocol,
+                self.close_protocol,
+                "#" * width,
+                self.display_protocol,
+                self.close_protocol))
+            y = y + 1
+            self._move_to(start_x, y)
+
+        # Restore cursor
+        curses.putp(curses.tigetstr("rc"))
+
+        sys.stdout.flush()
+
+    @staticmethod
+    def _move_to(x, y):
+        # curses.move(y, x)
+        tparm = curses.tparm(curses.tigetstr("cup"), y, x)
+        if sys.version_info[0] < 3:
+            sys.stdout.write(tparm)
+        else:
+            sys.stdout.buffer.write(tparm)  # pylint: disable=no-member
+
+    def clear(self, start_x, start_y, width, height):
+        self.fm.ui.win.redrawwin()
+        self.fm.ui.win.refresh()
 
 
 class URXVTImageDisplayer(ImageDisplayer, FileManagerAware):

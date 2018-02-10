@@ -67,9 +67,9 @@ doc: cleandoc
 
 TEST_PATHS_MAIN = \
 	$(shell find ./ranger -mindepth 1 -maxdepth 1 -type d \
-		-and -not -name '__pycache__' \
-		-and -not -path './ranger/config' \
-		-and -not -path './ranger/data' \
+		! -name '__pycache__' \
+		! -path './ranger/config' \
+		! -path './ranger/data' \
 	) \
 	./ranger/__init__.py \
 	$(shell find ./doc/tools ./examples -type f -name '*.py') \
@@ -95,7 +95,7 @@ test_doctest:
 	done
 
 test_pytest:
-	echo "Running py.test tests..."
+	@echo "Running py.test tests..."
 	py.test tests
 
 test: test_pylint test_flake8 test_doctest test_pytest

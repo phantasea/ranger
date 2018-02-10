@@ -227,7 +227,7 @@ class cd(Command):
 
         return [os.path.join(dest_dir, d) for d in dirnames if self._tab_match(dest_base, d)], ''
 
-    def _tab_smart_match(self, basepath, tokens):
+    def _tab_fuzzy_match(self, basepath, tokens):
         """ Find directories matching tokens recursively """
         if not tokens:
             tokens = ['']
@@ -246,7 +246,9 @@ class cd(Command):
                 return matches
             paths = matches
 
-    def _tab_smart(self, dest, dest_abs):
+        return None
+
+    def _tab_fuzzy(self, dest, dest_abs):
         tokens = []
         basepath = dest_abs
         while True:
@@ -259,7 +261,7 @@ class cd(Command):
                 break
             tokens.append(token)
 
-        paths = self._tab_smart_match(basepath, tokens)
+        paths = self._tab_fuzzy_match(basepath, tokens)
         if not os.path.isabs(dest):
             paths_rel = basepath
             paths = [os.path.relpath(path, paths_rel) for path in paths]
@@ -274,8 +276,8 @@ class cd(Command):
 
         paths, paths_rel = self._tab_paths(dest, dest_abs, ends_with_sep)
         if paths is None:
-            if self.fm.settings.cd_tab_smart:
-                paths, paths_rel = self._tab_smart(dest, dest_abs)
+            if self.fm.settings.cd_tab_fuzzy:
+                paths, paths_rel = self._tab_fuzzy(dest, dest_abs)
             else:
                 paths, paths_rel = self._tab_normal(dest, dest_abs)
 
@@ -470,11 +472,20 @@ class set_(Command):
             return sorted(self.firstpart + setting for setting in settings
                           if setting.startswith(name))
         if not value:
-            # Cycle through colorschemes when name, but no value is specified
-            if name == "colorscheme":
-                return sorted(self.firstpart + colorscheme for colorscheme
-                              in get_all_colorschemes(self.fm))
-            return self.firstpart + str(settings[name])
+            value_completers = {
+                "colorscheme":
+                # Cycle through colorschemes when name, but no value is specified
+                lambda: sorted(self.firstpart + colorscheme for colorscheme
+                               in get_all_colorschemes(self.fm)),
+
+                "column_ratios":
+                lambda: self.firstpart + ",".join(map(str, settings[name])),
+            }
+
+            def default_value_completer():
+                return self.firstpart + str(settings[name])
+
+            return value_completers.get(name, default_value_completer)()
         if bool in settings.types_of(name):
             if 'true'.startswith(value.lower()):
                 return self.firstpart + 'True'
@@ -484,6 +495,7 @@ class set_(Command):
         if name == "colorscheme":
             return sorted(self.firstpart + colorscheme for colorscheme
                           in get_all_colorschemes(self.fm) if colorscheme.startswith(value))
+        return None
 
 
 class setlocal(set_):
@@ -800,18 +812,22 @@ class load_copy_buffer(Command):
     copy_buffer_filename = 'copy_buffer'
 
     def execute(self):
+        import sys
         from ranger.container.file import File
         from os.path import exists
         fname = self.fm.datapath(self.copy_buffer_filename)
+        unreadable = IOError if sys.version_info[0] < 3 else OSError
         try:
             fobj = open(fname, 'r')
-        except OSError:
+        except unreadable:
             return self.fm.notify(
                 "Cannot open %s" % (fname or self.copy_buffer_filename), bad=True)
+
         self.fm.copy_buffer = set(File(g)
                                   for g in fobj.read().split("\n") if exists(g))
         fobj.close()
         self.fm.ui.redraw_main_column()
+        return None
 
 
 class save_copy_buffer(Command):
@@ -822,15 +838,18 @@ class save_copy_buffer(Command):
     copy_buffer_filename = 'copy_buffer'
 
     def execute(self):
+        import sys
         fname = None
         fname = self.fm.datapath(self.copy_buffer_filename)
+        unwritable = IOError if sys.version_info[0] < 3 else OSError
         try:
             fobj = open(fname, 'w')
-        except OSError:
+        except unwritable:
             return self.fm.notify("Cannot open %s" %
                                   (fname or self.copy_buffer_filename), bad=True)
         fobj.write("\n".join(fobj.path for fobj in self.fm.copy_buffer))
         fobj.close()
+        return None
 
 
 class unmark_tag(mark_tag):
@@ -913,6 +932,8 @@ class eval_(Command):
     resolve_macros = False
 
     def execute(self):
+        # The import is needed so eval() can access the ranger module
+        import ranger  # NOQA pylint: disable=unused-import,unused-variable
         if self.arg(1) == '-q':
             code = self.rest(2)
             quiet = True
@@ -933,7 +954,8 @@ class eval_(Command):
                 if result and not quiet:
                     p(result)
         except Exception as err:  # pylint: disable=broad-except
-            p(err)
+            fm.notify("The error `%s` was caused by evaluating the "
+                      "following code: `%s`" % (err, code), bad=True)
 
 
 class rename(Command):
@@ -952,7 +974,7 @@ class rename(Command):
             return self.fm.notify('Syntax: rename <newname>', bad=True)
 
         if new_name == self.fm.thisfile.relative_path:
-            return
+            return None
 
         if access(new_name, os.F_OK):
             return self.fm.notify("Can't rename: file already exists!", bad=True)
@@ -963,6 +985,8 @@ class rename(Command):
             self.fm.tags.update_path(self.fm.thisfile.path, file_new.path)
             self.fm.thisdir.pointed_obj = file_new
             self.fm.thisfile = file_new
+
+        return None
 
     def tab(self, tabnum):
         return self._tab_directory_content()
@@ -1145,7 +1169,7 @@ class relink(Command):
             return self.fm.notify('%s is not a symlink!' % tfile.relative_path, bad=True)
 
         if new_path == os.readlink(tfile.path):
-            return
+            return None
 
         try:
             os.remove(tfile.path)
@@ -1156,6 +1180,8 @@ class relink(Command):
         self.fm.reset()
         self.fm.thisdir.pointed_obj = tfile
         self.fm.thisfile = tfile
+
+        return None
 
     def tab(self, tabnum):
         if not self.rest(1):
@@ -1203,6 +1229,8 @@ class copymap(Command):
 
         for arg in self.args[2:]:
             self.fm.ui.keymaps.copy(self.context, self.arg(1), arg)
+
+        return None
 
 
 class copypmap(copymap):

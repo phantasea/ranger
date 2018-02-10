@@ -8,8 +8,8 @@ ranger - visual file manager
 =head1 SYNOPSIS
 
 B<ranger> [B<--version>] [B<--help>] [B<--debug>] [B<--clean>]
-[B<--cachedir>=I<directory>] [B<--confdir>=I<directory>] [B<--datadir>=I<directory>]
-[B<--copy-config>=I<which>]
+[B<--cachedir>=I<directory>] [B<--confdir>=I<directory>]
+[B<--datadir>=I<directory>] [B<--copy-config>=I<which>]
 [B<--choosefile>=I<target>] [B<--choosefiles>=I<target>]
 [B<--choosedir>=I<target>] [B<--selectfile>=I<filepath>]
 [B<--show-only-dirs>]
@@ -200,6 +200,10 @@ This only works in iTerm2 compiled with image preview support, but works over
 ssh.
 
 To enable this feature, set the option C<preview_images_method> to iterm2.
+
+This feature relies on the dimensions of the terminal's font.  By default, a
+width of 8 and height of 11 are used.  To use other values, set the options
+C<iterm2_font_width> and C<iterm2_font_height> to the desired values.
 
 =head3 urxvt
 
@@ -419,7 +423,7 @@ Inspect the current file in a bigger window.
 
 =item E
 
-Edit the current file in $EDITOR ("nano" by default)
+Edit the current file in $VISUAL otherwise $EDITOR otherwise "vim"
 
 =item S
 
@@ -704,9 +708,10 @@ Changes case sensitivity for the "cd" command tab completion. Possible values ar
  insensitive
  smart
 
-=item cd_tab_smart [bool]
+=item cd_tab_fuzzy [bool]
 
-Use smart tab completion with less typing? E.g. ":cd /f/b/b<tab>" yields ":cd /foo/bar/baz".
+Use fuzzy tab completion with the "cd" command. For example,
+B<:cd /u/lo/b<TABE<gt>> expands to B<:cd /usr/local/bin>.
 
 =item clear_filters_on_dir_change [bool]
 
@@ -772,6 +777,13 @@ When active, directories and files will not be loaded, improving performance
 when all the files you need are already loaded.  This does not affect file
 previews.
 
+=item global_inode_type_filter [string]
+
+Like filter_inode_type, but globally for all directories.  Useful in
+combination with B<--choosedir>:
+
+ ranger --choosedir=/tmp/x --cmd='set global_inode_type_filter d'
+
 =item hidden_filter [string]
 
 A regular expression pattern for files which should be hidden.  For example,
@@ -784,6 +796,16 @@ this pattern will hide all files that start with a dot or end with a tilde.
 The delay that ranger idly waits for user input, in milliseconds, with a
 resolution of 100ms.  Lower delay reduces lag between directory updates but
 increases CPU load.
+
+=item iterm2_font_height [integer]
+
+Change the assumed font height in iTerm2, which may help with iTerm image
+previews
+
+=item iterm2_font_width [integer]
+
+Change the assumed font width in iTerm2, which may help with iTerm image
+previews
 
 =item line_numbers [string]
 
@@ -819,6 +841,11 @@ Start line numbers from 1.  Possible values are:
  false      start line numbers from 0
  true       start line numbers from 1
 
+=item open_all_images [bool]
+
+Open all images in this directory when running certain image viewers like feh
+or sxiv?  You can still open selected files by marking them.
+
 =item padding_right [bool]
 
 When collapse_preview is on and there is no preview, should there remain a
@@ -836,6 +863,11 @@ Preview files in the preview column?
 =item preview_images [bool]
 
 Draw images inside the console with the external program w3mimgpreview?
+
+=item preview_images_method [string]
+
+Set the preview image method. Supported methods: w3m, iterm2, urxvt,
+urxvt-full, terminology.  See I<PREVIEWS> section.
 
 =item preview_max_size [int]
 
@@ -884,6 +916,10 @@ Show dotfiles in the bookmark preview window? (Type ')
 =item show_hidden [bool] <zh>, <^H>
 
 Show hidden files?
+
+=item show_selection_in_titlebar [bool]
+
+Add the highlighted file to the path in the titlebar
 
 =item sort_case_insensitive [bool] <zc>
 
@@ -943,13 +979,19 @@ Use the preview script defined in the setting I<preview_script>?
 
 Gather and display data about version control systems. Supported vcs: git, hg.
 
-=item vcs_backend_git, vcs_backend_hg, vcs_backend_bzr [string]
+=item vcs_backend_git, vcs_backend_hg, vcs_backend_bzr, vcs_backend_svn [string]
 
 Sets the state for the version control backend. The possible values are:
 
  disabled   don't display any information.
  local      display only local state.
  enabled    display both, local and remote state. May be slow for hg and bzr.
+
+=item viewmode [string]
+
+Sets the view mode, which can be B<miller> to display the files in the
+traditional miller column view that shows multiple levels of the hierarchy, or
+B<multipane> to use multiple panes (one per tab) similar to midnight-commander.
 
 =item wrap_scroll [bool]
 
@@ -1562,9 +1604,15 @@ If this variable is set to FALSE, ranger will not load the default rc.conf.
 This can save time if you copied the whole rc.conf to ~/.config/ranger/ and
 don't need the default one at all.
 
+=item VISUAL
+
+Defines the editor to be used for the "E" key.  Falls back to EDITOR if
+undefined or empty.
+
 =item EDITOR
 
-Defines the editor to be used for the "E" key.  Defaults to "nano".
+Defines the editor to be used for the "E" key if VISUAL is undefined or empty.
+Defaults to "vim".
 
 =item SHELL
 
@@ -1622,11 +1670,11 @@ GNU General Public License 3 or (at your option) any later version.
 
 =over
 
-=item Download: L<http://ranger.nongnu.org/ranger-stable.tar.gz>
+=item Download: L<https://ranger.github.io/ranger-stable.tar.gz>
 
-=item The project page: L<http://ranger.nongnu.org/>
+=item The project page: L<https://ranger.github.io/>
 
-=item The mailing list: L<http://savannah.nongnu.org/mail/?group=ranger>
+=item The mailing list: L<https://savannah.nongnu.org/mail/?group=ranger>
 
 =item IRC channel: #ranger on freenode.net
 

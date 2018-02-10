@@ -14,7 +14,7 @@ import os
 
 # Information
 __license__ = 'GPL3'
-__version__ = '1.9.0b5'
+__version__ = '1.9.0'
 __author__ = __maintainer__ = 'Roman Zimbelmann'
 __email__ = 'hut@hut.pm'
 
@@ -28,7 +28,6 @@ MACRO_DELIMITER_ESC = '%%'
 DEFAULT_PAGER = 'less'
 USAGE = '%prog [options] [path]'
 VERSION = 'ranger-master {0}'.format(__version__)
-
 
 # These variables are ignored if the corresponding
 # XDG environment variable is non-empty and absolute

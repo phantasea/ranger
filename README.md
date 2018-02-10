@@ -1,5 +1,5 @@
-ranger 1.9.0b5
-==============
+ranger 1.9.0
+============
 
 [![Build Status](https://travis-ci.org/ranger/ranger.svg?branch=master)](https://travis-ci.org/ranger/ranger)
 
@@ -29,10 +29,10 @@ About
 -----
 * Authors:     see `AUTHORS` file
 * License:     GNU General Public License Version 3
-* Website:     http://ranger.nongnu.org/
-* Download:    http://ranger.nongnu.org/ranger-stable.tar.gz
+* Website:     https://ranger.github.io/
+* Download:    https://ranger.github.io/ranger-stable.tar.gz
 * Bug reports: https://github.com/ranger/ranger/issues
-* git clone    http://git.sv.gnu.org/r/ranger.git
+* git clone    https://github.com/ranger/ranger.git
 
 
 Design Goals
@@ -108,6 +108,6 @@ current file.  The second is the main column and the first shows the parent
 directory.
 
 Ranger can automatically copy default configuration files to `~/.config/ranger`
-if you run it with the switch `--copy-config`. See `ranger --help` for a
-description of that switch.  Also check `ranger/config/` for the default
-configuration.
+if you run it with the switch `--copy-config=( rc | scope | ... | all )`.
+See `ranger --help` for a description of that switch.  Also check
+`ranger/config/` for the default configuration.
