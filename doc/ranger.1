@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "RANGER 1"
-.TH RANGER 1 "ranger-1.9.2" "2018-09-10" "ranger manual"
+.TH RANGER 1 "ranger-1.9.2" "10/14/2018" "ranger manual"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -298,6 +298,9 @@ This does not work over ssh, requires certain terminals (tested on \*(L"xterm\*(
 .PP
 To enable this feature, install the program \*(L"w3m\*(R" and set the option
 \&\f(CW\*(C`preview_images_method\*(C'\fR to w3m.
+.PP
+When using a terminal with a nonzero border which is not automatically detected, the w3m preview will be misaligned.
+Use the \f(CW\*(C`w3m_offset\*(C'\fR option to manually adjust the image offset. This should be the same value as the terminal's border value.
 .PP
 \fIiTerm2\fR
 .IX Subsection "iTerm2"
@@ -890,6 +893,9 @@ Otherwise the submaps are replaced with \*(L"...\*(R".
 .IP "hostname_in_titlebar [bool]" 4
 .IX Item "hostname_in_titlebar [bool]"
 Show hostname in titlebar?
+.IP "size_in_bytes [bool]" 4
+.IX Item "size_in_bytes [bool]"
+Print file sizes in bytes instead of the default human-readable format.
 .IP "idle_delay [integer]" 4
 .IX Item "idle_delay [integer]"
 The delay that ranger idly waits for user input, in milliseconds, with a
@@ -1473,6 +1479,9 @@ This can be used to re-evaluate the rc.conf file after changing it:
 .Vb 1
 \& map X chain shell vim \-p %confdir/rc.conf %rangerdir/config/rc.conf; source %confdir/rc.conf
 .Ve
+.IP "scroll_preview \fIvalue\fR" 2
+.IX Item "scroll_preview value"
+Scroll the file preview by \fIvalue\fR lines.
 .IP "terminal" 2
 .IX Item "terminal"
 Spawns the \fIx\-terminal-emulator\fR starting in the current directory.

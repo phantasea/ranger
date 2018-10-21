@@ -49,6 +49,7 @@ ALLOWED_SETTINGS = {
     'hidden_filter': str,
     'hint_collapse_threshold': int,
     'hostname_in_titlebar': bool,
+    'size_in_bytes': bool,
     'idle_delay': int,
     'iterm2_font_width': int,
     'iterm2_font_height': int,
@@ -94,6 +95,7 @@ ALLOWED_SETTINGS = {
     'vcs_backend_svn': str,
     'viewmode': str,
     'w3m_delay': float,
+    'w3m_offset': int,
     'wrap_scroll': bool,
     'xterm_alt_key': bool,
 }

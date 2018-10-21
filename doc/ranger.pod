@@ -209,6 +209,9 @@ This does not work over ssh, requires certain terminals (tested on "xterm" and
 To enable this feature, install the program "w3m" and set the option
 C<preview_images_method> to w3m.
 
+When using a terminal with a nonzero border which is not automatically detected, the w3m preview will be misaligned.
+Use the C<w3m_offset> option to manually adjust the image offset. This should be the same value as the terminal's border value.
+
 =head3 iTerm2
 
 This only works in iTerm2 compiled with image preview support, but works over
@@ -905,6 +908,10 @@ Otherwise the submaps are replaced with "...".
 
 Show hostname in titlebar?
 
+=item size_in_bytes [bool]
+
+Print file sizes in bytes instead of the default human-readable format.
+
 =item idle_delay [integer]
 
 The delay that ranger idly waits for user input, in milliseconds, with a
@@ -1571,6 +1578,10 @@ Reads commands from a file and executes them in the ranger console.
 This can be used to re-evaluate the rc.conf file after changing it:
 
  map X chain shell vim -p %confdir/rc.conf %rangerdir/config/rc.conf; source %confdir/rc.conf
+
+=item scroll_preview I<value>
+
+Scroll the file preview by I<value> lines.
 
 =item terminal
 

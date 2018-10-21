@@ -211,7 +211,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         self.ui.redraw_main_column()
 
     def redraw_window(self):
-        """:redraw
+        """:redraw_window
 
         Redraw the window.
         """
@@ -994,6 +994,20 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             pager.set_image(fobj)
         else:
             pager.set_source(fobj)
+
+    def scroll_preview(self, lines, narg=None):
+        """:scroll_preview <lines>
+
+        Scroll the file preview by <lines> lines.
+        """
+        preview_column = self.ui.browser.columns[-1]
+        if preview_column.target and preview_column.target.is_file:
+            if narg is not None:
+                lines = narg
+            target_scroll = preview_column.scrollbit + lines
+            max_scroll = len(preview_column.lines) - preview_column.hei
+            preview_column.scrollbit = max(0, min(target_scroll, max_scroll))
+            preview_column.request_redraw()
 
     # --------------------------
     # -- Previews
