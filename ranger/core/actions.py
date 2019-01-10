@@ -247,8 +247,6 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                 try:
                     val = self.fm.bookmarks[key_to_string(char)]
                 except KeyError:
-                    self.notify('No bookmark defined for `{}`'.format(
-                        key_to_string(char)), bad=True)
                     val = MACRO_FAIL
                 return ('any_path{:d}'.format(i), val)
 
@@ -1004,10 +1002,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         if preview_column.target and preview_column.target.is_file:
             if narg is not None:
                 lines = narg
-            target_scroll = preview_column.scrollbit + lines
-            max_scroll = len(preview_column.lines) - preview_column.hei
-            preview_column.scrollbit = max(0, min(target_scroll, max_scroll))
-            preview_column.request_redraw()
+            preview_column.scrollbit(lines)
 
     # --------------------------
     # -- Previews
@@ -1091,6 +1086,8 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             data['loading'] = False
             return path
 
+        if not os.path.exists(ranger.args.cachedir):
+            os.makedirs(ranger.args.cachedir)
         cacheimg = os.path.join(ranger.args.cachedir, self.sha1_encode(path))
         if self.settings.preview_images and \
                 os.path.isfile(cacheimg) and \
@@ -1170,31 +1167,34 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
     @staticmethod
     def read_text_file(path, count=None):
         """Encoding-aware reading of a text file."""
+        # Guess encoding ourselves.
+        # These should be the most frequently used ones.
+        # latin-1 as the last resort
+        encodings = [('utf-8', 'strict'), ('utf-16', 'strict'),
+                     ('latin-1', 'replace')]
+
+        with open(path, 'rb') as fobj:
+            data = fobj.read(count)
+
         try:
             import chardet
         except ImportError:
-            # Guess encoding ourselves. These should be the most frequently used ones.
-            encodings = ('utf-8', 'utf-16')
-            for encoding in encodings:
-                try:
-                    with codecs.open(path, 'r', encoding=encoding) as fobj:
-                        text = fobj.read(count)
-                except UnicodeDecodeError:
-                    pass
-                else:
-                    LOG.debug("guessed encoding of '%s' as %r", path, encoding)
-                    return text
+            pass
         else:
-            with open(path, 'rb') as fobj:
-                data = fobj.read(count)
             result = chardet.detect(data)
-            LOG.debug("chardet guess for '%s': %s", path, result)
             guessed_encoding = result['encoding']
-            return codecs.decode(data, guessed_encoding, 'replace')
+            if guessed_encoding is not None:
+                # Add chardet's guess before our own.
+                encodings.insert(0, (guessed_encoding, 'replace'))
 
-        # latin-1 as the last resort
-        with codecs.open(path, 'r', encoding='latin-1', errors='replace') as fobj:
-            return fobj.read(count)
+        for (encoding, error_scheme) in encodings:
+            try:
+                text = codecs.decode(data, encoding, error_scheme)
+            except UnicodeDecodeError:
+                pass
+            else:
+                LOG.debug("Guessed encoding of '%s' as %s", path, encoding)
+                return text
 
     # --------------------------
     # -- Tabs

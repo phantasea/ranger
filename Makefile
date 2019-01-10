@@ -20,6 +20,7 @@ endif
 SETUPOPTS ?= '--record=install_log.txt'
 DOCDIR ?= doc/pydoc
 DESTDIR ?= /
+PREFIX ?= /usr/local
 PYOPTIMIZE ?= 1
 FILTER ?= .
 
@@ -55,7 +56,8 @@ help:
 
 install:
 	$(PYTHON) setup.py install $(SETUPOPTS) \
-		'--root=$(DESTDIR)' --optimize=$(PYOPTIMIZE)
+		'--prefix=$(PREFIX)' '--root=$(DESTDIR)' \
+		--optimize=$(PYOPTIMIZE)
 
 compile: clean
 	PYTHONOPTIMIZE=$(PYOPTIMIZE) $(PYTHON) -m compileall -q ranger

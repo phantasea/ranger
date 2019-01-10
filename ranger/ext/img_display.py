@@ -20,6 +20,8 @@ import os
 import struct
 import sys
 import warnings
+import json
+import threading
 from subprocess import Popen, PIPE
 
 import termios
@@ -254,6 +256,9 @@ class ITerm2ImageDisplayer(ImageDisplayer, FileManagerAware):
         self.fm.ui.win.redrawwin()
         self.fm.ui.win.refresh()
 
+    def quit(self):
+        self.clear(0, 0, 0, 0)
+
     def _generate_iterm2_input(self, path, max_cols, max_rows):
         """Prepare the image content of path for image display in iTerm2"""
         image_width, image_height = self._get_image_dimensions(path)
@@ -379,6 +384,9 @@ class TerminologyImageDisplayer(ImageDisplayer, FileManagerAware):
         self.fm.ui.win.redrawwin()
         self.fm.ui.win.refresh()
 
+    def quit(self):
+        self.clear(0, 0, 0, 0)
+
 
 class URXVTImageDisplayer(ImageDisplayer, FileManagerAware):
     """Implementation of ImageDisplayer working by setting the urxvt
@@ -476,7 +484,7 @@ class URXVTImageFSDisplayer(URXVTImageDisplayer):
         return self._get_centered_offsets()
 
 
-class KittyImageDisplayer(ImageDisplayer):
+class KittyImageDisplayer(ImageDisplayer, FileManagerAware):
     """Implementation of ImageDisplayer for kitty (https://github.com/kovidgoyal/kitty/)
     terminal. It uses the built APC to send commands and data to kitty,
     which in turn renders the image. The APC takes the form
@@ -641,6 +649,8 @@ class KittyImageDisplayer(ImageDisplayer):
         # kitty doesn't seem to reply on deletes, checking like we do in draw()
         # will slows down scrolling with timeouts from select
         self.image_id -= 1
+        self.fm.ui.win.redrawwin()
+        self.fm.ui.win.refresh()
 
     def _format_cmd_str(self, cmd, payload=None, max_slice_len=2048):
         central_blk = ','.join(["{}={}".format(k, v) for k, v in cmd.items()]).encode('ascii')
@@ -667,3 +677,55 @@ class KittyImageDisplayer(ImageDisplayer):
         #         os.remove(self.temp_paths[k])
         #     except (OSError, IOError):
         #         continue
+
+
+class UeberzugImageDisplayer(ImageDisplayer):
+    """Implementation of ImageDisplayer using ueberzug.
+    Ueberzug can display images in a Xorg session.
+    Does not work over ssh.
+    """
+    IMAGE_ID = 'preview'
+    is_initialized = False
+
+    def __init__(self):
+        self.process = None
+
+    def initialize(self):
+        """start ueberzug"""
+        if (self.is_initialized and self.process.poll() is None
+                and not self.process.stdin.closed):
+            return
+
+        self.process = Popen(['ueberzug', 'layer', '--silent'],
+                             stdin=PIPE, universal_newlines=True)
+        self.is_initialized = True
+
+    def _execute(self, **kwargs):
+        self.initialize()
+        self.process.stdin.write(json.dumps(kwargs) + '\n')
+        self.process.stdin.flush()
+
+    def draw(self, path, start_x, start_y, width, height):
+        self._execute(
+            action='add',
+            identifier=self.IMAGE_ID,
+            x=start_x,
+            y=start_y,
+            max_width=width,
+            max_height=height,
+            path=path
+        )
+
+    def clear(self, start_x, start_y, width, height):
+        if self.process and not self.process.stdin.closed:
+            self._execute(action='remove', identifier=self.IMAGE_ID)
+
+    def quit(self):
+        if self.is_initialized and self.process.poll() is None:
+            timer_kill = threading.Timer(1, self.process.kill, [])
+            try:
+                self.process.terminate()
+                timer_kill.start()
+                self.process.communicate()
+            finally:
+                timer_kill.cancel()
