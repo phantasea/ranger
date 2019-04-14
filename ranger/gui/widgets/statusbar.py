@@ -137,6 +137,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             space_left -= len(string)
             starting_point += len(string)
 
+    #mod by sim1
     def _get_left_part(self, bar):  # pylint: disable=too-many-branches,too-many-statements
         left = bar.left
 
@@ -161,12 +162,14 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
         else:
             perms = target.get_permission_string()
         how = 'good' if getuid() == stat.st_uid else 'bad'
+        left.add('[')
         left.add(perms, 'permissions', how)
+        left.add(']')
         left.add_space()
-        left.add(str(stat.st_nlink), 'nlink')
-        left.add_space()
+        #left.add(str(stat.st_nlink), 'nlink')
+        #left.add_space()
         left.add(self._get_owner(target), 'owner')
-        left.add_space()
+        left.add(':')
         left.add(self._get_group(target), 'group')
 
         if target.is_link:
@@ -179,15 +182,18 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
         else:
             left.add_space()
 
-            if self.settings.display_size_in_status_bar and target.infostring:
-                left.add(target.infostring.replace(" ", ""))
-                left.add_space()
-
             try:
                 date = strftime(self.timeformat, localtime(stat.st_mtime))
             except OSError:
                 date = '?'
             left.add(date, 'mtime')
+
+            """
+            left.add_space()
+            if self.settings.display_size_in_status_bar and target.infostring:
+                left.add(target.infostring.replace(" ", ""))
+                left.add_space()
+            """
 
         directory = target if target.is_directory else \
             target.fm.get_directory(os.path.dirname(target.path))
@@ -238,6 +244,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             except KeyError:
                 return str(gid)
 
+    #mod by sim1
     def _get_right_part(self, bar):  # pylint: disable=too-many-branches,too-many-statements
         right = bar.right
         if self.column is None:
@@ -278,21 +285,21 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 right.add(human_readable(sumsize, separator=''))
             right.add("/" + str(len(target.marked_items)))
         else:
-            right.add(human_readable(target.disk_usage, separator='') + " sum")
+            right.add("Total:" + human_readable(target.disk_usage, separator=''))
             if self.settings.display_free_space_in_status_bar:
                 try:
                     free = get_free_space(target.mount_path)
                 except OSError:
                     pass
                 else:
-                    right.add(", ", "space")
-                    right.add(human_readable(free, separator='') + " free")
+                    right.add(" | ", "space")
+                    right.add("Free:" + human_readable(free, separator=''))
         right.add("  ", "space")
 
         if target.marked_items:
             # Indicate that there are marked files. Useful if you scroll
             # away and don't see them anymore.
-            right.add('Mrk', base, 'marked')
+            right.add('Mark', base, 'marked')
         elif target.files:
             right.add(str(target.pointer + 1) + '/' + str(len(target.files)) + '  ', base)
             if max_pos <= 0:

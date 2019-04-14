@@ -88,6 +88,7 @@ class TitleBar(Widget):
         self.right_sumsize = bar.right.sumsize()
         self.result = bar.combine()
 
+    #mod by sim1
     def _get_left_part(self, bar):
         # TODO: Properly escape non-printable chars without breaking unicode
         if self.settings.hostname_in_titlebar:
@@ -99,7 +100,7 @@ class TitleBar(Widget):
             bar.add(self.fm.username, 'hostname', clr, fixed=True)
             bar.add('@', 'hostname', clr, fixed=True)
             bar.add(self.fm.hostname, 'hostname', clr, fixed=True)
-            bar.add(' ', 'hostname', clr, fixed=True)
+            bar.add(': ', 'hostname', clr, fixed=True)
 
         pathway = self.fm.thistab.pathway
         if self.settings.tilde_in_titlebar \
