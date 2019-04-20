@@ -446,6 +446,9 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
                 tagged_display.append([tagged_marker, ['tag_marker']])
             else:
                 tagged_display.append([" ", ['tag_marker']])
+
+        tagged_display = []  #add by sim1 for not displaying tags
+
         return tagged_display
 
     def _draw_infostring_display(self, drawn, space):
