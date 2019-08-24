@@ -455,8 +455,8 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         infostring_display = []
         if self.display_infostring and drawn.infostring \
                 and self.settings.display_size_in_main_column:
-            //infostring = str(drawn.infostring) + " "
-            infostring = str(drawn.infostring)  //mod by sim1 for not displaying space after file size
+            #infostring = str(drawn.infostring) + " "
+            infostring = str(drawn.infostring)  #mod by sim1 for not displaying space after file size
             if len(infostring) <= space:
                 infostring_display.append([infostring, ['infostring']])
         return infostring_display
