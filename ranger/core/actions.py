@@ -1646,6 +1646,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             pass
         try:
             os.rename(src, dest)
+            self.reload_cwd()
         except OSError as err:
             self.notify(err)
             return False
