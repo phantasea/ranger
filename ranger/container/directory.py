@@ -717,6 +717,14 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
         for fobj in self.files:
             fobj.set_linemode(mode)
 
+    # add by sim1  +++++++
+    def get_preview_source(self, width, height):
+        return self.fm.get_preview(self, width, height)
+
+    def is_image_preview(self):
+        return False
+    # add by sim1  -------
+
     def __nonzero__(self):
         """Always True"""
         return True

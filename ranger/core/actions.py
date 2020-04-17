@@ -1016,7 +1016,9 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         pager.move(to=100, percentage=True)
 
     def display_file(self):
-        if not self.thisfile or not self.thisfile.is_file:
+        # mod by sim1: support directory preview
+        #if not self.thisfile or not self.thisfile.is_file:
+        if not self.thisfile:
             return
 
         pager = self.ui.open_pager()
