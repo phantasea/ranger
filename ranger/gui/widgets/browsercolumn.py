@@ -7,7 +7,7 @@ from __future__ import (absolute_import, division, print_function)
 
 import curses
 import stat
-from time import time
+from time import time, strftime, localtime  #mod by sim1
 from os.path import splitext
 
 try:
@@ -34,6 +34,7 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
     scroll_begin = 0
     target = None
     last_redraw_time = -1
+    timeformat = '%Y-%m-%d %H:%M'  #add by sim1
 
     old_dir = None
     old_thisfile = None
@@ -458,10 +459,18 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         infostring_display = []
         if self.display_infostring and drawn.infostring \
                 and self.settings.display_size_in_main_column:
+            #mod by sim1 for not displaying space after file size
             #infostring = str(drawn.infostring) + " "
-            infostring = str(drawn.infostring)  #mod by sim1 for not displaying space after file size
+            infostring = str(drawn.infostring)
             if len(infostring) <= space:
                 infostring_display.append([infostring, ['infostring']])
+
+            #add by sim1: show file mtime  +++++++
+            infostring_display.append([' | ', []])
+            date = strftime(self.timeformat, localtime(drawn.stat.st_mtime))
+            infostring_display.append([date, ['date']])
+            #add by sim1: show file mtime  -------
+
         return infostring_display
 
     def _draw_vcsstring_display(self, drawn):
