@@ -466,10 +466,12 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
                 infostring_display.append([infostring, ['infostring']])
 
             #add by sim1: show file mtime  +++++++
-            if not drawn.stat is None:
-                infostring_display.append([' | ', []])
-                date = strftime(self.timeformat, localtime(drawn.stat.st_mtime))
-                infostring_display.append([date, ['date']])
+            current_linemode = drawn.linemode_dict[drawn.linemode]
+            if current_linemode.name == 'devicons':
+                if not drawn.stat is None:
+                    infostring_display.append([' | ', []])
+                    date = strftime(self.timeformat, localtime(drawn.stat.st_mtime))
+                    infostring_display.append([date, ['date']])
             #add by sim1: show file mtime  -------
 
         return infostring_display
