@@ -66,6 +66,7 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
         self.run = None
         self.rifle = None
         self.thistab = None
+        self.widescreen = False  # add by sim1
 
         try:
             self.username = pwd.getpwuid(os.geteuid()).pw_name
@@ -237,6 +238,15 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
 
     thisfile = property(_get_thisfile, _set_thisfile)
     thisdir = property(_get_thisdir, _set_thisdir)
+
+    # add by sim1 for toggle widescreen mode +++++
+    def toggle_wide_mode(self):
+        if self.widescreen == False:
+            self.widescreen = True
+        else:
+            self.widescreen = False
+        return self.widescreen
+    # add by sim1 for toggle widescreen mode -----
 
     def block_input(self, sec=0):
         self.input_blocked = sec != 0
