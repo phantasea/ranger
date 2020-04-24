@@ -82,12 +82,12 @@ class ViewBase(Widget, DisplayableContainer):  # pylint: disable=too-many-instan
         ystart = self.hei - hei
 
         maxlen = self.wid
-        self.addnstr(ystart - 1, 0, "mark  path".ljust(self.wid), self.wid)
+        self.addnstr(ystart - 1, 0, "mark --- path".ljust(self.wid), self.wid)
 
         whitespace = " " * maxlen
         for line, items in zip(range(self.hei - 1), sorted_bookmarks):
             key, mark = items
-            string = " " + key + "   " + mark.path
+            string = "  " + key + "   |  " + mark.path
             self.addstr(ystart + line, 0, whitespace)
             self.addnstr(ystart + line, 0, string, self.wid)
 
@@ -171,7 +171,7 @@ class ViewBase(Widget, DisplayableContainer):  # pylint: disable=too-many-instan
 
         hei = min(self.hei - 1, len(hints))
         ystart = self.hei - hei
-        self.addnstr(ystart - 1, 0, "key          command".ljust(self.wid), self.wid)
+        self.addnstr(ystart - 1, 0, "key ------- command".ljust(self.wid), self.wid)
         try:
             self.win.chgat(ystart - 1, 0, curses.A_UNDERLINE)
         except curses.error:
@@ -179,7 +179,7 @@ class ViewBase(Widget, DisplayableContainer):  # pylint: disable=too-many-instan
         whitespace = " " * self.wid
         i = ystart
         for key, cmd in hints:
-            string = " " + key.ljust(11) + " " + cmd
+            string = " " + key.ljust(10) + " " + cmd
             self.addstr(i, 0, whitespace)
             self.addnstr(i, 0, string, self.wid)
             i += 1
