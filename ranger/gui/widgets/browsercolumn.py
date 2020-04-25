@@ -577,7 +577,35 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         """scroll down by n lines"""
         self.need_redraw = True
         self.target.move(down=n)
-        self.target.scroll_begin += 3 * n
+        # mod by sim1
+        #self.target.scroll_begin += 3 * n
+        self.target.scroll_begin += n
+
+    # add by sim1 ++++++++++++++++++++++++++++++++++++
+    def scroll_top(self):
+        self.need_redraw = True
+        curr = self._get_index_of_selected_file() or 0
+        begin = self.target.scroll_begin
+        offset = curr - begin
+        self.target.move(up=offset)
+
+    def scroll_mid(self):
+        self.need_redraw = True
+        curr = self._get_index_of_selected_file() or 0
+        begin = self.target.scroll_begin
+        winsize = self.hei
+        halfwinsize = winsize // 2
+        offset = begin + halfwinsize - curr
+        self.target.move(down=offset)
+
+    def scroll_bot(self):
+        self.need_redraw = True
+        curr = self._get_index_of_selected_file() or 0
+        begin = self.target.scroll_begin
+        winsize = self.hei
+        offset = begin + winsize - curr - 1
+        self.target.move(down=offset)
+    # add by sim1 ------------------------------------
 
     def __str__(self):
         return self.__class__.__name__ + ' at level ' + str(self.level)

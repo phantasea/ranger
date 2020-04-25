@@ -599,6 +599,23 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         """Move back and forth in the history"""
         self.thistab.history_go(int(relative))
 
+    # add by sim1  ++++++++++++++++++++++++++++++++++++
+    def move_top(self):
+        if self.ui.browser and self.ui.browser.main_column:
+            self.ui.browser.main_column.scroll_top()
+            self.thisfile = self.thisdir.pointed_obj
+
+    def move_mid(self):
+        if self.ui.browser and self.ui.browser.main_column:
+            self.ui.browser.main_column.scroll_mid()
+            self.thisfile = self.thisdir.pointed_obj
+
+    def move_bot(self):
+        if self.ui.browser and self.ui.browser.main_column:
+            self.ui.browser.main_column.scroll_bot()
+            self.thisfile = self.thisdir.pointed_obj
+    # add by sim1  ------------------------------------
+
     # this is to mimic vim scroll(J/K/C-E/C-Y)
     def scroll(self, relative):
         """Scroll down by <relative> lines"""
