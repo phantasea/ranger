@@ -120,7 +120,7 @@ class TitleBar(Widget):
 
         # mod by sim1: not display current dir name
         #if self.fm.thisfile is not None and \
-        if not self.fm.thisfile.is_directory and \
+        if self.fm.thisfile and not self.fm.thisfile.is_directory and \
                 self.settings.show_selection_in_titlebar:
             bar.add(self.fm.thisfile.relative_path, 'file')
 
