@@ -357,12 +357,15 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
                     # between the line number and the tag
                     space -= 1
 
+            # del by sim1 for not displaying tags
+            """
             # selection mark
             tagmark = self._draw_tagged_display(tagged, tagged_marker)
             tagmarklen = self._total_len(tagmark)
             if space - tagmarklen > 2:
                 predisplay_left += tagmark
                 space -= tagmarklen
+            """
 
             # vcs data
             vcsstring = self._draw_vcsstring_display(drawn)
@@ -451,8 +454,6 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
             else:
                 tagged_display.append([" ", ['tag_marker']])
 
-        tagged_display = []  #add by sim1 for not displaying tags
-
         return tagged_display
 
     def _draw_infostring_display(self, drawn, space):
@@ -478,6 +479,11 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
 
     def _draw_vcsstring_display(self, drawn):
         vcsstring_display = []
+
+        # add by sim1
+        if self.settings.vcs_aware:
+            vcsstring_display.append([' ', []])
+
         if (self.target.vcs and self.target.vcs.track) \
                 or (drawn.is_directory and drawn.vcs and drawn.vcs.track):
             if drawn.vcsremotestatus:

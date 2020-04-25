@@ -197,6 +197,8 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 left.add_space()
             """
 
+        # del by sim1: not display vcsdate
+        """
         directory = target if target.is_directory else \
             target.fm.get_directory(os.path.dirname(target.path))
         if directory.vcs and directory.vcs.track:
@@ -225,6 +227,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                     directory.vcs.rootvcs.head['summary'][:summary_length],
                     'vcscommit'
                 )
+        """
 
     def _get_owner(self, target):
         uid = target.stat.st_uid
