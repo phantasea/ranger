@@ -599,7 +599,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         """Move back and forth in the history"""
         self.thistab.history_go(int(relative))
 
-    # TODO: remove this method since it is not used?
+    # this is to mimic vim scroll(J/K/C-E/C-Y)
     def scroll(self, relative):
         """Scroll down by <relative> lines"""
         if self.ui.browser and self.ui.browser.main_column:
