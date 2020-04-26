@@ -31,28 +31,29 @@ def human_readable(byte, separator=' '):  # pylint: disable=too-many-return-stat
     # shorten this code, take performance into consideration.
     if byte <= 0:
         return '0'
+    # mod by sim1: one decimal precision display for size
     if byte < 2**10:
-        return '%d%sB' % (byte, separator)
+        return '%d.0%sB' % (byte, separator)
     if byte < 2**10 * 999:
-        return '%.3g%sK' % ((byte / 2**10), separator)
+        return '%#.1f%sK' % ((byte / 2**10), separator)
     if byte < 2**20:
-        return '%.4g%sK' % ((byte / 2**10), separator)
+        return '%#.1f%sK' % ((byte / 2**10), separator)
     if byte < 2**20 * 999:
-        return '%.3g%sM' % ((byte / 2**20), separator)
+        return '%#.1f%sM' % ((byte / 2**20), separator)
     if byte < 2**30:
-        return '%.4g%sM' % ((byte / 2**20), separator)
+        return '%#.1f%sM' % ((byte / 2**20), separator)
     if byte < 2**30 * 999:
-        return '%.3g%sG' % ((byte / 2**30), separator)
+        return '%#.1f%sG' % ((byte / 2**30), separator)
     if byte < 2**40:
-        return '%.4g%sG' % ((byte / 2**30), separator)
+        return '%#.1f%sG' % ((byte / 2**30), separator)
     if byte < 2**40 * 999:
-        return '%.3g%sT' % ((byte / 2**40), separator)
+        return '%#.1f%sT' % ((byte / 2**40), separator)
     if byte < 2**50:
-        return '%.4g%sT' % ((byte / 2**40), separator)
+        return '%#.1f%sT' % ((byte / 2**40), separator)
     if byte < 2**50 * 999:
-        return '%.3g%sP' % ((byte / 2**50), separator)
+        return '%#.1f%sP' % ((byte / 2**50), separator)
     if byte < 2**60:
-        return '%.4g%sP' % ((byte / 2**50), separator)
+        return '%#.1f%sP' % ((byte / 2**50), separator)
     return '>9000'
 
 
