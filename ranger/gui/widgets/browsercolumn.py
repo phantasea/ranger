@@ -332,7 +332,7 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
 
             if drawn.marked and (self.main_column
                                  or self.settings.display_tags_in_all_columns):
-                #mod by Chris
+                # mod by sim1
                 #text = " " + text
                 text = "" + text
 
@@ -460,20 +460,20 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         infostring_display = []
         if self.display_infostring and drawn.infostring \
                 and self.settings.display_size_in_main_column:
-            #mod by sim1 for not displaying space after file size
+            # del by sim1 for not displaying space after file size
             #infostring = str(drawn.infostring) + " "
             infostring = str(drawn.infostring)
             if len(infostring) <= space:
                 infostring_display.append([infostring, ['infostring']])
 
-            #add by sim1: show file mtime  +++++++
+            # add by sim1: show file mtime  +++++++
             current_linemode = drawn.linemode_dict[drawn.linemode]
             if current_linemode.name == 'devicons':
                 if not drawn.stat is None:
                     infostring_display.append([' | ', []])
                     date = strftime(self.timeformat, localtime(drawn.stat.st_mtime))
                     infostring_display.append([date, ['date']])
-            #add by sim1: show file mtime  -------
+            # add by sim1: show file mtime  -------
 
         return infostring_display
 
