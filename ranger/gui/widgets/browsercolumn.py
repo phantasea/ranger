@@ -480,24 +480,24 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
     def _draw_vcsstring_display(self, drawn):
         vcsstring_display = []
 
-        # add by sim1
-        if self.settings.vcs_aware:
-            vcsstring_display.append([' ', []])
-
         if (self.target.vcs and self.target.vcs.track) \
                 or (drawn.is_directory and drawn.vcs and drawn.vcs.track):
-            if drawn.vcsremotestatus:
-                vcsstr, vcscol = self.vcsremotestatus_symb[drawn.vcsremotestatus]
-                vcsstring_display.append([vcsstr, ['vcsremote'] + vcscol])
-            elif self.target.has_vcschild:
-                vcsstring_display.append([' ', []])
+            # mod by sim1: VCS DIY
+            #if drawn.vcsremotestatus:
+            #    vcsstr, vcscol = self.vcsremotestatus_symb[drawn.vcsremotestatus]
+            #    vcsstring_display.append([vcsstr, ['vcsremote'] + vcscol])
+            #elif self.target.has_vcschild:
+            #    vcsstring_display.append([' ', []])
+
             if drawn.vcsstatus:
                 vcsstr, vcscol = self.vcsstatus_symb[drawn.vcsstatus]
                 vcsstring_display.append([vcsstr, ['vcsfile'] + vcscol])
             elif self.target.has_vcschild:
                 vcsstring_display.append([' ', []])
         elif self.target.has_vcschild:
-            vcsstring_display.append(['  ', []])
+            # mod by sim1: VCS DIY
+            #vcsstring_display.append(['  ', []])
+            vcsstring_display.append([' ', []])
 
         return vcsstring_display
 
