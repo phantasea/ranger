@@ -754,7 +754,9 @@ class trash(Command):
             return os.path.isdir(path) and not os.path.islink(path) and len(os.listdir(path)) > 0
 
         if self.rest(1):
-            files = shlex.split(self.rest(1))
+            # mod by sim1: bug fix
+            #files = shlex.split(self.rest(1))
+            files = self.rest(1)
             many_files = (len(files) > 1 or is_directory_with_files(files[0]))
         else:
             cwd = self.fm.thisdir
@@ -764,13 +766,15 @@ class trash(Command):
                 return
 
             # relative_path used for a user-friendly output in the confirmation.
-            files = [f.relative_path for f in self.fm.thistab.get_selection()]
+            # mod by sim1: bug fix
+            #files = [f.relative_path for f in self.fm.thistab.get_selection()]
+            files = self.fm.thistab.get_selection()
             many_files = (cwd.marked_items or is_directory_with_files(tfile.path))
 
         confirm = self.fm.settings.confirm_on_delete
         if confirm != 'never' and (confirm != 'multiple' or many_files):
             self.fm.ui.console.ask(
-                "Confirm deletion of: %s (y/N)" % ', '.join(files),
+                "Confirm deletion of: %s (y/N)" % ', '.join([f.relative_path for f in files]),
                 partial(self._question_callback, files),
                 ('n', 'N', 'y', 'Y'),
             )
