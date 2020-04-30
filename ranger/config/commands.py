@@ -97,33 +97,6 @@ import re
 
 from ranger.api.commands import Command
 
-class vid(Command):
-    """
-    :vidfs
-
-    Play video file with mplayer in fullscreen
-    """
-
-    def execute(self):
-        from ranger.ext.shell_escape import shell_escape as esc
-
-        command = 'mplayer -vo fbdev2 '
-        filename = esc(self.fm.thisfile.path)
-        self.fm.run(command + filename)
-
-class vidfs(Command):
-    """
-    :vidfs
-
-    Play video file with mplayer in fullscreen
-    """
-
-    def execute(self):
-        from ranger.ext.shell_escape import shell_escape as esc
-
-        command = 'mplayer -vo fbdev2 -xy 1024 -fs -zoom -really-quiet '
-        filename = esc(self.fm.thisfile.path)
-        self.fm.run(command + filename)
 
 class alias(Command):
     """:alias <newcommand> <oldcommand>
@@ -1172,7 +1145,7 @@ class bulkrename(Command):
                     encoding="utf-8", errors="surrogateescape"))
             else:
                 listfile.write("\n".join(filenames))
-        self.fm.execute_file([File(listpath)], app='editor')
+        self.fm.execute_file([File(listpath)], app='vim')
         with (open(listpath, 'r', encoding="utf-8", errors="surrogateescape") if
               py3 else open(listpath, 'r')) as listfile:
             new_filenames = listfile.read().split("\n")
@@ -1210,7 +1183,7 @@ class bulkrename(Command):
 
             # Open the script and let the user review it, then check if the
             # script was modified by the user
-            self.fm.execute_file([File(cmdfile.name)], app='editor')
+            self.fm.execute_file([File(cmdfile.name)], app='vim')
             cmdfile.seek(0)
             script_was_edited = (script_content != cmdfile.read())
 
