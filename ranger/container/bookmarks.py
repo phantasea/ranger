@@ -169,6 +169,10 @@ class Bookmarks(FileManagerAware):
         """Save the bookmarks to the bookmarkfile.
 
         This is done automatically after every modification if autosave is True."""
+
+        # add by sim1: never change bookmarkfile
+        return
+
         self.update()
         if self.path is None:
             return
