@@ -601,7 +601,10 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         begin = self.target.scroll_begin
         winsize = self.hei
         halfwinsize = winsize // 2
-        offset = begin + halfwinsize - curr
+        if len(self.fm.thisdir) >= winsize:
+            offset = begin + halfwinsize - curr
+        else:
+            offset = (len(self.fm.thisdir) // 2) - curr
         self.target.move(down=offset)
 
     def scroll_bot(self):
