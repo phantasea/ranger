@@ -1607,7 +1607,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                 link(source_path,
                      next_available_filename(target_path))
 
-    def paste(self, overwrite=False, append=False, dest=None, make_safe_path=get_safe_path):
+    def paste(self, overwrite=False, append=False, dest=None, make_safe_path=get_safe_path, move=False):
         """:paste
 
         Paste the selected items into the current directory or to dest
@@ -1616,6 +1616,10 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         if dest is None:
             dest = self.thistab.path
         if isdir(dest):
+            # add by sim1: paste and remove the original file
+            if move == True:
+                self.do_cut = True
+
             loadable = CopyLoader(self.copy_buffer, self.do_cut, overwrite,
                                   dest, make_safe_path)
             self.loader.add(loadable, append=append)
