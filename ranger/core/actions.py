@@ -1257,6 +1257,9 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
     # -- Tabs
     # --------------------------
     def tab_open(self, name, path=None):
+        # add by sim1
+        self.last_tab = self.current_tab;
+
         tab_has_changed = (name != self.current_tab)
         self.current_tab = name
         previous_tab = self.thistab
@@ -1291,13 +1294,19 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         if name == self.current_tab:
             direction = -1 if name == self.get_tab_list()[-1] else 1
             previous = self.current_tab
-            self.tab_move(direction)
+            # mod by sim1
+            if not self.fm.settings['move_to_last_tab_after_close']:
+                self.tab_move(direction)
+            else:
+                self.tab_move(direction, narg=self.last_tab)
             if previous == self.current_tab:
                 return  # can't close last tab
         if name in self.tabs:
             del self.tabs[name]
         self.restorable_tabs.append(tab)
         self.signal_emit('tab.layoutchange')
+        # add by sim1
+        self.last_tab = self.current_tab;
 
     def tab_restore(self):
         # NOTE: The name of the tab is not restored.
@@ -1306,6 +1315,9 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             tab = self.restorable_tabs.pop()
             for name in range(1, len(self.tabs) + 2):
                 if name not in self.tabs:
+                    # add by sim1
+                    self.last_tab = self.current_tab;
+
                     self.current_tab = name
                     self.tabs[name] = tab
                     tab.enter_dir(tab.path, history=False)
@@ -1314,9 +1326,12 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                     self.signal_emit('tab.change', old=previous_tab, new=self.thistab)
                     break
 
-    def tab_move(self, offset, narg=None):
+    def tab_move(self, offset, last=False, narg=None):
         if narg:
             return self.tab_open(narg)
+        # add by sim1
+        if last:
+            return self.tab_open(self.last_tab)
         assert isinstance(offset, int)
         tablist = self.get_tab_list()
         current_index = tablist.index(self.current_tab)

@@ -72,6 +72,7 @@ ALLOWED_SETTINGS = {
     'save_backtick_bookmark': bool,
     'save_console_history': bool,
     'save_tabs_on_exit': bool,
+    'move_to_last_tab_after_close': bool,
     'scroll_offset': int,
     'shorten_title': int,
     'show_cursor': bool,  # TODO: not working?

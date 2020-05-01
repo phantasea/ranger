@@ -52,6 +52,7 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
         self.directories = dict()
         self.bookmarks = bookmarks
         self.current_tab = 1
+        self.last_tab = 1
         self.tabs = {}
         self.tags = tags
         self.restorable_tabs = deque([], ranger.MAX_RESTORABLE_TABS)
