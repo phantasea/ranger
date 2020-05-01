@@ -790,7 +790,12 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             if self.mode == 'visual':
                 self.change_mode('normal')
         else:
-            for i in range(cwd.pointer, min(cwd.pointer + narg, len(cwd))):
+            # add by sim1
+            step = 1
+            if (narg < 0):
+                step = -1
+
+            for i in range(cwd.pointer, min(cwd.pointer + narg, len(cwd)), step):
                 item = cwd.files[i]
                 if item is not None:
                     if toggle:
