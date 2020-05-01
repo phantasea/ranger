@@ -64,6 +64,7 @@ class ViewMultipane(ViewBase):
         for child in self.columns[:-1]:
             if 'separators' in border_types or 'outline' in border_types:
                 try:
+                    # mod by sim1: use | char to draw the vline
                     #win.vline(0, child.x + child.wid, curses.ACS_VLINE, self.hei)
                     win.vline(0, child.x + child.wid, '|', self.hei)
                 except curses.error:
