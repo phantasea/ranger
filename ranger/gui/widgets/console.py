@@ -378,9 +378,15 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
             self.copy = self.line[self.pos:]
             self.line = self.line[:self.pos]
         else:
-            self.copy = self.line[:self.pos]
-            self.line = self.line[self.pos:]
-            self.pos = 0
+            # mod by sim1: Ctrl-U but keep "rename "
+            if not self.line.split()[0] == "rename":
+                self.copy = self.line[:self.pos]
+                self.line = self.line[self.pos:]
+                self.pos = 0
+            else:
+                self.copy = self.line[7:self.pos]
+                self.line = self.line[0:7] + self.line[self.pos:]
+                self.pos = 7
         self.on_line_change()
 
     def paste(self):
@@ -397,7 +403,13 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
             if backward:
                 right_part = self.line[self.pos:]
                 i = self.pos - 2
-                while i >= 0 and re.match(
+                # mod by sim1: Ctrl-W not delete "rename "
+                min_pos = 0
+                if self.line.split()[0] == "rename":
+                    min_pos = 7
+                if i < min_pos:
+                    return
+                while i >= min_pos and re.match(
                         r'[\w\d]', self.line[i], re.UNICODE):  # pylint: disable=no-member
                     i -= 1
                 self.copy = self.line[i + 1:self.pos]
