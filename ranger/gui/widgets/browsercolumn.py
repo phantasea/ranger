@@ -581,38 +581,72 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
 
     def scroll(self, n):
         """scroll down by n lines"""
+        # mod by sim1: sync the scroll of vifm
+        cur = self._get_index_of_selected_file() or 0
+        top = self.target.scroll_begin
+        hei = self.hei
+        if len(self.fm.thisdir) <= hei:
+            return
+        if n > 0 and (len(self.fm.thisdir) <= (top + hei)):
+            return
+        if n < 0 and top == 0:
+            return
         self.need_redraw = True
         self.target.move(down=n)
-        # mod by sim1
-        #self.target.scroll_begin += 3 * n
         self.target.scroll_begin += n
+        if (n > 0 and cur > top) \
+            or (n < 0 and cur < (top + hei - 1)):
+            self.target.move(to=cur)
 
     # add by sim1 ++++++++++++++++++++++++++++++++++++
     def scroll_top(self):
-        self.need_redraw = True
-        curr = self._get_index_of_selected_file() or 0
-        begin = self.target.scroll_begin
-        offset = curr - begin
-        self.target.move(up=offset)
+        cur = self._get_index_of_selected_file() or 0
+        top = self.target.scroll_begin
+        offset = cur - top
+        if offset > 0:
+            self.scroll(offset)
 
     def scroll_mid(self):
-        self.need_redraw = True
-        curr = self._get_index_of_selected_file() or 0
-        begin = self.target.scroll_begin
-        winsize = self.hei
-        halfwinsize = winsize // 2
-        if len(self.fm.thisdir) >= winsize:
-            offset = begin + halfwinsize - curr
-        else:
-            offset = (len(self.fm.thisdir) // 2) - curr
-        self.target.move(down=offset)
+        cur = self._get_index_of_selected_file() or 0
+        top = self.target.scroll_begin
+        hei = self.hei
+        mid = top + (hei // 2) - 1
+        offset = cur - mid
+        self.scroll(offset)
 
     def scroll_bot(self):
+        cur = self._get_index_of_selected_file() or 0
+        top = self.target.scroll_begin
+        hei = self.hei
+        bot = top + hei - 1
+        offset = cur - bot
+        if offset < 0:
+            self.scroll(offset)
+
+    def move_top(self):
         self.need_redraw = True
-        curr = self._get_index_of_selected_file() or 0
-        begin = self.target.scroll_begin
-        winsize = self.hei
-        offset = begin + winsize - curr - 1
+        cur = self._get_index_of_selected_file() or 0
+        top = self.target.scroll_begin
+        offset = cur - top
+        self.target.move(up=offset)
+
+    def move_mid(self):
+        self.need_redraw = True
+        cur = self._get_index_of_selected_file() or 0
+        top = self.target.scroll_begin
+        hei = self.hei
+        if len(self.fm.thisdir) >= hei:
+            offset = top + (hei // 2) - cur
+        else:
+            offset = (len(self.fm.thisdir) // 2) - cur
+        self.target.move(down=offset)
+
+    def move_bot(self):
+        self.need_redraw = True
+        cur = self._get_index_of_selected_file() or 0
+        top = self.target.scroll_begin
+        hei = self.hei
+        offset = top + hei - cur - 1
         self.target.move(down=offset)
     # add by sim1 ------------------------------------
 
