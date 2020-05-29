@@ -48,6 +48,7 @@ ALLOWED_SETTINGS = {
     'global_inode_type_filter': str,
     'hidden_filter': str,
     'hint_collapse_threshold': int,
+    'hint_max_count': int,
     'hostname_in_titlebar': bool,
     'size_in_bytes': bool,
     'idle_delay': int,

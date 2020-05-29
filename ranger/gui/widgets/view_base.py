@@ -115,6 +115,9 @@ class ViewBase(Widget, DisplayableContainer):  # pylint: disable=too-many-instan
 
         def populate_hints(keymap, prefix=""):
             for key, value in keymap.items():
+                # add by sim1
+                if len(hints) >= self.fm.settings.hint_max_count:
+                    break
                 key = prefix + key_to_string(key)
                 if isinstance(value, dict):
                     populate_hints(value, key)
@@ -124,6 +127,9 @@ class ViewBase(Widget, DisplayableContainer):  # pylint: disable=too-many-instan
                         continue
                     hints.append((key, text))
         populate_hints(self.fm.ui.keybuffer.pointer)
+        # add by sim1
+        if len(hints) <= 0:
+            return
 
         def sort_hints(hints):
             """Sort the hints by the action string but first group them by the
