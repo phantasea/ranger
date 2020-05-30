@@ -605,9 +605,9 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             self.ui.browser.main_column.move_top()
             self.thisfile = self.thisdir.pointed_obj
 
-    def move_mid(self):
+    def move_mid(self, mode=0):
         if self.ui.browser and self.ui.browser.main_column:
-            self.ui.browser.main_column.move_mid()
+            self.ui.browser.main_column.move_mid(mode)
             self.thisfile = self.thisdir.pointed_obj
 
     def move_bot(self):
