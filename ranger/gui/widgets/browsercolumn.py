@@ -279,7 +279,12 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
 
         # Set the size of the linum text field to the number of digits in the
         # visible files in directory.
-        linum_text_len = len(str(self.scroll_begin + self.hei))
+        # mod by sim1
+        if len(self.target.files) >= self.hei:
+            disp_bot_pos = self.scroll_begin + self.hei
+        else:
+            disp_bot_pos = len(self.target.files) - 1
+        linum_text_len = len(str(disp_bot_pos))
         linum_format = "{0:>" + str(linum_text_len) + "}"
 
         selected_i = self._get_index_of_selected_file()
@@ -355,7 +360,7 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
                     # between the line number and the tag
                     space -= 1
                     # add separator between line number and tag
-                    predisplay_left.append([' ', []])
+                    predisplay_left.append([' ', ['line_number_separator']])
 
             # del by sim1 for not displaying tags
             """
