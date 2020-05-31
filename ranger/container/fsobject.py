@@ -32,11 +32,11 @@ CONTAINER_EXTENSIONS = ('7z', 'ace', 'ar', 'arc', 'bz', 'bz2', 'cab', 'cpio',
                         'cpt', 'deb', 'dgc', 'dmg', 'gz', 'iso', 'jar', 'msi',
                         'pkg', 'rar', 'shar', 'tar', 'tbz', 'tgz', 'txz',
                         'xar', 'xpi', 'xz', 'zip')
-DOCUMENT_EXTENSIONS = ('cbr', 'cbz', 'cfg', 'css', 'cvs', 'djvu', 'doc',
-                       'docx', 'gnm', 'gnumeric', 'htm', 'html', 'md', 'odf',
-                       'odg', 'odp', 'ods', 'odt', 'pdf', 'pod', 'ps', 'rtf',
-                       'sxc', 'txt', 'xls', 'xlw', 'xml', 'xslx')
-DOCUMENT_BASENAMES = ('bugs', 'bugs', 'changelog', 'copying', 'credits',
+DOCUMENT_EXTENSIONS = ('cbr', 'cbz', 'css', 'cvs', 'djvu', 'doc',
+                       'docx', 'gnm', 'gnumeric', 'md', 'odf',
+                       'odg', 'odp', 'ods', 'odt', 'pod', 'ps', 'rtf',
+                       'sxc', 'xls', 'xlw', 'xml', 'xslx')
+DOCUMENT_BASENAMES = ('bugs', 'changelog', 'copying', 'credits',
                       'hacking', 'help', 'install', 'license', 'readme', 'todo')
 
 BAD_INFO = '?'
@@ -225,13 +225,13 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes,too-many
         self.image = self._mimetype.startswith('image')
         self.audio = self._mimetype.startswith('audio')
         self.media = self.video or self.image or self.audio
-        self.document = self._mimetype.startswith('text') \
-            or self.extension in DOCUMENT_EXTENSIONS \
-            or self.basename.lower() in DOCUMENT_BASENAMES
+        self.document  = self.extension in DOCUMENT_EXTENSIONS
+        self.text  = self._mimetype.startswith('text')
+        self.special   = self.basename.lower() in DOCUMENT_BASENAMES
         self.container = self.extension in CONTAINER_EXTENSIONS
 
         # pylint: disable=attribute-defined-outside-init
-        keys = ('video', 'audio', 'image', 'media', 'document', 'container')
+        keys = ('video', 'audio', 'image', 'media', 'document', 'text', 'special', 'container')
         self._mimetype_tuple = tuple(key for key in keys if getattr(self, key))
 
         if self._mimetype == '':
