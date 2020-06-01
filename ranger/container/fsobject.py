@@ -83,6 +83,8 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes,too-many
     image = False
     media = False
     video = False
+    mimetext = False
+    special = False
 
     size = 0
 
@@ -196,7 +198,7 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes,too-many
         except KeyError:
             return str(self.stat.st_gid)
 
-    for attr in ('video', 'audio', 'image', 'media', 'document', 'container'):
+    for attr in ('video', 'audio', 'image', 'media', 'document', 'mimetext', 'special', 'container'):
         exec(  # pylint: disable=exec-used
             "%s = lazy_property(lambda self: self.set_mimetype() or self.%s)" % (attr, attr))
 
@@ -226,12 +228,12 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes,too-many
         self.audio = self._mimetype.startswith('audio')
         self.media = self.video or self.image or self.audio
         self.document  = self.extension in DOCUMENT_EXTENSIONS
-        self.text  = self._mimetype.startswith('text')
+        self.mimetext  = self._mimetype.startswith('mimetext')
         self.special   = self.basename.lower() in DOCUMENT_BASENAMES
         self.container = self.extension in CONTAINER_EXTENSIONS
 
         # pylint: disable=attribute-defined-outside-init
-        keys = ('video', 'audio', 'image', 'media', 'document', 'text', 'special', 'container')
+        keys = ('video', 'audio', 'image', 'media', 'document', 'mimetext', 'special', 'container')
         self._mimetype_tuple = tuple(key for key in keys if getattr(self, key))
 
         if self._mimetype == '':
