@@ -16,6 +16,7 @@ class ViewBase(Widget, DisplayableContainer):  # pylint: disable=too-many-instan
     need_clear = False
     draw_hints = False
     draw_info = False
+    hint_limit = False
 
     def __init__(self, win):  # pylint: disable=super-init-not-called
         DisplayableContainer.__init__(self, win)
@@ -117,6 +118,7 @@ class ViewBase(Widget, DisplayableContainer):  # pylint: disable=too-many-instan
             for key, value in keymap.items():
                 # add by sim1
                 if len(hints) >= self.fm.settings.hint_max_count:
+                    self.hint_limit = True
                     break
                 key = prefix + key_to_string(key)
                 if isinstance(value, dict):
@@ -177,7 +179,13 @@ class ViewBase(Widget, DisplayableContainer):  # pylint: disable=too-many-instan
 
         hei = min(self.hei - 1, len(hints))
         ystart = self.hei - hei
-        self.addnstr(ystart - 1, 0, "key ------- command".ljust(self.wid), self.wid)
+        # mod by sim1
+        if self.hint_limit:
+            self.addnstr(ystart - 1, 0, "key +++++++ command".ljust(self.wid), self.wid)
+        else:
+            self.addnstr(ystart - 1, 0, "key ------- command".ljust(self.wid), self.wid)
+        self.hint_limit = False
+
         try:
             self.win.chgat(ystart - 1, 0, curses.A_UNDERLINE)
         except curses.error:
