@@ -281,7 +281,10 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         # visible files in directory.
         # mod by sim1
         if len(self.target.files) >= self.hei:
-            bot_idx = self.scroll_begin + self.hei
+            if self.settings.one_indexed:
+                bot_idx = self.scroll_begin + self.hei
+            else:
+                bot_idx = self.scroll_begin + self.hei - 1
         else:
             if self.settings.one_indexed:
                 bot_idx = len(self.target.files)
