@@ -34,10 +34,13 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
     scroll_begin = 0
     target = None
     last_redraw_time = -1
-    timeformat = '%Y-%m-%d %H:%M'  #add by sim1
 
     old_dir = None
     old_thisfile = None
+
+    # add by sim1
+    timeformat = '%Y-%m-%d %H:%M'
+    old_linum_len = 1
 
     def __init__(self, win, level, tab=None):
         """Initializes a Browser Column Widget
@@ -293,6 +296,12 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         linum_text_len = len(str(bot_idx))
         linum_format = "{0:>" + str(linum_text_len) + "}"
         #linum_format = "{0:0>" + str(linum_text_len) + "}"  # prefix 0 such as 001
+
+        # add by sim1
+        if self.old_linum_len != linum_text_len:
+            self.fm.thisdir.unload()
+            self.fm.thisdir.load_content()
+        self.old_linum_len = linum_text_len
 
         selected_i = self._get_index_of_selected_file()
         for line in range(self.hei):
