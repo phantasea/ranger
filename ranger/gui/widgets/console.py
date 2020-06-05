@@ -98,9 +98,12 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
 
     def draw(self):
         self.win.erase()
+
         # add by sim1: support console color
-        base_color = ['in_console']
-        self.color(tuple(base_color))
+        self.color_at(0, 0, self.wid, "in_console")
+        self.color_reset()
+        self.color('in_console')
+
         if self.question_queue:
             assert isinstance(self.question_queue[0], tuple)
             assert len(self.question_queue[0]) == 3
