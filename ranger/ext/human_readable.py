@@ -20,7 +20,7 @@ def human_readable(byte, separator=' '):  # pylint: disable=too-many-return-stat
     """
 
     # add by sim1
-    if separator is not None:
+    if separator:
         separator = ' '
 
     # handle automatically_count_files false
