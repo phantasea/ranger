@@ -19,6 +19,10 @@ def human_readable(byte, separator=' '):  # pylint: disable=too-many-return-stat
     '1023 M'
     """
 
+    # add by sim1
+    if separator is not None:
+        separator = ' '
+
     # handle automatically_count_files false
     if byte is None:
         return ''

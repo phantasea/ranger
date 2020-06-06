@@ -330,9 +330,8 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes,too-many
         elif self.is_file:
             if new_stat:
                 self.size = new_stat.st_size
-                #mod by sim1
-                #self.infostring = ' ' + human_readable(self.size)
-                self.infostring = ' ' + human_readable(self.size, separator='')
+                # mod by sim1
+                self.infostring = ' ' + human_readable(self.size, separator=self.settings.size_separator)
             else:
                 self.size = 0
                 self.infostring = '?'

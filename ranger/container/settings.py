@@ -41,7 +41,7 @@ ALLOWED_SETTINGS = {
     'display_size_in_status_bar': bool,
     "display_free_space_in_status_bar": bool,
     'display_tags_in_all_columns': bool,
-    "display_time_in_status_bar": bool,
+    "display_time_in_status_bar": bool,    # add by sim1
     'draw_borders': str,
     'draw_progress_bar_in_status_bar': bool,
     'flushinput': bool,
@@ -49,9 +49,10 @@ ALLOWED_SETTINGS = {
     'global_inode_type_filter': str,
     'hidden_filter': str,
     'hint_collapse_threshold': int,
-    'hint_max_count': int,
+    'hint_max_count': int,    # add by sim1
     'hostname_in_titlebar': bool,
     'size_in_bytes': bool,
+    'size_separator': str,    # add by sim1
     'idle_delay': int,
     'iterm2_font_width': int,
     'iterm2_font_height': int,
