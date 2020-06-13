@@ -53,7 +53,6 @@ ALLOWED_SETTINGS = {
     'hostname_in_titlebar': bool,
     'size_in_bytes': bool,
     'size_separator': str,    # add by sim1
-    'size_zero_prefix': bool,    # add by sim1
     'idle_delay': int,
     'iterm2_font_width': int,
     'iterm2_font_height': int,

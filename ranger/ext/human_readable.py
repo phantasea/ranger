@@ -7,6 +7,7 @@ from datetime import datetime
 
 from ranger.core.shared import SettingsAware
 
+import re
 
 def human_readable(byte, separator=' '):  # pylint: disable=too-many-return-statements
     """Convert a large number of bytes to an easily readable format.
@@ -35,55 +36,35 @@ def human_readable(byte, separator=' '):  # pylint: disable=too-many-return-stat
     # shorten this code, take performance into consideration.
     if byte <= 0:
         return '0'
-    # mod by sim1: one decimal precision display for size
-    if SettingsAware.settings.size_zero_prefix:
-        if byte < 2**10:
-            return '%03d.0%sB' % (byte, separator)
-        if byte < 2**10 * 999:
-            return '%#05.1f%sK' % ((byte / 2**10), separator)
-        if byte < 2**20:
-            return '%#05.1f%sK' % ((byte / 2**10), separator)
-        if byte < 2**20 * 999:
-            return '%#05.1f%sM' % ((byte / 2**20), separator)
-        if byte < 2**30:
-            return '%#05.1f%sM' % ((byte / 2**20), separator)
-        if byte < 2**30 * 999:
-            return '%#05.1f%sG' % ((byte / 2**30), separator)
-        if byte < 2**40:
-            return '%#05.1f%sG' % ((byte / 2**30), separator)
-        if byte < 2**40 * 999:
-            return '%#05.1f%sT' % ((byte / 2**40), separator)
-        if byte < 2**50:
-            return '%#05.1f%sT' % ((byte / 2**40), separator)
-        if byte < 2**50 * 999:
-            return '%#05.1f%sP' % ((byte / 2**50), separator)
-        if byte < 2**60:
-            return '%#05.1f%sP' % ((byte / 2**50), separator)
-        return '>9000'
 
+    # mod by sim1
+    ret = '>9000'
     if byte < 2**10:
-        return '%d.0%sB' % (byte, separator)
-    if byte < 2**10 * 999:
-        return '%#.1f%sK' % ((byte / 2**10), separator)
-    if byte < 2**20:
-        return '%#.1f%sK' % ((byte / 2**10), separator)
-    if byte < 2**20 * 999:
-        return '%#.1f%sM' % ((byte / 2**20), separator)
-    if byte < 2**30:
-        return '%#.1f%sM' % ((byte / 2**20), separator)
-    if byte < 2**30 * 999:
-        return '%#.1f%sG' % ((byte / 2**30), separator)
-    if byte < 2**40:
-        return '%#.1f%sG' % ((byte / 2**30), separator)
-    if byte < 2**40 * 999:
-        return '%#.1f%sT' % ((byte / 2**40), separator)
-    if byte < 2**50:
-        return '%#.1f%sT' % ((byte / 2**40), separator)
-    if byte < 2**50 * 999:
-        return '%#.1f%sP' % ((byte / 2**50), separator)
-    if byte < 2**60:
-        return '%#.1f%sP' % ((byte / 2**50), separator)
-    return '>9000'
+        ret = '%03d.0%sB' % (byte, separator)
+    elif byte < 2**10 * 999:
+        ret = '%#05.1f%sK' % ((byte / 2**10), separator)
+    elif byte < 2**20:
+        ret = '%#05.1f%sK' % ((byte / 2**10), separator)
+    elif byte < 2**20 * 999:
+        ret = '%#05.1f%sM' % ((byte / 2**20), separator)
+    elif byte < 2**30:
+        ret = '%#05.1f%sM' % ((byte / 2**20), separator)
+    elif byte < 2**30 * 999:
+        ret = '%#05.1f%sG' % ((byte / 2**30), separator)
+    elif byte < 2**40:
+        ret = '%#05.1f%sG' % ((byte / 2**30), separator)
+    elif byte < 2**40 * 999:
+        ret = '%#05.1f%sT' % ((byte / 2**40), separator)
+    elif byte < 2**50:
+        ret = '%#05.1f%sT' % ((byte / 2**40), separator)
+    elif byte < 2**50 * 999:
+        ret = '%#05.1f%sP' % ((byte / 2**50), separator)
+    elif byte < 2**60:
+        ret = '%#05.1f%sP' % ((byte / 2**50), separator)
+
+    ret = re.compile(r'^00').sub('  ', ret)
+    ret = re.compile(r'^0').sub(' ', ret)
+    return ret
 
 
 def human_readable_time(timestamp):
