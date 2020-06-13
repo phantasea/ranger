@@ -21,8 +21,10 @@ def human_readable(byte, separator=' '):  # pylint: disable=too-many-return-stat
     """
 
     # add by sim1
-    if separator:
+    if SettingsAware.settings.size_separator_space:
         separator = ' '
+    else:
+        separator = ''
 
     # handle automatically_count_files false
     if byte is None:

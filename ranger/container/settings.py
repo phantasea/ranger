@@ -52,7 +52,7 @@ ALLOWED_SETTINGS = {
     'hint_max_count': int,    # add by sim1
     'hostname_in_titlebar': bool,
     'size_in_bytes': bool,
-    'size_separator': str,    # add by sim1
+    'size_separator_space': bool,    # add by sim1
     'idle_delay': int,
     'iterm2_font_width': int,
     'iterm2_font_height': int,
