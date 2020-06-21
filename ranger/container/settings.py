@@ -82,6 +82,7 @@ ALLOWED_SETTINGS = {
     'show_hidden_bookmarks': bool,
     'show_hidden': bool,
     'show_selection_in_titlebar': bool,
+    'show_selection_dirname_in_titlebar': bool,  # Add by sim1
     'sort_case_insensitive': bool,
     'sort_directories_first': bool,
     'sort_reverse': bool,
