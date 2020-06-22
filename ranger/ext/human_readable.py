@@ -9,7 +9,7 @@ from ranger.core.shared import SettingsAware
 
 import re
 
-def human_readable(byte, separator=' '):  # pylint: disable=too-many-return-statements
+def human_readable(byte, separator=' ', use_opt=False, uni_format=False):  # pylint: disable=too-many-return-statements
     """Convert a large number of bytes to an easily readable format.
 
     >>> human_readable(54)
@@ -21,10 +21,11 @@ def human_readable(byte, separator=' '):  # pylint: disable=too-many-return-stat
     """
 
     # add by sim1
-    if SettingsAware.settings.size_separator_space:
-        separator = ' '
-    else:
-        separator = ''
+    if use_opt:
+        if SettingsAware.settings.size_separator_space:
+            separator = ' '
+        else:
+            separator = ''
 
     # handle automatically_count_files false
     if byte is None:
@@ -41,31 +42,56 @@ def human_readable(byte, separator=' '):  # pylint: disable=too-many-return-stat
 
     # mod by sim1
     ret = '>9000'
-    if byte < 2**10:
-        ret = '%03d.0%sB' % (byte, separator)
-    elif byte < 2**10 * 999:
-        ret = '%#05.1f%sK' % ((byte / 2**10), separator)
-    elif byte < 2**20:
-        ret = '%#05.1f%sK' % ((byte / 2**10), separator)
-    elif byte < 2**20 * 999:
-        ret = '%#05.1f%sM' % ((byte / 2**20), separator)
-    elif byte < 2**30:
-        ret = '%#05.1f%sM' % ((byte / 2**20), separator)
-    elif byte < 2**30 * 999:
-        ret = '%#05.1f%sG' % ((byte / 2**30), separator)
-    elif byte < 2**40:
-        ret = '%#05.1f%sG' % ((byte / 2**30), separator)
-    elif byte < 2**40 * 999:
-        ret = '%#05.1f%sT' % ((byte / 2**40), separator)
-    elif byte < 2**50:
-        ret = '%#05.1f%sT' % ((byte / 2**40), separator)
-    elif byte < 2**50 * 999:
-        ret = '%#05.1f%sP' % ((byte / 2**50), separator)
-    elif byte < 2**60:
-        ret = '%#05.1f%sP' % ((byte / 2**50), separator)
+    if uni_format:
+        if byte < 2**10:
+            ret = '%03d.0%sB' % (byte, separator)
+        elif byte < 2**10 * 999:
+            ret = '%#05.1f%sK' % ((byte / 2**10), separator)
+        elif byte < 2**20:
+            ret = '%#05.1f%sK' % ((byte / 2**10), separator)
+        elif byte < 2**20 * 999:
+            ret = '%#05.1f%sM' % ((byte / 2**20), separator)
+        elif byte < 2**30:
+            ret = '%#05.1f%sM' % ((byte / 2**20), separator)
+        elif byte < 2**30 * 999:
+            ret = '%#05.1f%sG' % ((byte / 2**30), separator)
+        elif byte < 2**40:
+            ret = '%#05.1f%sG' % ((byte / 2**30), separator)
+        elif byte < 2**40 * 999:
+            ret = '%#05.1f%sT' % ((byte / 2**40), separator)
+        elif byte < 2**50:
+            ret = '%#05.1f%sT' % ((byte / 2**40), separator)
+        elif byte < 2**50 * 999:
+            ret = '%#05.1f%sP' % ((byte / 2**50), separator)
+        elif byte < 2**60:
+            ret = '%#05.1f%sP' % ((byte / 2**50), separator)
 
-    ret = re.compile(r'^00').sub('  ', ret)
-    ret = re.compile(r'^0').sub(' ', ret)
+        ret = re.compile(r'^00').sub('  ', ret)
+        ret = re.compile(r'^0').sub(' ', ret)
+    else:
+        if byte < 2**10:
+            ret = '%d.0%sB' % (byte, separator)
+        elif byte < 2**10 * 999:
+            ret = '%#.1f%sK' % ((byte / 2**10), separator)
+        elif byte < 2**20:
+            ret = '%#.1f%sK' % ((byte / 2**10), separator)
+        elif byte < 2**20 * 999:
+            ret = '%#.1f%sM' % ((byte / 2**20), separator)
+        elif byte < 2**30:
+            ret = '%#.1f%sM' % ((byte / 2**20), separator)
+        elif byte < 2**30 * 999:
+            ret = '%#.1f%sG' % ((byte / 2**30), separator)
+        elif byte < 2**40:
+            ret = '%#.1f%sG' % ((byte / 2**30), separator)
+        elif byte < 2**40 * 999:
+            ret = '%#.1f%sT' % ((byte / 2**40), separator)
+        elif byte < 2**50:
+            ret = '%#.1f%sT' % ((byte / 2**40), separator)
+        elif byte < 2**50 * 999:
+            ret = '%#.1f%sP' % ((byte / 2**50), separator)
+        elif byte < 2**60:
+            ret = '%#.1f%sP' % ((byte / 2**50), separator)
+
     return ret
 
 
