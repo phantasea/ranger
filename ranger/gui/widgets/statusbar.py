@@ -275,8 +275,11 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 or (target.is_directory and target.files is None):
             return
 
-        pos = target.scroll_begin
-        max_pos = len(target) - self.column.hei
+        #mod by sim1
+        #pos = target.scroll_begin
+        #max_pos = len(target) - self.column.hei
+        pos = target.pointer + 1
+        max_pos = len(target.files)
         base = 'scroll'
 
         right.add(" ", "space")
@@ -320,10 +323,12 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             # away and don't see them anymore.
             right.add('Mark', base, 'marked')
         elif target.files:
-            right.add(str(target.pointer + 1) + '/' + str(len(target.files)) + '  ', base)
-            if max_pos <= 0:
+            # mod by sim1: show hidden files count
+            right.add(str(target.pointer + 1) + '/' + str(len(target.files))\
+                + '(+' + str(len(os.listdir(target.path)) - len(target.files)) + ')' + '  ', base)
+            if max_pos <= self.column.hei:
                 right.add('All', base, 'all')
-            elif pos == 0:
+            elif pos == 1:
                 right.add('Top', base, 'top')
             elif pos >= max_pos:
                 right.add('Bot', base, 'bot')
