@@ -37,12 +37,13 @@ def human_readable(byte, separator=' ', use_opt=False, uni_format=False):  # pyl
     # I know this can be written much shorter, but this long version
     # performs much better than what I had before.  If you attempt to
     # shorten this code, take performance into consideration.
-    if byte <= 0:
-        return '0'
 
     # mod by sim1
     ret = '>9000'
     if uni_format:
+        if byte <= 0:
+            return '     0'
+
         if byte < 2**10:
             ret = '%03d.0%sB' % (byte, separator)
         elif byte < 2**10 * 999:
@@ -69,6 +70,9 @@ def human_readable(byte, separator=' ', use_opt=False, uni_format=False):  # pyl
         ret = re.compile(r'^00').sub('  ', ret)
         ret = re.compile(r'^0').sub(' ', ret)
     else:
+        if byte <= 0:
+            return '0'
+
         if byte < 2**10:
             ret = '%d.0%sB' % (byte, separator)
         elif byte < 2**10 * 999:
