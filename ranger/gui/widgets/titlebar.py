@@ -121,10 +121,16 @@ class TitleBar(Widget):
         # mod by sim1: display current dir name?
         if self.fm.thisfile is not None and self.settings.show_selection_in_titlebar:
             if not self.fm.thisfile.is_directory:
-                bar.add(self.fm.thisfile.relative_path, 'file')
+                if not self.fm.thisfile.is_link:
+                    bar.add(self.fm.thisfile.relative_path, 'file')
+                else:
+                    bar.add(self.fm.thisfile.relative_path, 'link')
             else:
                 if self.settings.show_selection_dirname_in_titlebar:
-                    bar.add(self.fm.thisfile.relative_path, 'directory')
+                    if not self.fm.thisfile.is_link:
+                        bar.add(self.fm.thisfile.relative_path, 'directory')
+                    else:
+                        bar.add(self.fm.thisfile.relative_path, 'link')
 
     def _get_right_part(self, bar):
         # TODO: fix that pressed keys are cut off when chaining CTRL keys
