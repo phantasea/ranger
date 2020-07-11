@@ -326,8 +326,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
         elif target.files:
             # mod by sim1: show hidden files count
             right.add(str(target.pointer + 1) + '/' + str(len(target.files))\
-                + '(+' + str(len(os.listdir(target.path)) - len(target.files)) + ')', base, 'ruler')
-            right.add(" ", "rspace")
+                + '(+' + str(len(os.listdir(target.path)) - len(target.files)) + ')' + ' ', base, 'ruler')
             if max_pos <= self.column.hei:
                 right.add('All', base, 'all')
             elif pos == 1:
@@ -335,8 +334,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             elif pos >= max_pos:
                 right.add('Bot', base, 'bot')
             else:
-                right.add('{0:0.0%}'.format((pos / max_pos)),
-                          base, 'percentage')
+                right.add('{0:0.0%}'.format((pos / max_pos)), base, 'percentage')
         else:
             right.add('0/0  All', base, 'all')
 
