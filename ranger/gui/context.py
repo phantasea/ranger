@@ -13,7 +13,7 @@ CONTEXT_KEYS = [
     'executable', 'media', 'link', 'fifo', 'socket', 'device',
     'video', 'audio', 'image', 'media', 'document', 'mimetext', 'special', 'container',
     'selected', 'empty', 'main_column', 'message', 'background',
-    'good', 'bad', 'lspace', 'rspace', 'size', 'ruler',
+    'good', 'bad', 'lspace', 'mspace', 'rspace', 'size', 'ruler',
     'space', 'permissions', 'owner', 'group', 'mtime', 'nlink',
     'scroll', 'all', 'bot', 'top', 'percentage', 'filter',
     'flat', 'marked', 'tagged', 'tag_marker', 'line_number', 'line_number_separator',

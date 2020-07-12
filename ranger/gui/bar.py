@@ -82,7 +82,7 @@ class Bar(object):
             wid = wid - self.sumsize()
 
         if wid > 0:
-            self.gap.add(char * wid, 'space')
+            self.gap.add(char * wid, 'mspace')
 
     def combine(self):
         return self.left + self.gap + self.right
