@@ -146,7 +146,12 @@ class TitleBar(Widget):
                 bar.addright(tabtext, 'tab', clr, fixed=True)
 
     def _get_tab_text(self, tabname):
-        result = ' ' + str(tabname)
+        # mod by sim1
+        if tabname == self.fm.current_tab:
+            result = '*' + str(tabname)
+        else:
+            result = '⋅' + str(tabname)
+
         if self.settings.dirname_in_tabs:
             dirname = basename(self.fm.tabs[tabname].path)
             if not dirname:
