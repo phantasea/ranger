@@ -177,9 +177,9 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
         left.add('[', 'permissions')
         left.add(perms, 'permissions', how)
         left.add(']', 'permissions')
-        left.add(' ', 'lspace')
+        left.add('⚡', 'lspace')
         #left.add(str(stat.st_nlink), 'nlink')
-        #left.add(' ', 'lspace')
+        #left.add('⚡', 'lspace')
         left.add(self._get_owner(target), 'owner')
         left.add(':', 'owner')
         left.add(self._get_group(target), 'group')
@@ -190,10 +190,10 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 dest = readlink(target.path)
             except OSError:
                 dest = '?'
-            left.add(' ', 'lspace')
+            left.add('⚡', 'lspace')
             left.add('-> ' + dest, 'link', how)
         else:
-            left.add(' ', 'lspace')
+            left.add('⚡', 'lspace')
 
             try:
                 date = strftime(self.timeformat, localtime(stat.st_mtime))
@@ -201,11 +201,11 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 date = '?'
             left.add(date, 'mtime')
 
-            left.add(' ', 'lspace')
+            left.add('⚡', 'lspace')
             """
             if self.settings.display_size_in_status_bar and target.infostring:
                 left.add(target.infostring.replace(" ", ""))
-                left.add(' ', 'lspace')
+                left.add('⚡', 'lspace')
             """
 
         # del by sim1: not display vcsdate
@@ -218,10 +218,10 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                     directory.vcs.rootvcs.repotype, directory.vcs.rootvcs.branch)
             else:
                 vcsinfo = '({0:s})'.format(directory.vcs.rootvcs.repotype)
-            left.add(' ', 'lspace')
+            left.add('⚡', 'lspace')
             left.add(vcsinfo, 'vcsinfo')
 
-            left.add(' ', 'lspace')
+            left.add('⚡', 'lspace')
             if directory.vcs.rootvcs.obj.vcsremotestatus:
                 vcsstr, vcscol = self.vcsremotestatus_symb[
                     directory.vcs.rootvcs.obj.vcsremotestatus]
@@ -230,9 +230,9 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 vcsstr, vcscol = self.vcsstatus_symb[target.vcsstatus]
                 left.add(vcsstr.strip(), 'vcsfile', *vcscol)
             if directory.vcs.rootvcs.head:
-                left.add(' ', 'lspace')
+                left.add('⚡', 'lspace')
                 left.add(directory.vcs.rootvcs.head['date'].strftime(self.timeformat), 'vcsdate')
-                left.add(' ', 'lspace')
+                left.add('⚡', 'lspace')
                 summary_length = self.settings.vcs_msg_length or 50
                 left.add(
                     directory.vcs.rootvcs.head['summary'][:summary_length],
@@ -283,22 +283,22 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
         max_pos = len(target.files)
         base = 'scroll'
 
-        right.add(" ", "rspace")
+        right.add("⚡", "rspace")
 
         if self.fm.thisdir.flat:
             right.add("flat=", base, 'flat')
             right.add(str(self.fm.thisdir.flat), base, 'flat')
-            right.add(" ", "rspace")
+            right.add("⚡", "rspace")
 
         if self.fm.thisdir.narrow_filter:
             right.add("narrowed")
-            right.add(" ", "rspace")
+            right.add("⚡", "rspace")
 
         if self.fm.thisdir.filter:
             right.add("f='", base, 'filter')
             right.add(self.fm.thisdir.filter.pattern, base, 'filter')
             right.add("'", base, 'filter')
-            right.add(" ", "rspace")
+            right.add("⚡", "rspace")
 
         if target.marked_items:
             if len(target.marked_items) == target.size:
@@ -318,7 +318,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 else:
                     right.add(" | ", "size")
                     right.add("Free:" + human_readable(free, separator=''), 'size')
-        right.add(" ", "rspace")
+        right.add("⚡", "rspace")
 
         if target.marked_items:
             # Indicate that there are marked files. Useful if you scroll
@@ -340,14 +340,14 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             right.add('0/0  All', base, 'all')
 
         if self.settings.display_time_in_status_bar:
-            right.add(" ", "rspace")
+            right.add("⚡", "rspace")
             right.add('[', 'systime')
             right.add(strftime(self.timeformat, localtime()), 'systime')
             right.add(']', 'systime')
 
         if self.settings.freeze_files:
             # Indicate that files are frozen and will not be loaded
-            right.add(" ", "rspace")
+            right.add("⚡", "rspace")
             right.add('FROZEN', base, 'frozen')
 
     def _print_result(self, result):
