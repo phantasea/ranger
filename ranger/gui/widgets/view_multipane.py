@@ -49,9 +49,19 @@ class ViewMultipane(ViewBase):
     def resize(self, y, x, hei=None, wid=None):
         ViewBase.resize(self, y, x, hei, wid)
         column_width = int((wid - len(self.columns) + 1) / len(self.columns))
+
+        #add by sim1 for the last column not right alligned
+        noteven = 0
+        if column_width * len(self.columns) < wid:
+            noteven = 1
+
         left = 0
         top = 0
         for column in self.columns:
+            #add by sim1 for the last column not right alligned
+            if column == self.columns[-1] and noteven == 1:
+                column_width = wid - (column_width+1)*(len(self.columns)-1)
+
             column.resize(top, left, hei, max(1, column_width))
             left += column_width + 1
             column.need_redraw = True
