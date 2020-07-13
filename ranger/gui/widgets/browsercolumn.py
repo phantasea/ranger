@@ -294,7 +294,7 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
             else:
                 bot_idx = len(self.target.files) - 1
         linum_text_len = len(str(bot_idx))
-        linum_format = "{0:>" + str(linum_text_len) + "}"
+        #linum_format = "{0:>" + str(linum_text_len) + "}"
         #linum_format = "{0:0>" + str(linum_text_len) + "}"  # prefix 0 such as 001
 
         # add by sim1
@@ -306,6 +306,12 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         selected_i = self._get_index_of_selected_file()
         for line in range(self.hei):
             i = line + self.scroll_begin
+
+            # add by sim1
+            if i != selected_i:
+                linum_format = "{0:>" + str(linum_text_len) + "}"
+            else:
+                linum_format = "{0:<" + str(linum_text_len) + "}"
 
             try:
                 drawn = self.target.files[i]
