@@ -387,10 +387,15 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
             self.line = self.line[:self.pos]
         else:
             # mod by sim1: Ctrl-U but keep command name
-            minpos = len(self.line.split()[0]) + 1
-            self.copy = self.line[minpos:self.pos]
-            self.line = self.line[0:minpos] + self.line[self.pos:]
-            self.pos = minpos
+            if self.pos > len(self.line.split()[0]):
+                minpos = len(self.line.split()[0]) + 1
+                self.copy = self.line[minpos:self.pos]
+                self.line = self.line[0:minpos] + self.line[self.pos:]
+                self.pos = minpos
+            else:
+                self.copy = self.line[:self.pos]
+                self.line = self.line[self.pos:]
+                self.pos = 0
         self.on_line_change()
 
     def paste(self):
@@ -412,7 +417,7 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
                         r'[\S]', self.line[i], re.UNICODE):  # pylint: disable=no-member
                     i -= 1
                 # add by sim1: Ctrl-W but keep command name
-                if i < len(self.line.split()[0]):
+                if i < len(self.line.split()[0]) and self.line[self.pos-1] == ' ':
                     return
                 self.copy = self.line[i + 1:self.pos]
                 self.line = self.line[:i + 1] + right_part
@@ -440,7 +445,7 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
                 self.close(trigger_cancel_function=False)
             return
         # add by sim1: not delete the command name
-        if self.pos + mod <= len(self.line.split()[0]):
+        if self.pos + mod <= len(self.line.split()[0]) and self.line[self.pos-1] == ' ':
             return
         # Delete utf-char-wise
         if PY3:
