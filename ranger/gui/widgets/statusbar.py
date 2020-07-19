@@ -326,8 +326,11 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             right.add('Mark', base, 'marked')
         elif target.files:
             # mod by sim1: show hidden files count
-            right.add(str(target.pointer + 1) + '/' + str(len(target.files))\
-                + '(+' + str(len(os.listdir(target.path)) - len(target.files)) + ')' + ' ', base, 'ruler')
+            if self.fm.thisdir.flat:
+                right.add(str(target.pointer + 1) + '/' + str(len(target.files)) + ' ', base, 'ruler')
+            else:
+                right.add(str(target.pointer + 1) + '/' + str(len(target.files))\
+                    + '(+' + str(len(os.listdir(target.path)) - len(target.files)) + ')' + ' ', base, 'ruler')
             if max_pos <= self.column.hei:
                 right.add('All', base, 'all')
             elif pos == 1:
