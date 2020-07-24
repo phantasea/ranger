@@ -309,15 +309,16 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 right.add(human_readable(sumsize, separator=''), 'size')
             right.add("/" + str(len(target.marked_items)), 'size')
         else:
-            right.add("Total:" + human_readable(target.disk_usage, separator=''), 'size')
+            # show size of all files in the current directory
+            if self.settings.display_file_space_in_status_bar:
+                right.add(human_readable(target.disk_usage, separator='') + " | ", 'size')
             if self.settings.display_free_space_in_status_bar:
                 try:
                     free = get_free_space(target.path)
                 except OSError:
                     pass
                 else:
-                    right.add(" | ", "size")
-                    right.add("Free:" + human_readable(free, separator=''), 'size')
+                    right.add(human_readable(free, separator=''), 'size')
         right.add("⚡", "rspace")
 
         if target.marked_items:

@@ -40,6 +40,7 @@ ALLOWED_SETTINGS = {
     'display_size_in_main_column': bool,
     'display_size_in_status_bar': bool,
     "display_free_space_in_status_bar": bool,
+    "display_file_space_in_status_bar": bool,
     'display_tags_in_all_columns': bool,
     "display_time_in_status_bar": bool,    # add by sim1
     'draw_borders': str,
