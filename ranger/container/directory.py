@@ -364,7 +364,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
                             self.look_up_cumulative_size()
                         else:
                             self.infostring = ' %s' % human_readable(
-                                self.size, separator='? ')
+                                self.size, separator='? ', use_opt=True)
                     else:
                         self.infostring = ' %s' % human_readable(self.size)
                 else:
@@ -562,7 +562,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
     def look_up_cumulative_size(self):
         self.cumulative_size_calculated = True
         self.size = self._get_cumulative_size()
-        self.infostring = ('-> ' if self.is_link else ' ') + human_readable(self.size)
+        self.infostring = ('-> ' if self.is_link else ' ') + human_readable(self.size, use_opt=True)
 
     @lazy_property
     def size(self):  # pylint: disable=method-hidden
