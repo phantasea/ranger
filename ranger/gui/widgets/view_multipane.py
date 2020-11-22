@@ -113,13 +113,16 @@ class ViewMultipane(ViewBase):
                     x = child.x + child.wid
                     y = self.hei - 1
                     try:
-                        win.vline(1, x, curses.ACS_VLINE, y - 1)
+                        # mod by sim1
                         if 'outline' in border_types:
+                            win.vline(1, x, curses.ACS_VLINE, y - 1)
                             self.addch(0, x, curses.ACS_TTEE, 0)
                             self.addch(y, x, curses.ACS_BTEE, 0)
                         else:
-                            self.addch(0, x, curses.ACS_VLINE, 0)
-                            self.addch(y, x, curses.ACS_VLINE, 0)
+                            #win.vline(1, x, curses.ACS_VLINE, y - 1)
+                            #self.addch(0, x, curses.ACS_VLINE, 0)
+                            #self.addch(y, x, curses.ACS_VLINE, 0)
+                            win.vline(0, x, '|', self.hei)
                     except curses.error:
                         pass
         else:
@@ -151,8 +154,8 @@ class ViewMultipane(ViewBase):
         top = 0
         for column in self.columns:
             #add by sim1 for the last column not right alligned
-            #if column == self.columns[-1] and noteven == 1:
-            #    column_width = wid - (column_width+1)*(len(self.columns)-1)
+            if column == self.columns[-1] and noteven == 1:
+                column_width = wid - (column_width+1)*(len(self.columns)-1)
 
             #column.resize(top, left, hei, max(1, column_width))
             column.resize(top + pad, left, hei - pad * 2, max(1, column_width))
