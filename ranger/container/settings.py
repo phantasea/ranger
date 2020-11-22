@@ -42,6 +42,7 @@ ALLOWED_SETTINGS = {
     'display_tags_in_all_columns': bool,
     "display_time_in_status_bar": bool,    # add by sim1
     'draw_borders': str,
+    'draw_borders_multipane': str,
     'draw_progress_bar_in_status_bar': bool,
     'flushinput': bool,
     'freeze_files': bool,
@@ -111,6 +112,8 @@ ALLOWED_VALUES = {
     'cd_tab_case': ['sensitive', 'insensitive', 'smart'],
     'confirm_on_delete': ['multiple', 'always', 'never'],
     'draw_borders': ['none', 'both', 'outline', 'separators'],
+    'draw_borders_multipane': [None, 'none', 'both', 'outline',
+                               'separators', 'active-pane'],
     'line_numbers': ['false', 'absolute', 'relative'],
     'nested_ranger_warning': ['true', 'false', 'error'],
     'one_indexed': [False, True],
