@@ -115,14 +115,17 @@ class TitleBar(Widget):
             else:
                 clr = 'directory'
 
-            bar.add(path.basename, clr, directory=path)
+            bidi_basename = self.bidi_transpose(path.basename)
+            bar.add(bidi_basename, clr, directory=path)
             bar.add('/', clr, fixed=True, directory=path)
 
         # mod by sim1: display current dir name?
         if self.fm.thisfile is not None and self.settings.show_selection_in_titlebar:
             if not self.fm.thisfile.is_directory:
                 if not self.fm.thisfile.is_link:
-                    bar.add(self.fm.thisfile.relative_path, 'file')
+                    #bar.add(self.fm.thisfile.relative_path, 'file')
+                    bidi_file_path = self.bidi_transpose(self.fm.thisfile.relative_path)
+                    bar.add(bidi_file_path, 'file')
                 else:
                     bar.add(self.fm.thisfile.relative_path, 'link')
             else:
