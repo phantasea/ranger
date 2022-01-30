@@ -197,7 +197,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             except OSError:
                 dest = '?'
             left.add('|', 'lspace')
-            left.add('-> ' + dest, 'link', how)
+            left.add('--> ' + dest, 'link', how)
         else:
             left.add('|', 'lspace')
 
