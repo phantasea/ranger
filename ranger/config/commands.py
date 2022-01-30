@@ -1256,7 +1256,8 @@ class bulkrename(Command):
                     encoding="utf-8", errors="surrogateescape"))
             else:
                 listfile.write("\n".join(filenames))
-        self.fm.execute_file([File(listpath)], app='editor')
+        # mod by sim1: bulkrename not working
+        self.fm.execute_file([File(listpath)], app='vim')
         with open(
             listpath, "r", encoding="utf-8", errors="surrogateescape"
         ) as listfile:
@@ -1295,6 +1296,7 @@ class bulkrename(Command):
 
             # Open the script and let the user review it, then check if the
             # script was modified by the user
+            # mod by sim1: bulkrename not working
             self.fm.execute_file([File(cmdfile.name)], app='vim')
             cmdfile.seek(0)
             script_was_edited = (script_content != cmdfile.read())
