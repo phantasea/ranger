@@ -1321,11 +1321,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         if name == self.current_tab:
             direction = -1 if name == self.get_tab_list()[-1] else 1
             previous = self.current_tab
-            # mod by sim1
-            if not self.fm.settings['move_to_last_tab_after_close']:
-                self.tab_move(direction)
-            else:
-                self.tab_move(direction, narg=self.last_tab)
+            self.tab_move(direction)
             if previous == self.current_tab:
                 return  # can't close last tab
         if name in self.tabs:
