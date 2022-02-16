@@ -43,6 +43,7 @@ class Bookmarks(FileManagerAware):
         self.path = bookmarkfile
         self.bookmarktype = bookmarktype
         self.nonpersistent_bookmarks = set(nonpersistent_bookmarks)
+        self.pos = {}
 
     def load(self):
         """Load the bookmarks from path/bookmarks"""
@@ -238,9 +239,16 @@ class Bookmarks(FileManagerAware):
                 dct = {}
                 for line in fobj:
                     if self.load_pattern.match(line):
-                        key, value = line[0], line[2:-1]
+                        dirpos = line[2:-1].split(":")
+                        key, value = line[0], dirpos[0]
                         if key in ALLOWED_KEYS:
                             dct[key] = self.bookmarktype(value)
+                            # add by sim1 -----------------------------------
+                            try:
+                                self.pos[key] = str(dirpos[1])
+                            except IndexError:
+                                pass
+                            # add by sim1 -----------------------------------
         except OSError as ex:
             self.fm.notify('Bookmarks error: {0}'.format(str(ex)), bad=True)
             return None
