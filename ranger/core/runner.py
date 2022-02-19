@@ -39,7 +39,7 @@ LOG = logging.getLogger(__name__)
 
 # TODO: Remove unused parts of runner.py
 # ALLOWED_FLAGS = 'sdpwcrtSDPWCRT'
-ALLOWED_FLAGS = 'cfrtCFRT'
+ALLOWED_FLAGS = 'cfrtCFRTl'   #mod by sim1: add flag 'l'
 
 
 def press_enter():
@@ -266,6 +266,12 @@ class Runner(object):  # pylint: disable=too-few-public-methods
             if toggle_ui:
                 self._activate_ui(True)
             if pipe_output and process:
+                #add by sim1 -------------------------------------------------
+                if 'l' in context.flags:
+                    self.fm.notify("%s" % process.stdout.readline().decode('ascii').rstrip("\n"), bad=True)
+                    return process  # pylint: disable=lost-exception
+                #add by sim1 -------------------------------------------------
+
                 return self(action='less', app='pager',  # pylint: disable=lost-exception
                             try_app_first=True, stdin=process.stdout)
             return process  # pylint: disable=lost-exception
