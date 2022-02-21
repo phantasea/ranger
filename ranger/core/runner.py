@@ -268,7 +268,7 @@ class Runner(object):  # pylint: disable=too-few-public-methods
             if pipe_output and process:
                 #add by sim1 -------------------------------------------------
                 if 'l' in context.flags:
-                    self.fm.notify("%s" % process.stdout.readline().decode('ascii').rstrip("\n"), bad=True)
+                    self.fm.notify("%s" % process.stdout.readline().decode('ascii').rstrip("\n"), bad=False)
                     return process  # pylint: disable=lost-exception
                 #add by sim1 -------------------------------------------------
 

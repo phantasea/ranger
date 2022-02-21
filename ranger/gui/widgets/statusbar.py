@@ -297,7 +297,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             right.add("|", "rspace")
 
         if self.fm.thisdir.narrow_filter:
-            right.add("narrowed")
+            right.add("narrowed", base, 'filter')
             right.add("|", "rspace")
 
         if self.fm.thisdir.filter:
