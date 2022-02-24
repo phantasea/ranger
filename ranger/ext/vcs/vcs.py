@@ -239,7 +239,7 @@ class VcsRoot(Vcs):  # pylint: disable=abstract-method
             self.obj.vcsremotestatus = self.data_status_remote()
             self.obj.vcsstatus = self.data_status_root()
         except VcsError as ex:
-            self.obj.fm.notify('VCS Exception: View log for more info', bad=True, exception=ex)
+            self.obj.fm.notify('VCS Exception#1: View log for more info', bad=True, exception=ex)
             return False
         self.rootinit = True
         return True
@@ -253,7 +253,7 @@ class VcsRoot(Vcs):  # pylint: disable=abstract-method
             self.obj.vcsremotestatus = self.data_status_remote()
             self.obj.vcsstatus = self._status_root()
         except VcsError as ex:
-            self.obj.fm.notify('VCS Exception: View log for more info', bad=True, exception=ex)
+            self.obj.fm.notify('VCS Exception#2: View log for more info', bad=True, exception=ex)
             return False
         self.rootinit = True
         self.updatetime = time.time()
@@ -482,7 +482,7 @@ class VcsThread(threading.Thread):  # pylint: disable=too-many-instance-attribut
                     self._ui.status.need_redraw = True
                     self._ui.redraw()
             except Exception as ex:  # pylint: disable=broad-except
-                self._ui.fm.notify('VCS Exception: View log for more info', bad=True, exception=ex)
+                self._ui.fm.notify('VCS Exception#3: View log for more info', bad=True, exception=ex)
 
     def stop(self):
         """Stop thread synchronously"""
