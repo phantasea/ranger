@@ -117,6 +117,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
     narrow_filter = None
     inode_type_filter = None
     marked_items = None
+    old_marked_items = None  #add by sim1
     scroll_begin = 0
 
     mount_path = '/'
@@ -154,6 +155,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
         FileSystemObject.__init__(self, path, **kw)
 
         self.marked_items = []
+        self.old_marked_items = []  #add by sim1
 
         self.filter_stack = []
 

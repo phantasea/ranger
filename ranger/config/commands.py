@@ -1569,6 +1569,7 @@ class scout(Command):
      -M    Unmark the matching files after pressing enter
      -p    Permanent filter: hide non-matching files after pressing enter
      -r    Interpret pattern as a regular expression pattern
+     -R    Reselect the old marked files
      -s    Smart case; like -i unless pattern contains upper case letters
      -t    Apply filter and search pattern as you type
      -v    Inverts the match
@@ -1588,6 +1589,7 @@ class scout(Command):
     UNMARK = "M"
     PERM_FILTER = "p"
     SM_REGEX = "r"
+    RESELECT = "R"  #add by sim1
     SMART_CASE = "s"
     AS_YOU_TYPE = "t"
     INVERT = "v"
@@ -1607,8 +1609,20 @@ class scout(Command):
         self.fm.thistab.last_search = regex
         self.fm.set_search_method(order="search")
 
+        #add by sim1: support reselect like 'gs' in vifm ------
+        #self.fm.notify('%s | %s' % (str(flags), str(thisdir.old_marked_items)), bad=True)
+        if flags == self.RESELECT and thisdir.old_marked_items:
+            for fobj in thisdir.old_marked_items:
+                thisdir.mark_item(fobj, 1)
+        #add by sim1: support reselect like 'gs' in vifm ++++++
+
         if (self.MARK in flags or self.UNMARK in flags) and thisdir.files:
             value = flags.find(self.MARK) > flags.find(self.UNMARK)
+            #add by sim1: support reselect like 'gs' in vifm ---------
+            if self.UNMARK in flags:
+                #self.fm.notify('=%s' % str(thisdir.old_marked_items), bad=True)
+                thisdir.old_marked_items = thisdir.marked_items.copy()
+            #add by sim1: support reselect like 'gs' in vifm +++++++++
             if self.FILTER in flags:
                 for fobj in thisdir.files:
                     thisdir.mark_item(fobj, value)
