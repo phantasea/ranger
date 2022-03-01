@@ -410,6 +410,20 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
         self.pos += len(self.copy)
         self.on_line_change()
 
+    #add by sim1: support paste from the clipboard
+    def clipboard_paste(self):
+        cmd = 'xsel -ob'
+        flags = 'px'
+        process = self.fm.execute_command(cmd, flags=flags)
+        copy = process.stdout.readline().decode('ascii').rstrip("\n")
+
+        if self.pos == len(self.line):
+            self.line += copy
+        else:
+            self.line = self.line[:self.pos] + copy + self.line[self.pos:]
+        self.pos += len(copy)
+        self.on_line_change()
+
     def delete_word(self, backward=True):
         if self.line:
             self.tab_deque = None
