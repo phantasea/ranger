@@ -30,6 +30,7 @@ ALLOWED_SETTINGS = {
     'cd_tab_case': str,
     'cd_tab_fuzzy': bool,
     'clear_filters_on_dir_change': bool,
+    'clipboard_prg': str,    # add by sim1
     'collapse_preview': bool,
     'colorscheme': str,
     'column_ratios': (tuple, list),
