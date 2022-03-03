@@ -146,6 +146,14 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             self._visual_reverse = reverse
             if narg is not None:
                 self.mark_files(val=not reverse, narg=narg)
+
+            #add by sim1: unmark before visual selection ---
+            thisdir = self.fm.thisdir
+            if thisdir.files:
+                for fobj in thisdir.files:
+                    thisdir.mark_item(fobj, 0)
+            #add by sim1: unmark before visual selection +++
+
             self.change_mode('visual')
         else:
             self.change_mode('normal')
