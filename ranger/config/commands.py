@@ -926,11 +926,12 @@ class mark_tag(Command):
 
 
 class console(Command):
-    """:console [-p N | -s sep] <command>
+    """:console [-p N | -s sep | -x/X] <command>
 
     Flags:
      -p N   Set position at N index
      -s sep Set position at separator(any char[s] sequence), example '#'
+     -x/X   Run execute_console instead of open_console to make f<any>/F<any> to work out
     Open the console with the given command.
     """
 
@@ -950,6 +951,24 @@ class console(Command):
             if pos != -1:
                 command = command.replace(sentinel, '', 1)
                 position = pos
+
+        #add by sim1: ++++++++++++++++++++++
+        elif self.arg(1)[0:2] == '-x':
+            command = self.rest(2)
+            self.fm.move(down=1)
+            self.fm.execute_console(command)
+            self.fm.move(up=1)
+            self.fm.move(down=1)
+            return
+        elif self.arg(1)[0:2] == '-X':
+            command = self.rest(2)
+            self.fm.move(to=0)
+            self.fm.execute_console(command)
+            self.fm.move(down=1)
+            self.fm.move(up=1)
+            return
+        #add by sim1: ----------------------
+
         self.fm.open_console(command, position=position)
 
 
