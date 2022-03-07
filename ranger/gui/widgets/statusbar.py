@@ -171,6 +171,9 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
         try:
             stat = target.stat
         except AttributeError:
+            #add by sim1
+            left.add('empty', 'permissions')
+            left.add('|', 'lspace')
             return
         if stat is None:
             return
