@@ -1234,7 +1234,9 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             data['loading'] = False
 
             pager = self.ui.get_pager()
-            if self.thisfile and self.thisfile.is_file:
+            # mod by sim1: support directory preview
+            #if self.thisfile and self.thisfile.is_file:
+            if self.thisfile:
                 if 'imagepreview' in data:
                     pager.set_image(cacheimg)
                     return cacheimg
