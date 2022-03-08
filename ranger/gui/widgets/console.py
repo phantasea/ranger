@@ -418,7 +418,7 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
 
         flags = 'px'
         process = self.fm.execute_command(cmd, flags=flags)
-        copy = process.stdout.readline().decode('ascii').rstrip("\n")
+        copy = process.stdout.readline().decode('utf8').rstrip("\n")
 
         if self.pos == len(self.line):
             self.line += copy
