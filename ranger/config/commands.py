@@ -306,25 +306,25 @@ class shell(Command):
             flags = ''
             command = self.rest(1)
 
-        if command:
-            #add by sim1: display in internal pager +++++++
-            if 'x' in flags and 'p' in flags:
-                process = self.fm.execute_command(command, flags=flags)
-                if not process:
-                    return
-
-                lines = []
-                for line in process.stdout.readlines():
-                    lines.append(line.decode('utf8'))
-
-                if not lines:
-                    return
-
-                pager = self.fm.ui.open_pager()
-                pager.set_source(lines)
+        #add by sim1: display shell result in internal pager ++++++
+        if command and 'x' in flags and 'p' in flags:
+            process = self.fm.execute_command(command, flags=flags)
+            if not process:
                 return
-            #add by sim1: ---------------------------------
 
+            lines = []
+            for line in process.stdout.readlines():
+                lines.append(line.decode('utf8'))
+
+            if not lines:
+                return
+
+            pager = self.fm.ui.open_pager()
+            pager.set_source(lines)
+            return
+        #add by sim1: ---------------------------------------------
+
+        if command:
             self.fm.execute_command(command, flags=flags)
 
     def tab(self, tabnum):
