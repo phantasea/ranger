@@ -352,6 +352,10 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
         else:
             right.add('0/0  All', base, 'all')
 
+        #add by sim1: show statusline indicator for 'show_hidden'
+        if self.settings.show_hidden:
+            right.add("[H]", 'permissions')
+
         if self.settings.display_time_in_status_bar:
             right.add("|", "rspace")
             right.add('[', 'systime')
