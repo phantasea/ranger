@@ -309,7 +309,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             else:
                 return False
 
-        if not target.is_link:
+        if not target or not target.is_link:
             return False
 
         how = 'good' if target.exists else 'bad'
