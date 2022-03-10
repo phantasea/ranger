@@ -336,21 +336,22 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             right.add('Mark', base, 'marked')
         elif target.files:
             # mod by sim1: show hidden files count
-            if self.fm.thisdir.flat:
+            hidden_files_num = len(os.listdir(target.path)) - len(target.files)
+            if self.fm.thisdir.flat or hidden_files_num == 0:
                 right.add(str(target.pointer + 1) + '/' + str(len(target.files)) + ' ', base, 'ruler')
             else:
                 right.add(str(target.pointer + 1) + '/' + str(len(target.files))\
-                    + '(+' + str(len(os.listdir(target.path)) - len(target.files)) + ')' + ' ', base, 'ruler')
+                    + '(+' + str(hidden_files_num) + ')' + ' ', base, 'ruler')
             if max_pos <= self.column.hei:
-                right.add('All', base, 'all')
+                right.add('--All--', base, 'all')
             elif pos == 1:
-                right.add('Top', base, 'top')
+                right.add('--Top--', base, 'top')
             elif pos >= max_pos:
-                right.add('Bot', base, 'bot')
+                right.add('--Bot--', base, 'bot')
             else:
-                right.add('{0:0.0%}'.format((pos / max_pos)), base, 'percentage')
+                right.add('--{0:0.0%}--'.format((pos / max_pos)), base, 'percentage')
         else:
-            right.add('0/0  All', base, 'all')
+            right.add('0/0  --All--', base, 'all')
 
         #add by sim1: show statusline indicator for 'show_hidden'
         if self.settings.show_hidden:
