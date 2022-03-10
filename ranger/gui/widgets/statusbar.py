@@ -193,31 +193,25 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
         left.add(':', 'owner')
         left.add(self._get_group(target), 'group')
 
-        if target.is_link:
-            how = 'good' if target.exists else 'bad'
-            try:
-                dest = readlink(target.path)
-            except OSError:
-                dest = '?'
-            left.add('|', 'lspace')
-            left.add('--> ' + dest, 'link', how)
-        else:
-            left.add('|', 'lspace')
+        left.add('|', 'lspace')
 
-            try:
-                date = strftime(self.timeformat, localtime(stat.st_mtime))
-            except OSError:
-                date = '?'
-            left.add(date, 'mtime')
+        try:
+            date = strftime(self.timeformat, localtime(stat.st_mtime))
+        except OSError:
+            date = '?'
+        left.add(date, 'mtime')
 
+        left.add('|', 'lspace')
+        """
+        if self.settings.display_size_in_status_bar and target.infostring:
+            left.add(target.infostring.replace(" ", ""))
             left.add('|', 'lspace')
-            """
-            if self.settings.display_size_in_status_bar and target.infostring:
-                left.add(target.infostring.replace(" ", ""))
-                left.add('|', 'lspace')
-            """
+        """
+        #add by sim1
+        if self._get_size_infostring(left):
+            left.add("|", "lspace")
 
-        # del by sim1: not display vcsdate
+        #del by sim1: not display vcsdate
         """
         directory = target if target.is_directory else \
             target.fm.get_directory(os.path.dirname(target.path))
@@ -249,6 +243,36 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 )
         """
 
+    #add by sim1
+    def _get_size_infostring(self, side):
+        target = self.column.target
+        if target is None \
+                or not target.accessible \
+                or (target.is_directory and target.files is None):
+            return False
+
+        if target.marked_items:
+            if len(target.marked_items) == target.size:
+                side.add(human_readable(target.disk_usage, separator=''), 'size')
+            else:
+                sumsize = sum(f.size for f in target.marked_items
+                              if not f.is_directory or f.cumulative_size_calculated)
+                side.add(human_readable(sumsize, separator=''), 'size')
+            side.add("/" + str(len(target.marked_items)), 'size')
+        else:
+            # show size of all files in the current directory
+            if self.settings.display_file_space_in_status_bar:
+                side.add(human_readable(target.disk_usage, separator='') + " | ", 'size')
+            if self.settings.display_free_space_in_status_bar:
+                try:
+                    free = get_free_space(target.path)
+                except OSError:
+                    pass
+                else:
+                    side.add(human_readable(free, separator=''), 'size')
+        return True
+
+
     def _get_owner(self, target):
         uid = target.stat.st_uid
 
@@ -273,6 +297,29 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             except KeyError:
                 return str(gid)
 
+    #add by sim1
+    def _get_symlink_infostring(self, side):
+        if self.column is not None and self.column.target is not None\
+                and self.column.target.is_directory:
+            target = self.column.target.pointed_obj
+        else:
+            directory = self.fm.thistab.at_level(0)
+            if directory:
+                target = directory.pointed_obj
+            else:
+                return False
+
+        if not target.is_link:
+            return False
+
+        how = 'good' if target.exists else 'bad'
+        try:
+            dest = readlink(target.path)
+        except OSError:
+            dest = '?'
+        side.add('"' + target.basename + ' -> ' + dest + '"', 'link', how)
+        return True
+
     #mod by sim1
     def _get_right_part(self, bar):  # pylint: disable=too-many-branches,too-many-statements
         right = bar.right
@@ -292,6 +339,11 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
         max_pos = len(target.files)
         base = 'scroll'
 
+        #add by sim1
+        if not target.marked_items \
+            and self._get_symlink_infostring(right):
+            return
+
         right.add("|", "rspace")
 
         if self.fm.thisdir.flat:
@@ -308,27 +360,6 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             right.add(self.fm.thisdir.filter.pattern, base, 'filter')
             right.add("'", base, 'filter')
             right.add("|", "rspace")
-
-        if target.marked_items:
-            if len(target.marked_items) == target.size:
-                right.add(human_readable(target.disk_usage, separator=''), 'size')
-            else:
-                sumsize = sum(f.size for f in target.marked_items
-                              if not f.is_directory or f.cumulative_size_calculated)
-                right.add(human_readable(sumsize, separator=''), 'size')
-            right.add("/" + str(len(target.marked_items)), 'size')
-        else:
-            # show size of all files in the current directory
-            if self.settings.display_file_space_in_status_bar:
-                right.add(human_readable(target.disk_usage, separator='') + " | ", 'size')
-            if self.settings.display_free_space_in_status_bar:
-                try:
-                    free = get_free_space(target.path)
-                except OSError:
-                    pass
-                else:
-                    right.add(human_readable(free, separator=''), 'size')
-        right.add("|", "rspace")
 
         if target.marked_items:
             # Indicate that there are marked files. Useful if you scroll
