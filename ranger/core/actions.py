@@ -975,14 +975,11 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                 self.bookmarks.remember(cwd)
 
                 # add by sim1 -------------------------------
-                try:
-                    relpos = self.bookmarks.pos[str(key)]
-                except KeyError:
-                    return
-                if destination.path != "/":
-                    abspos = destination.path + "/" + relpos
-                else:
+                relpos = self.bookmarks.pos[str(key)]
+                if destination.path == "/":
                     abspos = "/" + relpos
+                else:
+                    abspos = destination.path + "/" + relpos
                 self.fm.select_file(abspos)
                 # add by sim1 -------------------------------
         except KeyError:
