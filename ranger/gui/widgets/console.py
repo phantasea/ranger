@@ -402,12 +402,24 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
                 self.pos = 0
         self.on_line_change()
 
-    def paste(self):
+    #mod by sim1: add target option
+    def paste(self, target=None):
+        copy = ''
+        if target == None:
+            copy = self.copy
+        elif target == 'filename':
+            copy = self.fm.thisfile.relative_path
+        elif target == 'dirpath':
+            copy = self.fm.thisdir.path
+
+        if not copy:
+            return
+
         if self.pos == len(self.line):
-            self.line += self.copy
+            self.line += copy
         else:
-            self.line = self.line[:self.pos] + self.copy + self.line[self.pos:]
-        self.pos += len(self.copy)
+            self.line = self.line[:self.pos] + copy + self.line[self.pos:]
+        self.pos += len(copy)
         self.on_line_change()
 
     #add by sim1: support paste from the clipboard
