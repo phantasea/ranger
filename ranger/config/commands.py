@@ -1058,6 +1058,7 @@ class mkdir(Command):
         dirname = join(self.fm.thisdir.path, expanduser(self.rest(1)))
         if not lexists(dirname):
             makedirs(dirname)
+            self.fm.cd(dirname)  #add by sim1
         else:
             self.fm.notify("file/directory exists!", bad=True)
 
