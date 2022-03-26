@@ -650,7 +650,7 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         if offset != 0:
             self.target.move(up=offset)
 
-    def move_mid(self, mode):
+    def move_mid(self, mode=0):
         self.need_redraw = True
         cur = self._get_index_of_selected_file() or 0
         top = self.target.scroll_begin
@@ -663,7 +663,7 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         if mode == 0:
             mid = (top + bot) // 2
         elif mode == 1:
-            mid = (cur + bot) // 2
+            mid = (cur + bot + 1) // 2
         elif mode == -1:
             mid = (top + cur) // 2
         else:
