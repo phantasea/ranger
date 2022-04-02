@@ -194,12 +194,27 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         if not exists(filepath):
             return
 
+        rating_info = []
         with open(filepath, "r", encoding="utf-8", errors="surrogateescape") as fobj:
             try:
                 entries = json.load(fobj)
-                self.rating_info = entries["ratings"]
+                rating_info = entries["ratings"]
             except (ValueError, KeyError):
                 return
+
+        if rating_info:
+            self.rating_info = rating_info
+        """ the decryption does't work
+        for ratings in rating_info:
+            path_enc = str(ratings["path"])
+            path_dec = ''
+            d = {}
+            for i in range(len(path_enc)):
+                path_dec += chr(ord(path_enc[i]) - 13)
+            d["path"] = path_dec
+            d["star"] = ratings["star"]
+            self.rating_info.append(d)
+        """
     #add by sim1: ----------------------------
 
     def notify(self, obj, duration=4, bad=False, exception=None):
