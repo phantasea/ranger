@@ -171,7 +171,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             cwd.unload()
             cwd.load_content()
 
-    # add by sim1:
+    #add by sim1: ++++++++++++++++++++++++++++
     def toggle_flat(self, narg=None):
         #level = narg if narg else 1 by default
         level = narg or 1
@@ -186,6 +186,21 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             self.fm.thisdir.unload()
             self.fm.thisdir.flat = 0
             self.fm.thisdir.load_content()
+
+    def load_rating_info(self):
+        import json
+
+        filepath = "/opt/conf/vifm/vifminfo.json"
+        if not exists(filepath):
+            return
+
+        with open(filepath, "r", encoding="utf-8", errors="surrogateescape") as fobj:
+            try:
+                entries = json.load(fobj)
+                self.rating_info = entries["ratings"]
+            except (ValueError, KeyError):
+                return
+    #add by sim1: ----------------------------
 
     def notify(self, obj, duration=4, bad=False, exception=None):
         """:notify <text>

@@ -120,6 +120,7 @@ def main(
         fm = FM(paths=paths)
         FileManagerAware.fm_set(fm)
         load_settings(fm, args.clean)
+        fm.load_rating_info()  #add by sim1
 
         if args.show_only_dirs:
             from ranger.container.directory import InodeFilterConstants

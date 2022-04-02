@@ -211,6 +211,10 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
         if self._get_size_infostring(left):
             left.add("|", "lspace")
 
+        #add by sim1
+        if self._get_rating_infostring(left):
+            left.add("|", "lspace")
+
         #del by sim1: not display vcsdate
         """
         directory = target if target.is_directory else \
@@ -272,6 +276,18 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                     side.add(human_readable(free, separator=''), 'size')
         return True
 
+    #add by sim1
+    def _get_rating_infostring(self, side):
+        target = self.fm.thisfile.path
+        stars = ''
+        for ratings in self.fm.rating_info:
+            if ratings["path"] == target:
+                for i in range(int(ratings["star"])):
+                    stars += ''
+                side.add(stars, 'stars')
+                return True
+
+        return False
 
     def _get_owner(self, target):
         uid = target.stat.st_uid

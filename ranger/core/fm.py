@@ -53,7 +53,7 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
         self.directories = {}
         self.bookmarks = bookmarks
         self.current_tab = 1
-        self.last_tab = 1
+        self.last_tab = 1  #add by sim1
         self.tabs = {}
         self.tags = tags
         self.restorable_tabs = deque([], ranger.MAX_RESTORABLE_TABS)
@@ -67,8 +67,9 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
         self.run = None
         self.rifle = None
         self.thistab = None
-        self.widescreen = False  # add by sim1
-        self.vwidescreen = False  # add by sim1
+        self.widescreen = False   #add by sim1
+        self.vwidescreen = False  #add by sim1
+        self.rating_info = []     #add by sim1
 
         try:
             self.username = pwd.getpwuid(os.geteuid()).pw_name
