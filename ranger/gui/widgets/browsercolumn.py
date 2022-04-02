@@ -479,11 +479,20 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         infostring_display = []
         if self.display_infostring and drawn.infostring \
                 and self.settings.display_size_in_main_column:
-            # del by sim1 for not displaying space after file size
-            #infostring = str(drawn.infostring) + " "
+            # add by sim1 +++++++++++++++++++++++++++++++
+            stars = ''
+            for ratings in self.fm.rating_info:
+                if ratings["path"] == drawn.path:
+                    for i in range(int(ratings["star"])):
+                        stars += ''
+            # add by sim1 -------------------------------
+            # mod by sim1 for not displaying space after file size
             infostring = str(drawn.infostring)
             if len(infostring) <= space:
-                infostring_display.append([infostring, ['infostring']])
+                if not stars:
+                    infostring_display.append([infostring, ['infostring']])
+                else:
+                    infostring_display.append([stars, ['stars']])
 
             # add by sim1: show file mtime  +++++++
             current_linemode = drawn.linemode_dict[drawn.linemode]
