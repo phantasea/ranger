@@ -207,13 +207,13 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             left.add(target.infostring.replace(" ", ""))
             left.add('|', 'lspace')
         """
-        #add by sim1
-        if self._get_size_infostring(left):
-            left.add("|", "lspace")
 
-        #add by sim1
+        #mod by sim1
         if self._get_rating_infostring(left):
             left.add("|", "lspace")
+        else:
+            if self._get_size_infostring(left):
+                left.add("|", "lspace")
 
         #del by sim1: not display vcsdate
         """
