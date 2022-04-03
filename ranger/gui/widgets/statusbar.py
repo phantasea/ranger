@@ -280,12 +280,13 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
     def _get_rating_infostring(self, side):
         target = self.fm.thisfile.path
         stars = ''
-        for ratings in self.fm.rating_info:
-            if ratings["path"] == target:
-                for i in range(int(ratings["star"])):
-                    stars += ''
-                side.add(stars, 'stars')
-                return True
+        if not self.fm.rating_info:
+            for ratings in self.fm.rating_info:
+                if ratings["path"] == target:
+                    for i in range(int(ratings["star"])):
+                        stars += ''
+                    side.add(stars, 'stars')
+                    return True
 
         return False
 

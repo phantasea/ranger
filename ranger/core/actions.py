@@ -190,21 +190,20 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
     def load_rating_info(self):
         import json
 
-        filepath = "/opt/conf/vifm/vifminfo.json"
-        if not exists(filepath):
+        rangeinfo = self.datapath('rangeinfo.json')
+        if not exists(rangeinfo):
+            self.notify("%s doesnot exist!" % rangeinfo)
             return
 
         rating_info = []
-        with open(filepath, "r", encoding="utf-8", errors="surrogateescape") as fobj:
+        with open(rangeinfo, "r", encoding="utf-8", errors="surrogateescape") as fobj:
             try:
                 entries = json.load(fobj)
                 rating_info = entries["ratings"]
             except (ValueError, KeyError):
+                self.notify("failed to load %s!" % rangeinfo)
                 return
 
-        if rating_info:
-            self.rating_info = rating_info
-        """ the decryption does't work
         for ratings in rating_info:
             path_enc = str(ratings["path"])
             path_dec = ''
@@ -214,7 +213,6 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             d["path"] = path_dec
             d["star"] = ratings["star"]
             self.rating_info.append(d)
-        """
     #add by sim1: ----------------------------
 
     def notify(self, obj, duration=4, bad=False, exception=None):
