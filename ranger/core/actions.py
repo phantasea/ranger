@@ -190,9 +190,9 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
     def load_rating_info(self):
         import json
 
-        rangeinfo = self.datapath('rangeinfo.json')
+        rangeinfo = self.confpath('rangeinfo.json')
         if not exists(rangeinfo):
-            self.notify("%s doesnot exist!" % rangeinfo)
+            self.notify("%s not exist!" % rangeinfo)
             return
 
         rating_info = []
@@ -204,6 +204,9 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                 self.notify("failed to load %s!" % rangeinfo)
                 return
 
+        if rating_info:
+            self.rating_info = rating_info
+        """
         for ratings in rating_info:
             path_enc = str(ratings["path"])
             path_dec = ''
@@ -213,6 +216,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             d["path"] = path_dec
             d["star"] = ratings["star"]
             self.rating_info.append(d)
+        """
     #add by sim1: ----------------------------
 
     def notify(self, obj, duration=4, bad=False, exception=None):

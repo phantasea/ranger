@@ -481,7 +481,7 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
                 and self.settings.display_size_in_main_column:
             # add by sim1 +++++++++++++++++++++++++++++++
             stars = ''
-            if not self.fm.rating_info:
+            if self.fm.rating_info:
                 for ratings in self.fm.rating_info:
                     if ratings["path"] == drawn.path:
                         for i in range(int(ratings["star"])):
