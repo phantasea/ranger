@@ -194,6 +194,12 @@ def main(
                 fm.notify(' '.join((warning.upper(), nested_warning + '!!')),
                           bad=True)
 
+        #add by sim1 +++++++++++++++++++++
+        if fm.tabs_path:
+            fm.enter_dir(fm.tabs_path['tab2'])
+            fm.tab_new(path=fm.tabs_path['tab1'])
+        #add by sim1 ---------------------
+
         if ranger.args.profile:
             import cProfile
             import pstats
