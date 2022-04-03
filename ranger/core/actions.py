@@ -194,9 +194,19 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         tabs_path['tab1'] = self.fm.thistab.path
         tabs_path['tab2'] = self.fm.get_macros()['D']
 
+        rating_info = []
+        for entry in self.rating_info:
+            path_enc = ''
+            for c in entry['path']:
+                path_enc += chr(ord(c) + 13)
+            d = {}
+            d['path'] = path_enc
+            d['star']=entry['star']
+            rating_info.append(d)
+
         rangerinfo = {}
         rangerinfo["tabs"] = tabs_path
-        rangerinfo["ratings"] = self.rating_info
+        rangerinfo["ratings"] = rating_info
 
         filepath = self.confpath('rangerinfo.json')
         with open(filepath, "w", encoding="utf-8") as fobj:
@@ -233,22 +243,18 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                 tabs_path['tab2'] = "~"
                 pass
 
-        if rating_info:
-            self.rating_info = rating_info
         if tabs_path:
             self.tabs_path = tabs_path;
 
-        """
-        for ratings in rating_info:
-            path_enc = str(ratings["path"])
-            path_dec = ''
-            d = {}
-            for i in range(len(path_enc)):
-                path_dec += chr(ord(path_enc[i]) - 13)
-            d["path"] = path_dec
-            d["star"] = ratings["star"]
-            self.rating_info.append(d)
-        """
+        if rating_info:
+            for entry in rating_info:
+                path_dec = ''
+                for c in entry["path"]:
+                    path_dec += chr(ord(c) - 13)
+                d = {}
+                d["path"] = path_dec
+                d["star"] = entry["star"]
+                self.rating_info.append(d)
     #add by sim1: ----------------------------
 
     def notify(self, obj, duration=4, bad=False, exception=None):
