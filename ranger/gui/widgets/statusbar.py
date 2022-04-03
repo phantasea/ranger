@@ -286,6 +286,9 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                     for i in range(int(ratings["star"])):
                         stars += ''
                     side.add(stars, 'stars')
+                    side.add("|", "lspace")
+                    size = os.stat(target).st_size
+                    side.add(human_readable(size), 'stars')
                     return True
 
         return False
