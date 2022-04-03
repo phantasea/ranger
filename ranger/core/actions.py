@@ -190,7 +190,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
     def load_rating_info(self):
         import json
 
-        rangeinfo = self.confpath('rangeinfo.json')
+        rangeinfo = self.confpath('rangerinfo.json')
         if not exists(rangeinfo):
             self.notify("%s not exist!" % rangeinfo)
             return
