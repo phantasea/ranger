@@ -187,25 +187,57 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             self.fm.thisdir.flat = 0
             self.fm.thisdir.load_content()
 
-    def load_rating_info(self):
+    def save_ranger_info(self):
         import json
 
-        rangeinfo = self.confpath('rangerinfo.json')
-        if not exists(rangeinfo):
-            self.notify("%s not exist!" % rangeinfo)
+        tabs_path = {}
+        tabs_path['tab1'] = self.fm.thistab.path
+        tabs_path['tab2'] = self.fm.get_macros()['D']
+
+        rangerinfo = {}
+        rangerinfo["tabs"] = tabs_path
+        rangerinfo["ratings"] = self.rating_info
+
+        filepath = self.confpath('rangerinfo.json')
+        with open(filepath, "w", encoding="utf-8") as fobj:
+            json.dump(rangerinfo, fobj, ensure_ascii=False, indent=2)
+
+    def load_ranger_info(self):
+        import json
+
+        filepath = self.confpath('rangerinfo.json')
+        if not exists(filepath):
+            self.notify("%s not exist!" % filepath)
             return
 
+        tabs_path = {}
         rating_info = []
-        with open(rangeinfo, "r", encoding="utf-8", errors="surrogateescape") as fobj:
+        with open(filepath, "r", encoding="utf-8", errors="surrogateescape") as fobj:
             try:
                 entries = json.load(fobj)
-                rating_info = entries["ratings"]
-            except (ValueError, KeyError):
-                self.notify("failed to load %s!" % rangeinfo)
+            except ValueError:
+                self.notify("failed to load %s!" % filepath)
                 return
+
+            try:
+                rating_info = entries["ratings"]
+            except KeyError:
+                self.notify("failed to load rating info!")
+                pass
+
+            try:
+                tabs_path = entries["tabs"]
+            except KeyError:
+                self.notify("failed to load tabs path!")
+                tabs_path['tab1'] = "~"
+                tabs_path['tab2'] = "~"
+                pass
 
         if rating_info:
             self.rating_info = rating_info
+        if tabs_path:
+            self.tabs_path = tabs_path;
+
         """
         for ratings in rating_info:
             path_enc = str(ratings["path"])
