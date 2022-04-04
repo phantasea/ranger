@@ -196,6 +196,11 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
 
         rating_info = []
         for entry in self.rating_info:
+            if entry['star'] <= 0:
+                continue
+            if not os.path.exists(entry['path']):
+                continue
+
             path_enc = ''
             for c in entry['path']:
                 path_enc += chr(ord(c) + 13)
@@ -255,6 +260,36 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                 d["path"] = path_dec
                 d["star"] = entry["star"]
                 self.rating_info.append(d)
+
+    def update_rating_info(self, path, stars_offset):
+        if not path or not stars_offset:
+            return
+
+        for entry in self.rating_info:
+            if entry['path'] == path:
+                entry['star'] += stars_offset
+                if entry['star'] <= 0:
+                    self.rating_info.remove(entry)
+                elif entry['star'] > 7:
+                    entry['star'] = 7
+                return
+
+        if stars_offset > 0:
+            d = {}
+            d['star'] = stars_offset
+            d['path'] = path
+            self.rating_info.append(d)
+
+    def set_rating_stars(self, mode=1, narg=None):
+        offset = narg or 1
+        offset *= mode
+        #self.notify("%s, %s" % (mode, narg))
+
+        for fobj in self.thistab.get_selection():
+            if fobj in self.thisdir.files:
+                self.update_rating_info(fobj.path, offset)
+
+        self.reload_cwd()
     #add by sim1: ----------------------------
 
     def notify(self, obj, duration=4, bad=False, exception=None):
