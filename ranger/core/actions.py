@@ -290,6 +290,19 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                 self.update_rating_info(fobj.path, offset)
 
         self.reload_cwd()
+
+    def has_rating_stars(self, fobj):
+        if not fobj:
+            return False
+
+        for entry in self.rating_info:
+            try:
+                if entry['path'] == fobj.path:
+                    return True
+            except:
+                pass
+
+        return False
     #add by sim1: ----------------------------
 
     def notify(self, obj, duration=4, bad=False, exception=None):

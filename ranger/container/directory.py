@@ -97,6 +97,7 @@ class InodeFilterConstants(object):  # pylint: disable=too-few-public-methods
     DIRS = 'd'
     FILES = 'f'
     LINKS = 'l'
+    RATINGS = 'r'  #add by sim1
 
 
 class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public-methods
@@ -293,6 +294,11 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
                 elif InodeFilterConstants.LINKS in inode_filter and \
                         obj.is_link:
                     return True
+                #add by sim1 ++++++++++++++++++++++++++++++++++++++++++
+                elif InodeFilterConstants.RATINGS in inode_filter and \
+                        self.fm.has_rating_stars(obj):
+                    return True
+                #add by sim1 ------------------------------------------
                 return False
             filters.append(inode_filter_func)
         if self.filter:
