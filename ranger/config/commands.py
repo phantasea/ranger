@@ -1508,8 +1508,13 @@ class bulkrename(Command):
             # Do the renaming
             self.fm.run(['/bin/sh', cmdfile.name], flags=self.flags)
 
+        #add by sim1: cancel visual mode after bulkrename
+        if self.fm.mode == 'visual':
+            self.fm.change_mode('normal')
+
         # Retag the files, but only if the script wasn't changed during review,
         # because only then we know which are the source and destination files.
+        '''
         if not script_was_edited:
             tags_changed = False
             for old, new in zip(filenames, new_filenames):
@@ -1525,6 +1530,7 @@ class bulkrename(Command):
                 self.fm.tags.dump()
         else:
             fm.notify("files have not been retagged")
+        '''
 
 
 class relink(Command):
