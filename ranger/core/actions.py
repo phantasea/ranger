@@ -276,7 +276,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
 
         if stars_offset > 0:
             d = {}
-            d['star'] = stars_offset
+            d['star'] = stars_offset if stars_offset <= 7 else 7
             d['path'] = path
             self.rating_info.append(d)
 
