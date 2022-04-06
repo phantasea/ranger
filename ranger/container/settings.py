@@ -30,7 +30,7 @@ ALLOWED_SETTINGS = {
     'cd_tab_case': str,
     'cd_tab_fuzzy': bool,
     'clear_filters_on_dir_change': bool,
-    'clipboard_prg': str,    # add by sim1
+    'clipboard_prg': str,    #add by sim1
     'collapse_preview': bool,
     'colorscheme': str,
     'column_ratios': (tuple, list),
@@ -41,7 +41,7 @@ ALLOWED_SETTINGS = {
     "display_free_space_in_status_bar": bool,
     "display_file_space_in_status_bar": bool,
     'display_tags_in_all_columns': bool,
-    "display_time_in_status_bar": bool,    # add by sim1
+    "display_time_in_status_bar": bool,    #add by sim1
     'draw_borders': str,
     'draw_borders_multipane': str,
     'draw_progress_bar_in_status_bar': bool,
@@ -50,16 +50,17 @@ ALLOWED_SETTINGS = {
     'global_inode_type_filter': str,
     'hidden_filter': str,
     'hint_collapse_threshold': int,
-    'hint_max_count': int,    # add by sim1
+    'hint_max_count': int,    #add by sim1
     'hostname_in_titlebar': bool,
     'size_in_bytes': bool,
-    'size_separator_space': bool,    # add by sim1
+    'size_separator_space': bool,    #add by sim1
     'idle_delay': int,
     'iterm2_font_width': int,
     'iterm2_font_height': int,
     'line_numbers': str,
     'max_console_history_size': (int, type(None)),
     'max_history_size': (int, type(None)),
+    'max_rating_stars': int,    #add by sim1
     'metadata_deep_search': bool,
     'mouse_enabled': bool,
     'nested_ranger_warning': str,
@@ -82,7 +83,7 @@ ALLOWED_SETTINGS = {
     'show_hidden_bookmarks': bool,
     'show_hidden': bool,
     'show_selection_in_titlebar': bool,
-    'show_selection_dirname_in_titlebar': bool,  # Add by sim1
+    'show_selection_dirname_in_titlebar': bool,  #add by sim1
     'sort_case_insensitive': bool,
     'sort_directories_first': bool,
     'sort_reverse': bool,
