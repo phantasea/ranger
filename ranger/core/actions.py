@@ -172,6 +172,18 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             cwd.load_content()
 
     #add by sim1: ++++++++++++++++++++++++++++
+    def cancel_all(self):
+        thisdir = self.fm.thisdir
+        if thisdir.files:
+            for fobj in thisdir.files:
+                thisdir.mark_item(fobj, 0)
+
+        self.uncut()
+
+        if self.mode == 'visual':
+            self.change_mode('normal')
+
+
     def toggle_flat(self, narg=None):
         #level = narg if narg else 1 by default
         level = narg or 1
