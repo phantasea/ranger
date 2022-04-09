@@ -35,6 +35,7 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
     # add by sim1
     timeformat = '%Y-%m-%d %H:%M'
     old_linum_len = 1
+    linum_len_chg = False
 
     def __init__(self, win, level, tab=None):
         """Initializes a Browser Column Widget
@@ -295,10 +296,14 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         #linum_format = "{0:0>" + str(linum_text_len) + "}"  # prefix 0 such as 001
 
         # add by sim1
-        if self.old_linum_len != linum_text_len:
-            self.fm.thisdir.unload()
-            self.fm.thisdir.load_content()
-        self.old_linum_len = linum_text_len
+        self.linum_len_chg = False
+        if self.settings.line_numbers != 'false':
+            if self.old_linum_len != linum_text_len:
+                self.fm.reload_cwd()
+            self.old_linum_len = linum_text_len
+
+            if len(set(str(bot_idx))) == 1 and str(bot_idx)[0] == '9':
+                self.linum_len_chg = True
 
         selected_i = self._get_index_of_selected_file()
         for line in range(self.hei):
