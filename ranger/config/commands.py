@@ -1063,7 +1063,8 @@ class mkdir(Command):
         dirname = join(self.fm.thisdir.path, expanduser(self.rest(1)))
         if not lexists(dirname):
             makedirs(dirname)
-            #self.fm.cd(dirname)  #add by sim1
+            if self.fm.settings.cd_after_mkdir:
+                self.fm.cd(dirname)  #add by sim1
             """ add by sim1:
             when creating the directory and the line num len changing
             there is some problem of showing correctly

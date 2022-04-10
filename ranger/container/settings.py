@@ -29,6 +29,7 @@ ALLOWED_SETTINGS = {
     'cd_bookmarks': bool,
     'cd_tab_case': str,
     'cd_tab_fuzzy': bool,
+    'cd_after_mkdir': bool,  #add by sim1
     'clear_filters_on_dir_change': bool,
     'clipboard_prg': str,    #add by sim1
     'collapse_preview': bool,
