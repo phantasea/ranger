@@ -424,7 +424,11 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
 
     #add by sim1: support paste from the clipboard
     def clipboard_paste(self):
-        cmd = str(self.settings.clipboard_prg)
+        cmd = ''
+        if 'DISPLAY' in os.environ:
+            cmd = str(self.settings.clipboard_prg_gui)
+        else:
+            cmd = str(self.settings.clipboard_prg_cli)
         if len(cmd) == 0:
             return
 

@@ -31,7 +31,8 @@ ALLOWED_SETTINGS = {
     'cd_tab_fuzzy': bool,
     'cd_after_mkdir': bool,  #add by sim1
     'clear_filters_on_dir_change': bool,
-    'clipboard_prg': str,    #add by sim1
+    'clipboard_prg_cli': str,    #add by sim1
+    'clipboard_prg_gui': str,    #add by sim1
     'collapse_preview': bool,
     'colorscheme': str,
     'column_ratios': (tuple, list),
