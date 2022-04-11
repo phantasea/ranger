@@ -172,11 +172,32 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             cwd.load_content()
 
     #add by sim1: ++++++++++++++++++++++++++++
+    def reselect(self):
+        """
+        support reselect like 'gs' in vifm
+        """
+        thisdir = self.fm.thisdir
+        if thisdir.old_marked_items:
+            for fobj in thisdir.old_marked_items:
+                thisdir.mark_item(fobj, 1)
+
+
     def cancel_all(self):
         thisdir = self.fm.thisdir
+        if thisdir.marked_items:
+            thisdir.old_marked_items = thisdir.marked_items.copy()
+        """ this solution uses more CPU if there are many files in this dir
         if thisdir.files:
             for fobj in thisdir.files:
                 thisdir.mark_item(fobj, 0)
+        """
+        #dunno why cannot unmark all for once
+        while True:
+            if thisdir.marked_items:
+                for fobj in thisdir.marked_items:
+                    thisdir.mark_item(fobj, 0)
+            else:
+                break
 
         self.uncut()
 
