@@ -192,10 +192,14 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                 thisdir.mark_item(fobj, 0)
         """
         #dunno why cannot unmark all for once
+        loop = 0
         while True:
             if thisdir.marked_items:
                 for fobj in thisdir.marked_items:
                     thisdir.mark_item(fobj, 0)
+                loop += 1
+                if loop >= 9:
+                    break
             else:
                 break
 
