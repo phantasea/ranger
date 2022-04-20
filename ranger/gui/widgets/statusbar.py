@@ -402,7 +402,12 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             else:
                 right.add('--{0:0.0%}--'.format((pos / max_pos)), base, 'percentage')
         else:
-            right.add('0/0  --All--', base, 'all')
+            #mod by sim1
+            hidden_files_num = len(os.listdir(target.path)) - len(target.files)
+            if self.fm.thisdir.filter and hidden_files_num > 0:
+                right.add('0/0(+' + str(hidden_files_num) + ')' + ' ' + '--All--', base, 'all')
+            else:
+                right.add('0/0  --All--', base, 'all')
 
         #add by sim1: show statusline indicator for 'show_hidden'
         if self.settings.show_hidden:
