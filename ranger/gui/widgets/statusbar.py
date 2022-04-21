@@ -375,9 +375,13 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             right.add("narrowed", base, 'filter')
             right.add("|", "rspace")
 
-        if self.fm.thisdir.filter:
-            right.add("f='", base, 'filter')
-            right.add(self.fm.thisdir.filter.pattern, base, 'filter')
+        if self.fm.thisdir.filter or self.fm.thisdir.inode_type_filter:
+            if self.fm.thisdir.filter:
+                right.add("f='", base, 'filter')
+                right.add(self.fm.thisdir.filter.pattern, base, 'filter')
+            else:
+                right.add("only='", base, 'filter')
+                right.add(self.fm.thisdir.inode_type_filter, base, 'filter')
             right.add("'", base, 'filter')
             right.add("|", "rspace")
 
@@ -404,7 +408,8 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
         else:
             #mod by sim1
             hidden_files_num = len(os.listdir(target.path)) - len(target.files)
-            if self.fm.thisdir.filter and hidden_files_num > 0:
+            if (self.fm.thisdir.filter or self.fm.thisdir.inode_type_filter) \
+                    and hidden_files_num > 0:
                 right.add('0/0(+' + str(hidden_files_num) + ')' + ' ' + '--All--', base, 'all')
             else:
                 right.add('0/0  --All--', base, 'all')

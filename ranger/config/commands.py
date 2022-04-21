@@ -2011,6 +2011,9 @@ class filter_inode_type(Command):
             self.fm.thisdir.inode_type_filter = self.arg(1)
         self.fm.thisdir.refilter()
 
+        #add by sim1
+        self.fm.ui.redraw_window()
+
 
 class filter_stack(Command):
     """
