@@ -488,6 +488,10 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
                 if ratings["path"] == drawn.path:
                     for i in range(int(ratings["star"])):
                         stars += ''
+        if stars:
+            mult = self.settings.max_rating_stars - len(stars)
+            stars = ' ' * mult + stars
+
         return stars
 
     def _draw_infostring_display(self, drawn, space):
