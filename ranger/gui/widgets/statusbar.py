@@ -288,7 +288,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                     side.add(stars, 'stars')
                     side.add("|", "lspace")
                     size = os.stat(target).st_size
-                    side.add(human_readable(size), 'stars')
+                    side.add(human_readable(size, use_opt=True), 'stars')
                     return True
 
         return False
