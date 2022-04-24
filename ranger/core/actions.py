@@ -302,21 +302,18 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         if not path or not stars_offset:
             return
 
-        maxstars = self.settings.max_rating_stars
-        if maxstars < 3:
-            maxstars = 3
         for entry in self.rating_info:
             if entry['path'] == path:
                 entry['star'] += stars_offset
                 if entry['star'] <= 0:
                     self.rating_info.remove(entry)
-                elif entry['star'] > maxstars:
-                    entry['star'] = maxstars
+                elif entry['star'] > 7:
+                    entry['star'] = 7
                 return
 
         if stars_offset > 0:
             d = {}
-            d['star'] = stars_offset if stars_offset <= maxstars else maxstars
+            d['star'] = stars_offset if stars_offset <= 7 else 7
             d['path'] = path
             self.rating_info.append(d)
 

@@ -62,7 +62,6 @@ ALLOWED_SETTINGS = {
     'line_numbers': str,
     'max_console_history_size': (int, type(None)),
     'max_history_size': (int, type(None)),
-    'max_rating_stars': int,    #add by sim1
     'metadata_deep_search': bool,
     'mouse_enabled': bool,
     'nested_ranger_warning': str,

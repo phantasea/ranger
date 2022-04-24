@@ -489,8 +489,11 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
                     for i in range(int(ratings["star"])):
                         stars += ''
         if stars:
-            mult = self.settings.max_rating_stars - len(stars)
-            stars = ' ' * mult + stars
+            mults = 7 - len(stars)
+            if mults < 0:
+                mults = 0
+            stars = ' ' * mults + stars
+            #stars = stars.center(7)
 
         return stars
 
