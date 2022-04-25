@@ -74,7 +74,11 @@ def human_readable_time(timestamp):
     """Convert a timestamp to an easily readable format.
     """
     # Hard to test because it's relative to ``now()``
-    date = datetime.fromtimestamp(timestamp)
+    try:
+        date = datetime.fromtimestamp(timestamp)
+    except ValueError:
+        return '???'
+
     datediff = datetime.now().date() - date.date()
     if datediff.days >= 365:
         return date.strftime("%-d %b %Y")
