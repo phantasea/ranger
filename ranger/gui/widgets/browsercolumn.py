@@ -35,7 +35,6 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
     # add by sim1
     timeformat = '%Y-%m-%d %H:%M'
     old_linum_len = 1
-    linum_len_chg = False
 
     def __init__(self, win, level, tab=None):
         """Initializes a Browser Column Widget
@@ -281,39 +280,28 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         # Set the size of the linum text field to the number of digits in the
         # visible files in directory.
         # mod by sim1
-        if len(self.target.files) >= self.hei:
-            if self.settings.one_indexed:
-                bot_idx = self.scroll_begin + self.hei
-            else:
-                bot_idx = self.scroll_begin + self.hei - 1
-        else:
+        if self.settings.line_numbers == 'relative':
+            bot_idx = len(self.target.files) - 1
+            linum_text_len = len(str(bot_idx))
+        elif self.settings.line_numbers == 'absolute':
             if self.settings.one_indexed:
                 bot_idx = len(self.target.files)
             else:
                 bot_idx = len(self.target.files) - 1
-        linum_text_len = len(str(bot_idx))
-        #linum_format = "{0:>" + str(linum_text_len) + "}"
-        #linum_format = "{0:0>" + str(linum_text_len) + "}"  # prefix 0 such as 001
-
-        # add by sim1
-        self.linum_len_chg = False
-        if self.settings.line_numbers != 'false':
-            if self.old_linum_len != linum_text_len:
-                self.fm.reload_cwd()
-            self.old_linum_len = linum_text_len
-
-            if len(set(str(bot_idx))) == 1 and str(bot_idx)[0] == '9':
-                self.linum_len_chg = True
+            linum_text_len = len(str(bot_idx))
+        else:
+            linum_text_len = 0
 
         selected_i = self._get_index_of_selected_file()
         for line in range(self.hei):
             i = line + self.scroll_begin
 
             # add by sim1
-            if i != selected_i:
-                linum_format = "{0:>" + str(linum_text_len) + "}"
-            else:
-                linum_format = "{0:<" + str(linum_text_len) + "}"
+            if self.settings.line_numbers != 'false':
+                if i != selected_i:
+                    linum_format = "{0:>" + str(linum_text_len) + "}"
+                else:
+                    linum_format = "{0:<" + str(linum_text_len) + "}"
 
             try:
                 drawn = self.target.files[i]

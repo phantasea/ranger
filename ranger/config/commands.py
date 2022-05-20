@@ -1065,12 +1065,6 @@ class mkdir(Command):
             makedirs(dirname)
             if self.fm.settings.cd_after_mkdir:
                 self.fm.cd(dirname)  #add by sim1
-            """ add by sim1:
-            when creating the directory and the line num len changing
-            there is some problem of showing correctly
-            """
-            if self.fm.ui.browser.main_column.linum_len_chg:
-                self.fm.reset()
         else:
             self.fm.notify("file/directory exists!", bad=True)
 
@@ -1095,13 +1089,6 @@ class touch(Command):
                 makedirs(dirname)
             with open(fname, 'a', encoding="utf-8"):
                 pass  # Just create the file
-
-            """ add by sim1:
-            when creating the file and the line num len changing
-            there is some problem of showing correctly
-            """
-            if self.fm.ui.browser.main_column.linum_len_chg:
-                self.fm.reset()
         else:
             self.fm.notify("file/directory exists!", bad=True)
 
