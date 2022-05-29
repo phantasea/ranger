@@ -281,7 +281,7 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         # visible files in directory.
         # mod by sim1
         if self.settings.line_numbers == 'relative':
-            bot_idx = len(self.target.files) - 1
+            bot_idx = len(self.target.files)
             linum_text_len = len(str(bot_idx))
         elif self.settings.line_numbers == 'absolute':
             if self.settings.one_indexed:
