@@ -684,7 +684,17 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             if tfile is None:
                 return
             if tfile.is_directory:
-                self.thistab.enter_dir(tfile)
+                #mod by sim1: support 3l/4l/5l... to move down 3j/4j/5j...then l
+                if narg is None:
+                    self.thistab.enter_dir(tfile)
+                else:
+                    curr = cwd.pointer
+                    self.move(down=narg)
+                    if self.thisfile.is_directory:
+                        self.thistab.enter_dir(self.thisfile)
+                    else:
+                        self.notify("the %sth-down file is not dir!" % narg, bad=True)
+                        self.move(to=curr)
             elif selection:
                 result = self.execute_file(selection, mode=mode)
                 if result in (False, ASK_COMMAND):
