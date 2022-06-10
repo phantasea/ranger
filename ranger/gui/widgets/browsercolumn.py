@@ -355,11 +355,12 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
 
             text = current_linemode.filetitle(drawn, metadata)
 
+            # del by sim1
+            '''
             if drawn.marked and (self.main_column
                                  or self.settings.display_tags_in_all_columns):
-                # mod by sim1
-                #text = " " + text
-                text = "" + text
+                text = " " + text
+            '''
 
             # Computing predisplay data. predisplay contains a list of lists
             # [string, colorlst] where string is a piece of string to display,
