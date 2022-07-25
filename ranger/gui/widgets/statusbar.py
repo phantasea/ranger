@@ -209,11 +209,11 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
         """
 
         #mod by sim1
+        if self._get_size_infostring(left):
+            left.add("|", "lspace")
+
         if self._get_rating_infostring(left):
             left.add("|", "lspace")
-        else:
-            if self._get_size_infostring(left):
-                left.add("|", "lspace")
 
         #del by sim1: not display vcsdate
         """
@@ -285,10 +285,11 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 if ratings["path"] == target:
                     for i in range(int(ratings["star"])):
                         stars += ''
-                    side.add(stars, 'stars')
-                    side.add("|", "lspace")
+
                     size = os.stat(target).st_size
                     side.add(human_readable(size, use_opt=True), 'stars')
+                    side.add("|", "lspace")
+                    side.add(stars, 'stars')
                     return True
 
         return False
