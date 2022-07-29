@@ -16,12 +16,12 @@ def size_fmt(bytes, separator=''):
         return '     0'
 
     for unit in ["B", "K", "M", "G", "T", "P", "E", "Z"]:
-        if bytes < 1000.0:
+        if bytes < 1024.0:
             val = f"{bytes:5.1f}"
             if len(val) < 5:
                 val = f"{float(val): 5.1f}"
             return val + separator + unit
-        bytes /= 1000.0
+        bytes /= 1024.0
 
     return "TooBig"
 
