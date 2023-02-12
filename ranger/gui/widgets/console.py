@@ -450,8 +450,10 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
                 right_part = self.line[self.pos:]
                 i = self.pos - 2
                 while i >= 0 and re.match(
+                        # mod by sim1
                         #r'[\w\d]', self.line[i], re.UNICODE):  # pylint: disable=no-member
-                        r'[\S]', self.line[i], re.UNICODE):  # pylint: disable=no-member
+                        #r'[\S]', self.line[i], re.UNICODE):  # pylint: disable=no-member
+                        r'[^ _=+@#&(){},.;:|-]', self.line[i], re.UNICODE):  # pylint: disable=no-member
                     i -= 1
                 # add by sim1: Ctrl-W but keep command name
                 if i < len(self.line.split()[0]) and self.line[self.pos-1] == ' ':
@@ -463,8 +465,10 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
                 left_part = self.line[:self.pos]
                 i = self.pos + 1
                 while i < len(self.line) and re.match(
+                        # mod by sim1
                         #r'[\w\d]', self.line[i], re.UNICODE):  # pylint: disable=no-member
-                        r'[\S]', self.line[i], re.UNICODE):  # pylint: disable=no-member
+                        #r'[\S]', self.line[i], re.UNICODE):  # pylint: disable=no-member
+                        r'[^ _=+@#&(){},.;:|-]', self.line[i], re.UNICODE):  # pylint: disable=no-member
                     i += 1
                 self.copy = self.line[self.pos:i]
                 if i >= len(self.line):
