@@ -194,7 +194,11 @@ class ViewBase(Widget, DisplayableContainer):  # pylint: disable=too-many-instan
         whitespace = " " * self.wid
         i = ystart
         for key, cmd in hints:
-            string = " " + key.ljust(10) + " " + cmd
+            # mod by sim1
+            if key == '<c-i>':
+                key = '<c-i>/<tab>'
+            #string = " " + key.ljust(10) + " " + cmd
+            string =key.ljust(11) + " " + cmd
             self.addstr(i, 0, whitespace)
             self.addnstr(i, 0, string, self.wid)
             i += 1
