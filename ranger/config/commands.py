@@ -1981,7 +1981,7 @@ class narrow(Command):
 
 class filter_inode_type(Command):
     """
-    :filter_inode_type [dfl]
+    :filter_inode_type [dflr]
 
     Displays only the files of specified inode type. Parameters
     can be combined.
@@ -1989,6 +1989,7 @@ class filter_inode_type(Command):
         d display directories
         f display files
         l display links
+        r display rating files
     """
 
     def execute(self):
@@ -2054,6 +2055,18 @@ class filter_stack(Command):
             )
             return
 
+        # Cleanup.
+        self.cancel()
+
+    def quick(self):
+        if self.rest(1).startswith("add name "):
+            self.fm.thisdir.temporary_filter = re.compile(self.rest(3))
+            self.fm.thisdir.refilter()
+
+        return False
+
+    def cancel(self):
+        self.fm.thisdir.temporary_filter = None
         self.fm.thisdir.refilter()
 
 
