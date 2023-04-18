@@ -40,7 +40,8 @@ def human_readable(byte, separator=' ', use_opt=False, uni_format=False):  # pyl
     # handle automatically_count_files false
     if byte is None:
         return ''
-
+    if byte <= 0:
+        return '0'
     if SettingsAware.settings.size_in_bytes:
         return format(byte, 'n')  # 'n' = locale-aware separator.
 

@@ -26,6 +26,7 @@ ALLOWED_SETTINGS = {
     'autosave_bookmarks': bool,
     'autoupdate_cumulative_size': bool,
     'bidi_support': bool,
+    'binary_size_prefix': bool,
     'cd_bookmarks': bool,
     'cd_tab_case': str,
     'cd_tab_fuzzy': bool,
@@ -108,6 +109,7 @@ ALLOWED_SETTINGS = {
     'wrap_plaintext_previews': bool,
     'wrap_scroll': bool,
     'xterm_alt_key': bool,
+    'sixel_dithering': str,
 }
 
 ALLOWED_VALUES = {
@@ -120,8 +122,8 @@ ALLOWED_VALUES = {
     'nested_ranger_warning': ['true', 'false', 'error'],
     'one_indexed': [False, True],
     'preview_images_method': ['w3m', 'iterm2', 'terminology',
-                              'urxvt', 'urxvt-full', 'kitty',
-                              'ueberzug'],
+                              'sixel', 'urxvt', 'urxvt-full',
+                              'kitty', 'ueberzug'],
     'vcs_backend_bzr': ['disabled', 'local', 'enabled'],
     'vcs_backend_git': ['enabled', 'disabled', 'local'],
     'vcs_backend_hg': ['disabled', 'local', 'enabled'],
