@@ -12,16 +12,20 @@ def size_fmt(bytes, separator=''):
     """
     xxxxxxxx --> xxx.x[BKMGTPEZ]
     """
+    base = 1024.0
+    if not SettingsAware.settings.binary_size_prefix:
+        base = 1000.0
+
     if bytes <= 0:
         return '     0'
 
-    for unit in ["B", "K", "M", "G", "T", "P", "E", "Z"]:
-        if bytes < 1024.0:
+    for unit in ["B", "K", "M", "G", "T", "P"]:
+        if bytes < base:
             val = f"{bytes:5.1f}"
             if len(val) < 5:
                 val = f"{float(val): 5.1f}"
             return val + separator + unit
-        bytes /= 1024.0
+        bytes /= base
 
     return "TooBig"
 
@@ -96,6 +100,7 @@ if __name__ == '__main__':
     class SettingsAwareMock(object):  # pylint: disable=too-few-public-methods
         class settings(object):  # pylint: disable=invalid-name,too-few-public-methods
             size_in_bytes = False
+            binary_size_prefix = True
     SettingsAware = SettingsAwareMock  # noqa: F811
 
     import doctest
