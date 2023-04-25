@@ -102,38 +102,50 @@ class TitleBar(Widget):
             bar.add(self.fm.hostname, 'hostname', clr, fixed=True)
             bar.add(':', 'hostname', clr, fixed=True)  #mod by sim1: no space after colon
 
-        pathway = self.fm.thistab.pathway
-        if self.settings.tilde_in_titlebar \
-           and (self.fm.thisdir.path.startswith(self.fm.home_path + "/")
-                or self.fm.thisdir.path == self.fm.home_path):
-            pathway = pathway[self.fm.home_path.count('/') + 1:]
-            bar.add('~/', 'directory', fixed=True)
+        if self.fm.thisdir:
+            pathway = self.fm.thistab.pathway
+            if self.settings.tilde_in_titlebar \
+                and (self.fm.thisdir.path.startswith(
+                    self.fm.home_path + "/") or self.fm.thisdir.path == self.fm.home_path):
+                pathway = pathway[self.fm.home_path.count('/') + 1:]
+                bar.add('~/', 'directory', fixed=True)
 
-        for path in pathway:
-            if path.is_link:
-                clr = 'link'
-            else:
-                clr = 'directory'
-
-            bidi_basename = self.bidi_transpose(path.basename)
-            bar.add(bidi_basename, clr, directory=path)
-            bar.add('/', clr, fixed=True, directory=path)
-
-        # mod by sim1: display current dir name?
-        if self.fm.thisfile is not None and self.settings.show_selection_in_titlebar:
-            if not self.fm.thisfile.is_directory:
-                if not self.fm.thisfile.is_link:
-                    #bar.add(self.fm.thisfile.relative_path, 'file')
-                    bidi_file_path = self.bidi_transpose(self.fm.thisfile.relative_path)
-                    bar.add(bidi_file_path, 'file')
+            for path in pathway:
+                if path.is_link:
+                    clr = 'link'
                 else:
-                    bar.add(self.fm.thisfile.relative_path, 'link')
-            else:
-                if self.settings.show_selection_dirname_in_titlebar:
+                    clr = 'directory'
+
+                bidi_basename = self.bidi_transpose(path.basename)
+                bar.add(bidi_basename, clr, directory=path)
+                bar.add('/', clr, fixed=True, directory=path)
+
+            # mod by sim1: display current dir name?
+            if self.fm.thisfile is not None and self.settings.show_selection_in_titlebar:
+                if not self.fm.thisfile.is_directory:
                     if not self.fm.thisfile.is_link:
-                        bar.add(self.fm.thisfile.relative_path, 'directory')
+                        #bar.add(self.fm.thisfile.relative_path, 'file')
+                        bidi_file_path = self.bidi_transpose(self.fm.thisfile.relative_path)
+                        bar.add(bidi_file_path, 'file')
                     else:
                         bar.add(self.fm.thisfile.relative_path, 'link')
+                else:
+                    if self.settings.show_selection_dirname_in_titlebar:
+                        if not self.fm.thisfile.is_link:
+                            bar.add(self.fm.thisfile.relative_path, 'directory')
+                        else:
+                            bar.add(self.fm.thisfile.relative_path, 'link')
+        else:
+            path = self.fm.thistab.path
+            if self.settings.tilde_in_titlebar \
+                and (self.fm.thistab.path.startswith(
+                    self.fm.home_path + "/") or self.fm.thistab.path == self.fm.home_path):
+                path = path[len(self.fm.home_path + "/"):]
+                bar.add('~/', 'directory', fixed=True)
+
+            clr = 'directory'
+            bar.add(path, clr, directory=path)
+            bar.add('/', clr, fixed=True, directory=path)
 
     def _get_right_part(self, bar):
         # TODO: fix that pressed keys are cut off when chaining CTRL keys

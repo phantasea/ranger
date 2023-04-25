@@ -338,7 +338,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             dest = readlink(target.path)
         except OSError:
             dest = '?'
-        side.add('"' + target.basename + ' -> ' + dest + '"', 'link', how)
+        side.add(' -> ' '"' + dest + '"', 'link', how)
         return True
 
     #mod by sim1
