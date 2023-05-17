@@ -206,8 +206,10 @@ def main(
 
         #add by sim1 +++++++++++++++++++++
         if fm.tabs_path:
-            fm.enter_dir(fm.tabs_path['tab2'])
-            fm.tab_new(path=fm.tabs_path['tab1'])
+            if not args.paths:
+                fm.enter_dir(fm.tabs_path['tab2'])
+            if len(args.paths) <= 1:
+                fm.tab_new(path=fm.tabs_path['tab1'])
         #add by sim1 ---------------------
 
         if ranger.args.profile:
