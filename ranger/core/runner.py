@@ -279,7 +279,7 @@ class Runner(object):  # pylint: disable=too-few-public-methods
                 if 'x' in context.flags:
                     return process  # pylint: disable=lost-exception
                 #for output on cmdline
-                if 'l' in context.flags:
+                if 'b' in context.flags:
                     self.fm.notify("%s" % process.stdout.readline().decode('utf8').rstrip("\n"), bad=False)
                     return process  # pylint: disable=lost-exception
                 #add by sim1 +++++++++++++++++++++++++++++++++++++++++++++++++
