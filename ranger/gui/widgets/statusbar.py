@@ -405,7 +405,9 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             elif pos >= max_pos:
                 right.add('--Bot--', base, 'bot')
             else:
-                right.add('--{0:0.0%}--'.format((pos / max_pos)), base, 'percentage')
+                #right.add('--{0:0.0%}--'.format((pos / max_pos)), base, 'percentage')
+                #right.add('--{0:02.0f}%--'.format((pos*100/max_pos)), base, 'percentage')
+                right.add('--{:02d}%--'.format((pos*100//max_pos)), base, 'percentage')
         else:
             #mod by sim1
             hidden_files_num = len(os.listdir(target.path)) - len(target.files)
