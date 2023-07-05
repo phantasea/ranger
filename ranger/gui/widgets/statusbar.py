@@ -266,7 +266,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
         else:
             # show size of all files in the current directory
             if self.settings.display_file_space_in_status_bar:
-                side.add(human_readable(target.disk_usage, separator='') + " | ", 'size')
+                side.add(human_readable(target.disk_usage, separator='') + "/", 'size')
             if self.settings.display_free_space_in_status_bar:
                 try:
                     free = get_free_space(target.path)
