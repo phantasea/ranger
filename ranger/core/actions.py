@@ -1688,7 +1688,9 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
     # --------------------------
 
     def _run_pager(self, path):
-        self.run(shlex.split(os.environ.get('PAGER', ranger.DEFAULT_PAGER)) + [path])
+        # mod by sim1
+        #self.run(shlex.split(os.environ.get('PAGER', ranger.DEFAULT_PAGER)) + [path])
+        self.run(shlex.split(ranger.DEFAULT_PAGER) + [path])
 
     def dump_keybindings(self, *contexts):
         if not contexts:
