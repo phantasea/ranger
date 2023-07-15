@@ -41,6 +41,10 @@ def human_readable(byte, separator=' ', use_opt=False, uni_format=False):  # pyl
         else:
             separator = ''
 
+    # mod by sim1
+    if uni_format:
+        return size_fmt(byte, separator)
+
     # handle automatically_count_files false
     if byte is None:
         return ''
@@ -52,11 +56,6 @@ def human_readable(byte, separator=' ', use_opt=False, uni_format=False):  # pyl
     # I know this can be written much shorter, but this long version
     # performs much better than what I had before.  If you attempt to
     # shorten this code, take performance into consideration.
-
-    # mod by sim1
-    if uni_format:
-        return size_fmt(byte, separator)
-
     if byte <= 0:
         return '0'
     elif byte < 2**10:
