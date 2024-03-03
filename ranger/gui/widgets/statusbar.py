@@ -174,6 +174,14 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             #add by sim1
             left.add('empty', 'permissions')
             left.add('|', 'lspace')
+            if self.settings.display_free_space_in_status_bar:
+                try:
+                    free = get_free_space(self.column.target.path)
+                except OSError:
+                    pass
+                else:
+                    left.add(human_readable(free, separator=''), 'size')
+                    left.add('|', 'lspace')
             return
         if stat is None:
             return
