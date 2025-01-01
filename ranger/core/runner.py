@@ -266,24 +266,25 @@ class Runner(object):  # pylint: disable=too-few-public-methods
                     self.zombies.add(process)
                 if wait_for_enter:
                     press_enter()
-        finally:
-            self.fm.signal_emit('runner.execute.after',
-                                popen_kws=popen_kws, context=context, error=error)
-            if devnull:
-                devnull.close()
-            if toggle_ui:
-                self._activate_ui(True)
-            if pipe_output and process:
-                #add by sim1 -------------------------------------------------
-                #for clipboard_paste
-                if 'x' in context.flags:
-                    return process  # pylint: disable=lost-exception
-                #for output on cmdline
-                if 'b' in context.flags:
-                    self.fm.notify("%s" % process.stdout.readline().decode('utf8').rstrip("\n"), bad=False)
-                    return process  # pylint: disable=lost-exception
-                #add by sim1 +++++++++++++++++++++++++++++++++++++++++++++++++
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+        self.fm.signal_emit('runner.execute.after',
+                            popen_kws=popen_kws, context=context, error=error)
+        if devnull:
+            devnull.close()
+        if toggle_ui:
+            self._activate_ui(True)
+        if pipe_output and process:
+            #add by sim1 -------------------------------------------------
+            #for clipboard_paste
+            if 'x' in context.flags:
+                return process  # pylint: disable=lost-exception
+            #for output on cmdline
+            if 'b' in context.flags:
+                self.fm.notify("%s" % process.stdout.readline().decode('utf8').rstrip("\n"), bad=False)
+                return process  # pylint: disable=lost-exception
+            #add by sim1 +++++++++++++++++++++++++++++++++++++++++++++++++
 
-                return self(action='less', app='pager',  # pylint: disable=lost-exception
-                            try_app_first=True, stdin=process.stdout)
-            return process  # pylint: disable=lost-exception
+            return self(action='less', app='pager',
+                        try_app_first=True, stdin=process.stdout)
+        return process
