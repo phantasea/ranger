@@ -9,7 +9,7 @@ CONTEXT_KEYS = [
     'in_browser', 'in_statusbar', 'in_titlebar', 'in_console',
     'in_pager', 'in_taskview',
     'active_pane', 'inactive_pane',
-    'directory', 'file', 'hostname',
+    'directory', 'file', 'hostname', 'username', 'separator',
     'executable', 'media', 'link', 'fifo', 'socket', 'device',
     'video', 'audio', 'image', 'media', 'document', 'mimetext', 'special', 'container',
     'selected', 'empty', 'main_column', 'message', 'background',

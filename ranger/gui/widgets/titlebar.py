@@ -96,11 +96,11 @@ class TitleBar(Widget):
                 clr = 'bad'
             else:
                 clr = 'good'
-
-            bar.add(self.fm.username, 'hostname', clr, fixed=True)
-            bar.add('@', 'hostname', clr, fixed=True)
+            #mod by sim1
+            bar.add(self.fm.username, 'username', clr, fixed=True)
+            bar.add('@', 'separator', clr, fixed=True)
             bar.add(self.fm.hostname, 'hostname', clr, fixed=True)
-            bar.add(':', 'hostname', clr, fixed=True)  #mod by sim1: no space after colon
+            bar.add(':', 'separator', clr, fixed=True)
 
         if self.fm.thisdir:
             pathway = self.fm.thistab.pathway
