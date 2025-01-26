@@ -855,7 +855,11 @@ class trash(Command):
             file_names = [f.relative_path for f in files]
             many_files = (cwd.marked_items or is_directory_with_files(tfile.path))
 
-        confirm = self.fm.settings.confirm_on_delete
+        confirm = self.fm.settings.confirm_on_trash
+
+        if confirm == 'like_delete':
+            confirm = self.fm.settings.confirm_on_delete
+
         if confirm != 'never' and (confirm != 'multiple' or many_files):
             self.fm.ui.console.ask(
                 "Confirm deletion of {0} files: {1} (y/N)".format(len(files), ', '.join(file_names)),
