@@ -1918,6 +1918,10 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                     self.notify(err)
         self.thistab.ensure_correct_pointer()
 
+        #add by sim1: unmark after deletion
+        if self.mode == 'visual':
+            self.change_mode('normal')
+
     def mkdir(self, name):
         try:
             os.makedirs(os.path.join(self.thisdir.path, name))
