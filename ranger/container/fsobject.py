@@ -38,6 +38,7 @@ DOCUMENT_EXTENSIONS = ('cbr', 'cbz', 'css', 'cvs', 'djvu', 'doc',
                        'sxc', 'xls', 'xlw', 'xml', 'xslx')
 DOCUMENT_BASENAMES = ('bugs', 'changelog', 'copying', 'credits',
                       'hacking', 'help', 'install', 'license', 'readme', 'todo')
+DOCUMENT_EBOOKS = ('epub', 'pdf', 'mobi', 'azw')
 
 BAD_INFO = '?'
 
@@ -234,9 +235,10 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes,too-many
         self.mimetext  = self._mimetype.startswith('mimetext')
         self.special   = self.basename.lower() in DOCUMENT_BASENAMES
         self.container = self.extension in CONTAINER_EXTENSIONS
+        self.ebooks    = self.extension in DOCUMENT_EBOOKS
 
         # pylint: disable=attribute-defined-outside-init
-        keys = ('video', 'audio', 'image', 'media', 'document', 'mimetext', 'special', 'container')
+        keys = ('video', 'audio', 'image', 'media', 'ebooks', 'document', 'mimetext', 'special', 'container')
         self._mimetype_tuple = tuple(key for key in keys if getattr(self, key))
 
         if self._mimetype == '':

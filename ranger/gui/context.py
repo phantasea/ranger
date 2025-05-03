@@ -11,12 +11,14 @@ CONTEXT_KEYS = [
     'active_pane', 'inactive_pane',
     'directory', 'file', 'hostname', 'username', 'separator',
     'executable', 'media', 'link', 'fifo', 'socket', 'device',
-    'video', 'audio', 'image', 'media', 'document', 'mimetext', 'special', 'container',
+    'video', 'audio', 'image', 'media', 'document',
+    'mimetext', 'special', 'container', 'ebooks',
     'selected', 'empty', 'main_column', 'message', 'background',
     'good', 'bad', 'lspace', 'mspace', 'rspace', 'size', 'ruler',
     'space', 'permissions', 'owner', 'group', 'mtime', 'nlink',
     'scroll', 'all', 'bot', 'top', 'percentage', 'filter', 'stars',
-    'flat', 'marked', 'tagged', 'tag_marker', 'line_number', 'line_number_separator',
+    'flat', 'marked', 'tagged', 'tag_marker',
+    'line_number', 'line_number_separator',
     'cut', 'copied', 'frozen', 'systime',
     'help_markup',  # COMPAT
     'seperator', 'key', 'special', 'border',  # COMPAT
