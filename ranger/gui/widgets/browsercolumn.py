@@ -5,6 +5,7 @@
 
 from __future__ import (absolute_import, division, print_function)
 
+import os
 import curses
 import stat
 from time import time, strftime, localtime  #mod by sim1
@@ -511,7 +512,10 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
             for ratings in self.fm.rating_info:
                 if ratings["path"] == drawn.path:
                     for i in range(int(ratings["star"])):
-                        stars += ''
+                        if 'DISPLAY' in os.environ:
+                            stars += ''
+                        else:
+                            stars += '★'
         if stars:
             '''
             mults = 7 - len(stars)

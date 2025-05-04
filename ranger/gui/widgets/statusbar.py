@@ -210,15 +210,6 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
         left.add(date, 'mtime')
 
         left.add('|', 'lspace')
-        """
-        if self.settings.display_size_in_status_bar and target.infostring:
-            left.add(target.infostring.replace(" ", ""))
-            left.add('|', 'lspace')
-        """
-
-        #mod by sim1
-        if self._get_size_infostring(left):
-            left.add("|", "lspace")
 
         if self._get_rating_infostring(left):
             left.add("|", "lspace")
@@ -272,16 +263,28 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 side.add(human_readable(sumsize, separator=''), 'size')
             side.add("/" + str(len(target.marked_items)), 'size')
         else:
+            size = ""
+            if self.settings.display_size_in_status_bar:
+                #size = os.stat(self.fm.thisfile.path).st_size
+                size = self.fm.thisfile.size
+                side.add(human_readable(size, use_opt=True), 'size')
+
             # show size of all files in the current directory
             if self.settings.display_file_space_in_status_bar:
-                side.add(human_readable(target.disk_usage, separator='') + "/", 'size')
-            if self.settings.display_free_space_in_status_bar:
-                try:
-                    free = get_free_space(target.path)
-                except OSError:
-                    pass
-                else:
-                    side.add(human_readable(free, separator=''), 'size')
+                if self.settings.display_size_in_status_bar:
+                    side.add('/', 'size')
+                size = human_readable(target.disk_usage, separator='')
+                side.add(size, 'size')
+
+            #if self.settings.display_free_space_in_status_bar:
+            if size:
+                side.add('/', 'size')
+            try:
+                free = get_free_space(target.path)
+            except OSError:
+                side.add('ERR', 'size')
+            else:
+                side.add(human_readable(free, separator=''), 'size')
         return True
 
     #add by sim1
@@ -292,11 +295,11 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             for ratings in self.fm.rating_info:
                 if ratings["path"] == target:
                     for i in range(int(ratings["star"])):
-                        stars += ''
+                        if 'DISPLAY' in os.environ:
+                            stars += ''
+                        else:
+                            stars += '★'
 
-                    size = os.stat(target).st_size
-                    side.add(human_readable(size, use_opt=True), 'stars')
-                    side.add("|", "lspace")
                     side.add(stars, 'stars')
                     return True
 
@@ -392,6 +395,9 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 right.add("only='", base, 'filter')
                 right.add(self.fm.thisdir.inode_type_filter, base, 'filter')
             right.add("'", base, 'filter')
+            right.add("|", "rspace")
+
+        if self._get_size_infostring(right):
             right.add("|", "rspace")
 
         if target.marked_items:
