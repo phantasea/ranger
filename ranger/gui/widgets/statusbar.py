@@ -174,6 +174,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
             #add by sim1
             left.add('empty', 'permissions')
             left.add('|', 'lspace')
+            '''
             if self.settings.display_free_space_in_status_bar:
                 try:
                     free = get_free_space(self.column.target.path)
@@ -182,6 +183,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 else:
                     left.add(human_readable(free, separator=''), 'size')
                     left.add('|', 'lspace')
+            '''
             return
         if stat is None:
             return
@@ -263,10 +265,13 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 side.add(human_readable(sumsize, separator=''), 'size')
             side.add("/" + str(len(target.marked_items)), 'size')
         else:
-            size = ""
+            size = None
             if self.settings.display_size_in_status_bar:
-                #size = os.stat(self.fm.thisfile.path).st_size
-                size = self.fm.thisfile.size
+                try:
+                    #size = os.stat(self.fm.thisfile.path).st_size
+                    size = self.fm.thisfile.size
+                except AttributeError:
+                    size = 0
                 side.add(human_readable(size, use_opt=True), 'size')
 
             # show size of all files in the current directory
@@ -277,7 +282,7 @@ class StatusBar(Widget):  # pylint: disable=too-many-instance-attributes
                 side.add(size, 'size')
 
             #if self.settings.display_free_space_in_status_bar:
-            if size:
+            if size is not None:
                 side.add('/', 'size')
             try:
                 free = get_free_space(target.path)
