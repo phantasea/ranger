@@ -96,7 +96,6 @@ class ViewBase(Widget, DisplayableContainer):  # pylint: disable=too-many-instan
         self.win.chgat(ystart - 1, 0, curses.A_UNDERLINE)
 
     def _draw_info(self, lines):
-        self.color_reset()  # add by sim1: necessary after console color support
         hei = min(self.hei - 1, len(lines))
         ystart = self.hei - hei
         i = ystart
