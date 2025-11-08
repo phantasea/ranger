@@ -284,6 +284,9 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
                 self.pos = len(self.line)
 
     def add_to_history(self):
+        #add by sim1: ignore the rename cmd history
+        if 'rename' in self.line:
+            return
         self.history_backup.fast_forward()
         self.history_backup.add(self.line)
         self.history = History(self.history_backup)
