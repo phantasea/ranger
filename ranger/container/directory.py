@@ -393,7 +393,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
                         self.infostring = ' %s' % human_readable(self.size)
                 else:
                     self.size = len(filelist)
-                    self.infostring = ' %2d' % self.size    # mod by sim1
+                    self.infostring = ' %3d' % self.size    # mod by sim1
                 if self.is_link:
                     self.infostring = '->' + self.infostring
 
@@ -604,7 +604,7 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
             if size is None:
                 self.infostring = ''
             else:
-                self.infostring = ' %2d' % size    # mod by sim1
+                self.infostring = ' %3d' % size    # mod by sim1
             self.accessible = True
             self.runnable = True
             return size
