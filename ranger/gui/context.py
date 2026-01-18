@@ -12,7 +12,7 @@ CONTEXT_KEYS = [
     'directory', 'file', 'hostname', 'username', 'separator',
     'executable', 'media', 'link', 'fifo', 'socket', 'device',
     'video', 'audio', 'image', 'media', 'document',
-    'mimetext', 'special', 'container', 'ebooks',
+    'mimetext', 'special', 'container', 'ebooks', 'www',
     'selected', 'empty', 'main_column', 'message', 'background',
     'good', 'bad', 'lspace', 'mspace', 'rspace', 'size', 'ruler',
     'space', 'permissions', 'owner', 'group', 'mtime', 'nlink',
