@@ -109,6 +109,7 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
         self.thistab = None
         #add by sim1 +++++++++++
         self.last_tab = 1
+        self.tabfunc = False
         self.widescreen = False
         self.vwidescreen = False
         self.tabs_path = {}
@@ -359,6 +360,15 @@ class FM(Actions,  # pylint: disable=too-many-instance-attributes
             self.vwidescreen = False
         return self.vwidescreen
     # add by sim1 for toggle widescreen mode -----
+
+    # add by sim1 for toggle TAB function +++++
+    def toggle_tab_func(self):
+        if self.tabfunc == False:
+            self.tabfunc = True
+        else:
+            self.tabfunc = False
+        return self.tabfunc
+    # add by sim1 for toggle TAB function -----
 
     def block_input(self, sec=0):
         self.input_blocked = sec != 0
