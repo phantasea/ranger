@@ -77,12 +77,11 @@ def human_readable(byte, separator=' ', use_opt=False, uni_format=False):  # pyl
 def human_readable_time(timestamp):
     """Convert a timestamp to an easily readable format.
     """
-    # Hard to test because it's relative to ``now()``
     try:
         date = datetime.fromtimestamp(timestamp)
-    except ValueError:
+    except (OSError, OverflowError, ValueError):
         return '???'
-
+    # Hard to test because it's relative to ``now()``
     datediff = datetime.now().date() - date.date()
     if datediff.days >= 365:
         return date.strftime("%-d %b %Y")
