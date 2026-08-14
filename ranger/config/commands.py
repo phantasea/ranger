@@ -798,7 +798,7 @@ class delete(Command):
         confirm = self.fm.settings.confirm_on_delete
         if confirm != 'never' and (confirm != 'multiple' or many_files):
             self.fm.ui.console.ask(
-                "Confirm deletion of {0} files: {1} (y/N)".format(len(files), ', '.join(files)),
+                "Confirm deletion of %s items: %s (y/N)" % (len(files), ', '.join(files)),
                 partial(self._question_callback, files),
                 ('n', 'N', 'y', 'Y'),
             )
@@ -864,7 +864,7 @@ class trash(Command):
 
         if confirm != 'never' and (confirm != 'multiple' or many_files):
             self.fm.ui.console.ask(
-                "Confirm deletion of {0} files: {1} (y/N)".format(len(files), ', '.join(file_names)),
+                "Confirm deletion of %s items: %s (y/N)" % (len(files), ', '.join(file_names)),
                 partial(self._question_callback, files),
                 ('n', 'N', 'y', 'Y'),
             )
