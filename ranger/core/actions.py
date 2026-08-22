@@ -339,6 +339,10 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                 pass
 
         return False
+
+    def move_percent(self, narg=None):
+        offset = narg or 50
+        self.move(to=offset, percentage=True)
     #add by sim1: ----------------------------
 
     def notify(self, obj, duration=4, bad=False, exception=None):

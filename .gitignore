@@ -5,6 +5,8 @@
 *~
 *.orig
 
+ranger/tags
+
 /.cache
 /build
 /build_scripts
