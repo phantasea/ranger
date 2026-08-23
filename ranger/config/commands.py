@@ -1097,6 +1097,10 @@ class touch(Command):
         fname = join(self.fm.thisdir.path, expanduser(self.rest(1)))
         dirname = dirname(fname)
         if not lexists(fname):
+            if fname.endswith("/"):
+                makedirs(fname)
+                return
+
             if not lexists(dirname):
                 makedirs(dirname)
             with open(fname, 'a', encoding="utf-8"):
