@@ -812,18 +812,24 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
     # add by sim1  ++++++++++++++++++++++++++++++++++++
     def move_top(self):
         if self.ui.browser and self.ui.browser.main_column:
-            self.ui.browser.main_column.move_top()
-            self.thisfile = self.thisdir.pointed_obj
+            #self.ui.browser.main_column.move_top()
+            #self.thisfile = self.thisdir.pointed_obj
+            offset = self.ui.browser.main_column.move_top()
+            self.move(up=offset)
 
     def move_mid(self, mode=0):
         if self.ui.browser and self.ui.browser.main_column:
-            self.ui.browser.main_column.move_mid(mode)
-            self.thisfile = self.thisdir.pointed_obj
+            #self.ui.browser.main_column.move_mid(mode)
+            #self.thisfile = self.thisdir.pointed_obj
+            offset = self.ui.browser.main_column.move_mid(mode)
+            self.move(down=offset)
 
     def move_bot(self):
         if self.ui.browser and self.ui.browser.main_column:
-            self.ui.browser.main_column.move_bot()
-            self.thisfile = self.thisdir.pointed_obj
+            #self.ui.browser.main_column.move_bot()
+            #self.thisfile = self.thisdir.pointed_obj
+            offset = self.ui.browser.main_column.move_bot()
+            self.move(down=offset)
 
     def scroll_top(self):
         if self.ui.browser and self.ui.browser.main_column:
