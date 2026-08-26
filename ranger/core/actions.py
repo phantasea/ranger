@@ -753,6 +753,38 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             if self.ui.pager.visible:
                 self.display_file()
 
+    #add by sim1 ++++++++++++++++++++
+    def visual_toggle_boundary(self):
+        if self.mode != 'visual':
+            return
+
+        vis_direction = self.thisdir.pointer - self._visual_pos_start
+        if vis_direction == 0:
+            return
+
+        self._visual_pos_start = self.thisdir.pointer
+
+        sels = len(set(self.thisdir.marked_items))
+        if vis_direction > 0:
+            self.thisdir.pointer -= (sels - 1)
+        else:
+            self.thisdir.pointer += (sels - 1)
+
+    def visual_to_mid(self):
+        if self.mode != 'visual':
+            return
+
+        vis_direction = self.thisdir.pointer - self._visual_pos_start
+        if abs(vis_direction) <= 1:
+            return
+
+        offset = len(set(self.thisdir.marked_items)) // 2
+        if vis_direction > 0:
+            self.move(to=(self.thisdir.pointer - offset))
+        else:
+            self.move(to=(self.thisdir.pointer + offset))
+    #add by sim1 --------------------
+
     def move_parent(self, n, narg=None):
         self.change_mode('normal')
         if narg is not None:
