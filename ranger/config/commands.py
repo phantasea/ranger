@@ -685,18 +685,12 @@ class quit(Command):  # pylint: disable=redefined-builtin
     def execute(self):
         #add by sim1 ++++++++++++++++++++++++++++++++
         if len(self.fm.tabs) == 2:
-            """
-            #choosedir2 = expanduser("~") + "/.cache/ranger/rangerdir2"
-            import ranger  # NOQA pylint: disable=unused-import,unused-variable
-            choosedir = ranger.args.choosedir
-            if choosedir:
-                choosedir2 = choosedir + '2'
-                with open(choosedir2, "w", encoding="utf-8") as fobj:
-                    fobj.write(self.fm.thistab.path)
-            """
-
             self.fm.save_ranger_info()
+            if self.fm.loader.has_work():
+                self.fm.loader.destroy()
+            self.fm.exit()
         #add by sim1 --------------------------------
+
         if len(self.fm.tabs) >= 2:
             self.fm.tab_close()
         else:
