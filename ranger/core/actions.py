@@ -816,7 +816,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
 
         return blocks
 
-    def smart_cycle_sels(self):
+    def cycle_sels(self):
         cwd = self.thisdir
         all = len(set(cwd.marked_items))
         if all == 0:
