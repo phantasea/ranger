@@ -49,6 +49,13 @@ class _MacroTemplate(string.Template):
 class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-methods
         FileManagerAware, SettingsAware):
 
+    #add by sim1:
+    cyc_indx = 0
+    tag_stat = 0
+    g_tag_stat = 0
+    sel_blocks = []
+    blocks_cnt = 0
+
     # --------------------------
     # -- Basic Commands
     # --------------------------
@@ -783,6 +790,74 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             self.move(to=(self.thisdir.pointer - offset))
         else:
             self.move(to=(self.thisdir.pointer + offset))
+
+    def selection_blocks(self):
+        blocks = []
+        founds = 0
+        init = None
+        prev = False
+
+        cwd = self.thisdir
+        all = len(set(cwd.marked_items))
+        for idx, item in enumerate(cwd.files):
+            if item.marked:
+                founds += 1
+                if not prev:
+                    init = idx
+                    prev = True
+
+                if founds >= all:
+                    blocks.append((init, idx))
+                    break
+            else:
+                if prev:
+                    blocks.append((init, idx-1))
+                    prev = False
+
+        return blocks
+
+    def smart_cycle_sels(self):
+        cwd = self.thisdir
+        all = len(set(cwd.marked_items))
+        if all == 0:
+            self.notify("No file is selected!", bad=False)
+            return
+
+        if self.tag_stat == 0 or self.tag_stat != self.g_tag_stat:
+            self.tag_stat = self.g_tag_stat
+            self.sel_blocks = self.selection_blocks();
+            self.blocks_cnt = len(self.sel_blocks)
+            if self.blocks_cnt == 0:
+                self.notify("No file is selected!", bad=False)
+                return
+
+            self.cyc_indx = self.blocks_cnt - 1
+
+        curr = cwd.pointer
+        bnum = self.blocks_cnt
+        init = self.sel_blocks[self.cyc_indx][0]
+        last = self.sel_blocks[self.cyc_indx][1]
+
+        if bnum == 1 and init == last and curr == init:
+            self.notify("Only one file is selected!", bad=False)
+            return
+
+        #self.notify("(blocks, index)==(%s, %s)" % (bnum, self.cyc_indx))
+        if curr == last:
+            if init == last:
+                self.cyc_indx = (self.cyc_indx - 1) % bnum
+                cwd.pointer = self.sel_blocks[self.cyc_indx][1]
+            else:
+                cwd.pointer = init
+        elif curr == init:
+            self.cyc_indx = (self.cyc_indx - 1) % bnum
+            cwd.pointer = self.sel_blocks[self.cyc_indx][1]
+        else:
+            cwd.pointer = last
+
+        cwd.correct_pointer()
+        self.ui.status.request_redraw()
+
     #add by sim1 --------------------
 
     def move_parent(self, n, narg=None):
@@ -1042,6 +1117,9 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
 
         self.ui.redraw_main_column()
         self.ui.status.need_redraw = True
+
+        #add by sim1
+        self.g_tag_stat += 1
 
     def mark_in_direction(self, val=True, dirarg=None):
         cwd = self.thisdir
