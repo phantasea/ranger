@@ -83,7 +83,8 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         self.rifle.reload_config()
         self.fm.tags.sync()
 
-    def change_mode(self, mode=None):
+    #mod by sim1: add "append"
+    def change_mode(self, mode=None, append=False):
         """:change_mode <mode>
 
         Change mode to "visual" (selection) or "normal" mode.
@@ -100,6 +101,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             self.mark_files(val=not self._visual_reverse, movedown=False)
         elif mode == 'normal':
             if self.mode == 'visual':  # pylint: disable=access-member-before-definition
+                if append: pass  #add by sim1
                 self._visual_pos_start = None
                 self._visual_move_cycles = None
                 self._previous_selection = None
@@ -143,7 +145,8 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             return value.split(',')
         raise ValueError("Invalid value `%s' for option `%s'!" % (value, name))
 
-    def toggle_visual_mode(self, reverse=False, narg=None):
+    #mod by sim1: add "append"
+    def toggle_visual_mode(self, reverse=False, narg=None, append=False):
         """:toggle_visual_mode
 
         Toggle the visual mode (see :change_mode).
@@ -153,16 +156,16 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             if narg is not None:
                 self.mark_files(val=not reverse, narg=narg)
 
-            #add by sim1: unmark before visual selection ---
-            thisdir = self.fm.thisdir
-            if thisdir.files:
-                for fobj in thisdir.files:
-                    thisdir.mark_item(fobj, 0)
-            #add by sim1: unmark before visual selection +++
+            #add by sim1: unmark before new visual op
+            if not append:
+                thisdir = self.fm.thisdir
+                if thisdir.files:
+                    for fobj in thisdir.files:
+                        thisdir.mark_item(fobj, 0)
 
             self.change_mode('visual')
         else:
-            self.change_mode('normal')
+            self.change_mode('normal', append=append)
 
     def reload_cwd(self):
         """:reload_cwd
@@ -186,7 +189,6 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         if thisdir.old_marked_items:
             for fobj in thisdir.old_marked_items:
                 thisdir.mark_item(fobj, 1)
-
 
     def cancel_all(self):
         thisdir = self.fm.thisdir
@@ -213,7 +215,6 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
 
         if self.mode == 'visual':
             self.change_mode('normal')
-
 
     def toggle_flat(self, narg=None):
         #level = narg if narg else 1 by default
