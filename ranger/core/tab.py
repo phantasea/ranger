@@ -118,9 +118,10 @@ class Tab(FileManagerAware, SettingsAware):  # pylint: disable=too-many-instance
             path.move_to_obj(last_path)
             last_path = path
 
-    def ensure_correct_pointer(self):
+    def ensure_correct_pointer(self, pos=None):
         if self.thisdir:
-            self.thisdir.correct_pointer()
+            #mod by sim1
+            self.thisdir.correct_pointer(pos)
 
     def history_go(self, relative):
         """Move relative in history"""

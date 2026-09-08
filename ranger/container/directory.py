@@ -673,9 +673,10 @@ class Directory(  # pylint: disable=too-many-instance-attributes,too-many-public
 
             self.move_to_obj(self.cycle_list[0])
 
-    def correct_pointer(self):
+    def correct_pointer(self, pos=None):
         """Make sure the pointer is in the valid range"""
-        Accumulator.correct_pointer(self)
+        #mod by sim1
+        Accumulator.correct_pointer(self, pos)
 
         if self == self.fm.thisdir:
             try:

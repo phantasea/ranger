@@ -63,8 +63,14 @@ class Accumulator(object):
         return self.move(to=self.pointer)
 
     # XXX Is this still necessary?  move() ensures correct pointer position
-    def correct_pointer(self):
+    def correct_pointer(self, pos=None):
         lst = self.get_list()
+
+        #add by sim1
+        if pos:
+            self.pointer = pos
+            self.pointed_obj = lst[pos]
+            return
 
         if not lst:
             self.pointer = 0

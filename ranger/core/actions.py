@@ -2053,6 +2053,27 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         else:
             self.notify('Failed to paste. The destination is invalid.', bad=True)
 
+    #add by sim1
+    def find_next_unmarked_file(self, files):
+        sel = len(files)
+        cwd = self.thisdir
+        max = len(cwd.files)
+        cur = cwd.pointer
+        #self.notify('00==%s==%s==%s' % (sel, max, cur))
+        #self.notify('11==%s==%s' % (cwd.pointed_obj.path, ', '.join(files)))
+        if sel == max or cwd.pointed_obj.path not in files:
+            return None
+
+        for idx in range(cur + 1, max):
+            if cwd.files[idx].path not in files:
+                return idx
+
+        for idx in range(cur - 1, -1, -1):
+            if cwd.files[idx].path not in files:
+                return idx
+
+        return None
+
     def delete(self, files=None):
         # XXX: warn when deleting mount points/unseen marked files?
         # COMPAT: old command.py use fm.delete() without arguments
@@ -2080,7 +2101,10 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                     os.remove(path)
                 except OSError as err:
                     self.notify(err)
-        self.thistab.ensure_correct_pointer()
+
+        #add by sim1
+        expected_pos = self.fm.find_next_unmarked_file(files)
+        self.thistab.ensure_correct_pointer(expected_pos)
 
         #add by sim1: unmark after deletion
         if self.mode == 'visual':
