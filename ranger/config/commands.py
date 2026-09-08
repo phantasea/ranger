@@ -880,6 +880,11 @@ class trash(Command):
         """
         try:
             self.fm.execute_file(files, label='trash')
+
+            #add by sim1
+            paths = [fobj.path for fobj in files]
+            pos = self.fm.find_next_unmarked_file(paths)
+            self.fm.thisdir.correct_pointer(pos)
         except OSError as err:
             if err.errno == 7:
                 self.fm.notify("Error: Command too long (try passing less files at once)",
