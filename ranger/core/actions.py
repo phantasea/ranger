@@ -498,6 +498,9 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
 
         macros['f'] = lambda: self.fm.thisfile.relative_path
 
+        #add by sim1: get the file root name w/o extension
+        macros['r'] = lambda: os.path.splitext(self.fm.thisfile.relative_path)[0]
+
         macros['p'] = lambda: [os.path.join(self.fm.thisdir.path,
                                             fl.relative_path) for fl in
                                self.fm.thistab.get_selection()]
