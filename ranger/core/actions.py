@@ -1949,8 +1949,13 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         Copy the selected items.
         Modes are: 'set', 'add', 'remove'.
         """
-        assert mode in ('set', 'add', 'remove', 'toggle')
+        assert mode in ('set', 'add', 'remove', 'toggle', 'all')
         cwd = self.thisdir
+
+        #add by sim1
+        if mode == 'all':
+            cwd.mark_all(val=True)
+
         if not narg and not dirarg:
             selected = (fobj for fobj in self.thistab.get_selection() if fobj in cwd.files)
         else:
@@ -1964,7 +1969,7 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
                                              pagesize=self.ui.termsize[0], offset=offset)
             cwd.pointer = pos
             cwd.correct_pointer()
-        if mode == 'set':
+        if mode == 'set' or mode == 'all':
             self.copy_buffer = set(selected)
         elif mode == 'add':
             self.copy_buffer.update(set(selected))
