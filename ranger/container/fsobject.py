@@ -62,6 +62,7 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes,too-many
     path = None
     permissions = None
     stat = None
+    #statx_attrs = None  #add by sim1
 
     content_loaded = False
     force_load = False
@@ -321,6 +322,16 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes,too-many
 
         # Set some attributes
 
+        '''
+        #add by sim1: statx for immutable/appendonly flags
+        if hasattr(os, 'statx'):  #since Python 3.15
+            try:
+                stx_res = os.statx(os.AT_FDCWD, path, flags=0, mask=stat.STATX_BASIC_STATS)
+                self.statx_attrs = stx_res.stx_attributes
+            except Exception:
+                pass
+        '''
+
         self.accessible = bool(new_stat)
         mode = new_stat.st_mode if new_stat else 0
 
@@ -360,6 +371,14 @@ class FileSystemObject(  # pylint: disable=too-many-instance-attributes,too-many
             perms = ['d']
         else:
             perms = ['-']
+
+        #add by sim1: statx for immutable/appendonly flags
+        '''
+        if self.statx_attrs & stat.STATX_ATTR_IMMUTABLE:
+            perms = ['i']
+        elif self.statx_attrs & stat.STATX_ATTR_IMMUTABLE:
+            perms = ['a']
+        '''
 
         mode = self.stat.st_mode
         test = 0o0400
