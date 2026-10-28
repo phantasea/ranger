@@ -679,6 +679,17 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         kw.setdefault('cycle', self.fm.settings['wrap_scroll'])
         kw.setdefault('one_indexed', self.fm.settings['one_indexed'])
         direction = Direction(kw)
+
+        #add by sim1 +++++++++
+        if 'top' in direction:
+            self.move_top()
+            return
+
+        if 'bot' in direction:
+            self.move_bot()
+            return
+        #add by sim1 ---------
+
         if 'left' in direction or direction.left() > 0:
             steps = direction.left()
             if narg is not None:

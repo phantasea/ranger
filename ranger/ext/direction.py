@@ -55,6 +55,9 @@ class Direction(dict):
             except KeyError:
                 return fallback
 
+    def top_mid_bot(self):
+        return Direction._get_direction(self, 'top', 'mid', 'bot')
+
     def up(self):  # pylint: disable=invalid-name
         return -Direction.down(self)  # pylint: disable=invalid-unary-operand-type
 
