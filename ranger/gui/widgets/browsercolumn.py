@@ -702,11 +702,13 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         cur = self._get_index_of_selected_file() or 0
         top = self.target.scroll_begin
         offset = cur - top
+        return offset
+        '''
         if offset != 0:
-            return offset
-            #self.target.move(up=offset)
+            self.target.move(up=offset)
+        '''
 
-    def move_mid(self, mode=0):
+    def move_mid(self, mode=None):
         self.need_redraw = True
         cur = self._get_index_of_selected_file() or 0
         top = self.target.scroll_begin
@@ -716,19 +718,22 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         else:
             bot = len(self.fm.thisdir) - 1
 
-        if mode == 0:
+        if not mode:
             mid = (top + bot) // 2
-        elif mode == 1:
+        elif mode == 'DOWN_MID':
             mid = (cur + bot + 1) // 2
-        elif mode == -1:
+        elif mode == 'UP_MID':
             mid = (top + cur) // 2
-        else:
+        elif mode == 'ABS_MID':
             mid = (len(self.fm.thisdir) - 1) // 2
 
+        #self.fm.notify("%s, %s, %s" % (cur, mid, bot), bad=False)
         offset = mid - cur
+        return offset
+        '''
         if offset != 0:
-            return offset
-            #self.target.move(down=offset)
+            self.target.move(down=offset)
+        '''
 
     def move_bot(self):
         self.need_redraw = True
@@ -736,9 +741,11 @@ class BrowserColumn(Pager):  # pylint: disable=too-many-instance-attributes
         top = self.target.scroll_begin
         hei = self.hei
         offset = top + hei - cur - 1
+        return offset
+        '''
         if offset != 0:
-            return offset
-            #self.target.move(down=offset)
+            self.target.move(down=offset)
+        '''
     # add by sim1 ------------------------------------
 
     def __str__(self):

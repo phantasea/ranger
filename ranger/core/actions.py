@@ -685,6 +685,10 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             self.move_top()
             return
 
+        if 'mid' in direction:
+            self.move_mid()
+            return
+
         if 'bot' in direction:
             self.move_bot()
             return
@@ -905,21 +909,24 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             #self.ui.browser.main_column.move_top()
             #self.thisfile = self.thisdir.pointed_obj
             offset = self.ui.browser.main_column.move_top()
-            self.move(up=offset)
+            if offset != 0:
+                self.move(up=offset)
 
-    def move_mid(self, mode=0):
+    def move_mid(self, mode=None):
         if self.ui.browser and self.ui.browser.main_column:
             #self.ui.browser.main_column.move_mid(mode)
             #self.thisfile = self.thisdir.pointed_obj
             offset = self.ui.browser.main_column.move_mid(mode)
-            self.move(down=offset)
+            if offset != 0:
+                self.move(down=offset)
 
     def move_bot(self):
         if self.ui.browser and self.ui.browser.main_column:
             #self.ui.browser.main_column.move_bot()
             #self.thisfile = self.thisdir.pointed_obj
             offset = self.ui.browser.main_column.move_bot()
-            self.move(down=offset)
+            if offset != 0:
+                self.move(down=offset)
 
     def scroll_top(self):
         if self.ui.browser and self.ui.browser.main_column:
