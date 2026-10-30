@@ -912,11 +912,11 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             if offset != 0:
                 self.move(up=offset)
 
-    def move_mid(self, mode=None):
+    def move_mid(self, midpos=None):
         if self.ui.browser and self.ui.browser.main_column:
-            #self.ui.browser.main_column.move_mid(mode)
+            #self.ui.browser.main_column.move_mid(midpos)
             #self.thisfile = self.thisdir.pointed_obj
-            offset = self.ui.browser.main_column.move_mid(mode)
+            offset = self.ui.browser.main_column.move_mid(midpos)
             if offset != 0:
                 self.move(down=offset)
 
