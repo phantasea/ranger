@@ -2085,17 +2085,23 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         cwd = self.thisdir
         max = len(cwd.files)
         cur = cwd.pointer
+        tfile = cwd.pointed_obj.path
+        tfile = os.path.realpath(tfile)
+
         #self.notify('00==%s==%s==%s' % (sel, max, cur))
-        #self.notify('11==%s==%s' % (cwd.pointed_obj.path, ', '.join(files)))
-        if sel == max or cwd.pointed_obj.path not in files:
+        #self.notify('99==%s==%s' % (tfile, ', '.join(files)))
+        if sel == max or tfile not in files:
+            #self.notify('11==%s==%s==%s' % (sel, max, cur))
             return None
 
         for idx in range(cur + 1, max):
             if cwd.files[idx].path not in files:
+                #self.notify('22==%s==%s==%s==%s' % (sel, max, cur, idx))
                 return idx
 
         for idx in range(cur - 1, -1, -1):
             if cwd.files[idx].path not in files:
+                #self.notify('33==%s==%s==%s==%s' % (sel, max, cur, idx))
                 return idx
 
         return None
