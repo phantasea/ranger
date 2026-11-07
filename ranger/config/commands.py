@@ -1228,7 +1228,9 @@ class rename_append(Command):
         basename = tfile.basename.replace(MACRO_DELIMITER, MACRO_DELIMITER_ESC)
 
         if basename.find('.') <= 0 or os.path.isdir(relpath):
-            self.fm.open_console('rename ' + relpath)
+            #mod by sim1
+            #self.fm.open_console('rename ' + relpath)
+            self.fm.open_console('rename ')
             return
 
         if self._flag_ext_all:
