@@ -1785,6 +1785,8 @@ class scout(Command):
 
     Flags:
      -a    Automatically open a file on unambiguous match
+     -d    Mark to trash
+     -D    Mark to delete
      -e    Open the selected file when pressing enter
      -f    Filter files that match the current search pattern
      -g    Interpret pattern as a glob pattern
@@ -1815,10 +1817,13 @@ class scout(Command):
     UNMARK = "M"
     PERM_FILTER = "p"
     SM_REGEX = "r"
-    RESELECT = "R"  #add by sim1
     SMART_CASE = "s"
     AS_YOU_TYPE = "t"
     INVERT = "v"
+    #add by sim1: support reselect/trash/delete
+    RESELECT = "R"
+    TRASH = "d"
+    DELETE = "D"
 
     def __init__(self, *args, **kwargs):
         super(scout, self).__init__(*args, **kwargs)
@@ -1835,20 +1840,19 @@ class scout(Command):
         self.fm.thistab.last_search = regex
         self.fm.set_search_method(order="search")
 
-        #add by sim1: support reselect like 'gs' in vifm ------
+        #add by sim1: support reselect like 'gs' in vifm
         #self.fm.notify('%s | %s' % (str(flags), str(thisdir.old_marked_items)), bad=True)
         if flags == self.RESELECT and thisdir.old_marked_items:
             for fobj in thisdir.old_marked_items:
                 thisdir.mark_item(fobj, 1)
-        #add by sim1: support reselect like 'gs' in vifm ++++++
 
         if (self.MARK in flags or self.UNMARK in flags) and thisdir.files:
             value = flags.find(self.MARK) > flags.find(self.UNMARK)
-            #add by sim1: support reselect like 'gs' in vifm ---------
+            #add by sim1: support reselect like 'gs' in vifm
             if self.UNMARK in flags:
                 #self.fm.notify('=%s' % str(thisdir.old_marked_items), bad=True)
                 thisdir.old_marked_items = thisdir.marked_items.copy()
-            #add by sim1: support reselect like 'gs' in vifm +++++++++
+
             if self.FILTER in flags:
                 for fobj in thisdir.files:
                     thisdir.mark_item(fobj, value)
@@ -1856,6 +1860,14 @@ class scout(Command):
                 for fobj in thisdir.files:
                     if regex.search(fobj.relative_path):
                         thisdir.mark_item(fobj, value)
+
+            #add by sim1: mark to trash
+            if self.TRASH in flags:
+                self.fm.execute_console('trash')
+                return
+            if self.DELETE in flags:
+                self.fm.execute_console('delete')
+                return
 
         if self.PERM_FILTER in flags:
             thisdir.filter = regex if pattern else None
