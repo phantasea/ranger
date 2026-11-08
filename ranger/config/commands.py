@@ -1864,11 +1864,11 @@ class scout(Command):
                         thisdir.mark_item(fobj, value)
 
             #add by sim1: mark to trash
-            if self.TRASH in flags:
-                self.fm.execute_console('trash')
-                return
-            if self.DELETE in flags:
-                self.fm.execute_console('delete')
+            if self.TRASH in flags or self.DELETE in flags:
+                cmd = 'trash' if self.TRASH in flags else 'delete'
+                #self.fm.notify('pat=%s, cmd=%s' % (str(self.pattern), cmd), bad=False)
+                if self.pattern:
+                    self.fm.execute_console(cmd)
                 return
 
         if self.PERM_FILTER in flags:
