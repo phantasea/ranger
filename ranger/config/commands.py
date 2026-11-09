@@ -1866,9 +1866,13 @@ class scout(Command):
             #add by sim1: mark to trash
             if self.TRASH in flags or self.DELETE in flags:
                 cmd = 'trash' if self.TRASH in flags else 'delete'
-                #self.fm.notify('pat=%s, cmd=%s' % (str(self.pattern), cmd), bad=False)
                 if self.pattern:
                     self.fm.execute_console(cmd)
+                    self.fm.notify('pat=%s, cmd=%s' % (self.pattern, cmd), bad=False)
+                else:
+                    for fobj in thisdir.files:
+                        thisdir.mark_item(fobj, 0)
+                    self.fm.notify('No patter is specified!', bad=False)
                 return
 
         if self.PERM_FILTER in flags:
