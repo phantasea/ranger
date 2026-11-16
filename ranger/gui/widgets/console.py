@@ -598,7 +598,7 @@ class Console(Widget):  # pylint: disable=too-many-instance-attributes,too-many-
             return None
         except KeyError:
             if not quiet:
-                self.fm.notify("Command not found: `%s'" % self.line.split()[0], bad=True)
+                self.fm.notify("Command not found: `%s`" % self.line.split()[0], bad=True)
             return None
         return command_class(self.line)
 
