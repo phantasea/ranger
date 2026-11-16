@@ -426,8 +426,11 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
         Execute a command for the console
         """
         #add by sim1:
-        if string.startswith(("subst/", "s/", "global/", "g/", "vglobal/", "vg/", "v/")):
+        if string.startswith(("subst/", "s/")):
             string = string.replace("/", " ")
+        elif string.startswith(("g/", "v/")):
+            string = string.replace("/", " ", 2)
+
         command_name = string.lstrip().split()[0]
         cmd_class = self.commands.get_command(command_name)
         if cmd_class is None:

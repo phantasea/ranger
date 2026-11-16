@@ -1550,6 +1550,9 @@ class bulkrename(Command):
             fm.notify("files have not been retagged")
         '''
 
+class r(bulkrename):
+    pass
+
 
 class relink(Command):
     """:relink <newpath>
