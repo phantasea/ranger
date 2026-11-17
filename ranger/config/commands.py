@@ -1806,6 +1806,7 @@ class scout(Command):
      -s    Smart case; like -i unless pattern contains upper case letters
      -t    Apply filter and search pattern as you type
      -v    Inverts the match
+     -V    Inverts the match based on the old marked files
 
     Multiple flags can be combined.  For example, ":scout -gpt" would create
     a :filter-like command using globbing.
@@ -1825,10 +1826,12 @@ class scout(Command):
     SMART_CASE = "s"
     AS_YOU_TYPE = "t"
     INVERT = "v"
-    #add by sim1: support reselect/trash/delete
+
+    #add by sim1:
     RESELECT = "R"
     TRASH = "d"
     DELETE = "D"
+    SEL_INVERT = 'V'
 
     def __init__(self, *args, **kwargs):
         super(scout, self).__init__(*args, **kwargs)
@@ -1857,6 +1860,14 @@ class scout(Command):
             if self.UNMARK in flags:
                 #self.fm.notify('=%s' % str(thisdir.old_marked_items), bad=True)
                 thisdir.old_marked_items = thisdir.marked_items.copy()
+
+            #add by sim1: invert mark based on the old marked files
+            if self.SEL_INVERT in flags:
+                if thisdir.marked_items:
+                    for fobj in thisdir.marked_items:
+                        if regex.search(fobj.relative_path):
+                            thisdir.mark_item(fobj, 0)
+                return
 
             if self.FILTER in flags:
                 for fobj in thisdir.files:

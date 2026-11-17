@@ -52,6 +52,7 @@ ALLOWED_SETTINGS = {
     'filter_dead_tabs_on_startup': bool,
     'flushinput': bool,
     'freeze_files': bool,
+    'gcmd_running' : bool,    #add by sim1
     'global_inode_type_filter': str,
     'hidden_filter': str,
     'hint_collapse_threshold': int,
