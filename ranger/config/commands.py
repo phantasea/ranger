@@ -807,6 +807,9 @@ class delete(Command):
         if answer.lower() == 'y':
             self.fm.delete(files)
 
+class D(delete):
+    pass
+
 
 class trash(Command):
     """:trash
@@ -891,6 +894,9 @@ class trash(Command):
                                bad=True)
             else:
                 raise
+
+class d(trash):
+    pass
 
 
 class jump_non(Command):
