@@ -1864,7 +1864,8 @@ class scout(Command):
             #add by sim1: invert mark based on the old marked files
             if self.SEL_INVERT in flags:
                 if thisdir.marked_items:
-                    for fobj in thisdir.marked_items:
+                    # MUST use [:] to work correctly
+                    for fobj in thisdir.marked_items[:]:
                         if regex.search(fobj.relative_path):
                             thisdir.mark_item(fobj, 0)
                 return
