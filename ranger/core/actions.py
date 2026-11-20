@@ -418,6 +418,9 @@ class Actions(  # pylint: disable=too-many-instance-attributes,too-many-public-m
             string = string.replace("/", " ")
         elif string.startswith(("g/", "v/")):
             string = string.replace("/", " ", 2)
+        elif string.startswith("g!/"):
+            string = string.replace("g!", "v")
+            string = string.replace("/", " ", 2)
 
         command_name = string.lstrip().split()[0]
         cmd_class = self.commands.get_command(command_name)
